@@ -1,0 +1,332 @@
+// =============================================================================
+// تصدير التقارير إلى PDF و Excel (FR-23 — ReportService.exportPdf/exportExcel).
+// =============================================================================
+
+import 'dart:typed_data';
+
+import 'package:excel/excel.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+
+import '../../core/money/money.dart';
+import '../../domain/enums.dart';
+import '../../domain/models/budget_report_models.dart';
+import '../../domain/models/transaction_models.dart';
+import 'pdf_fonts.dart';
+
+/// نصوص التقرير بلغة المستخدم.
+class ReportLabels {
+  const ReportLabels({
+    required this.appName,
+    required this.title,
+    required this.period,
+    required this.income,
+    required this.expense,
+    required this.net,
+    required this.month,
+    required this.category,
+    required this.share,
+    required this.expenseByCategory,
+    required this.incomeByCategory,
+    required this.monthsComparison,
+    required this.transactions,
+    required this.date,
+    required this.type,
+    required this.account,
+    required this.amount,
+    required this.note,
+    required this.typeName,
+    required this.excludedNote,
+  });
+
+  final String appName;
+  final String title;
+  final String period;
+  final String income;
+  final String expense;
+  final String net;
+  final String month;
+  final String category;
+  final String share;
+  final String expenseByCategory;
+  final String incomeByCategory;
+  final String monthsComparison;
+  final String transactions;
+  final String date;
+  final String type;
+  final String account;
+  final String amount;
+  final String note;
+
+  /// اسم نوع المعاملة المترجم.
+  final String Function(TxType) typeName;
+
+  /// «حركات الديون والتسويات مستبعدة من هذه الأرقام».
+  final String excludedNote;
+}
+
+class ReportExporter {
+  ReportExporter({
+    required this.labels,
+    required this.money,
+    required this.locale,
+    required this.rtl,
+  });
+
+  final ReportLabels labels;
+  final MoneyFormatter money;
+  final String locale;
+  final bool rtl;
+
+  static const _primary = PdfColor.fromInt(0xFF0F766E);
+  static const _green = PdfColor.fromInt(0xFF15803D);
+  static const _red = PdfColor.fromInt(0xFFDC2626);
+  static const _muted = PdfColor.fromInt(0xFF64748B);
+
+  String _range(PeriodReport r) {
+    final f = DateFormat.yMMMd(locale);
+    return '${f.format(r.range.start)} — '
+        '${f.format(r.range.end.subtract(const Duration(days: 1)))}';
+  }
+
+  // ---------------------------------------------------------------------------
+  // PDF
+  // ---------------------------------------------------------------------------
+
+  Future<Uint8List> buildPdf(PeriodReport report, PdfFonts fonts) async {
+    final doc = pw.Document(title: labels.title);
+    final monthFmt = DateFormat.yMMM(locale);
+
+    pw.Widget amount(int v, {PdfColor? color, bool bold = false}) => pw.Text(
+      money.format(v, withSymbol: true),
+      textDirection: pw.TextDirection.ltr,
+      style: pw.TextStyle(
+        color: color,
+        fontWeight: bold ? pw.FontWeight.bold : null,
+        fontSize: 10,
+      ),
+    );
+
+    pw.Widget table(List<String> headers, List<List<pw.Widget>> rows) =>
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: _primary),
+              children: [
+                for (final h in headers)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text(
+                      h,
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            for (final r in rows)
+              pw.TableRow(
+                children: [
+                  for (final c in r)
+                    pw.Padding(padding: const pw.EdgeInsets.all(5), child: c),
+                ],
+              ),
+          ],
+        );
+
+    List<List<pw.Widget>> categoryRows(List<CategoryTotal> items) => [
+      for (final c in items)
+        [
+          pw.Text(c.category.name, style: const pw.TextStyle(fontSize: 10)),
+          amount(c.total),
+          pw.Text(
+            '${(c.share * 100).toStringAsFixed(1)}%',
+            textDirection: pw.TextDirection.ltr,
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+        ],
+    ];
+
+    doc.addPage(
+      pw.MultiPage(
+        theme: fonts.theme(),
+        textDirection: rtl ? pw.TextDirection.rtl : pw.TextDirection.ltr,
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                labels.title,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                labels.appName,
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  color: _primary,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          pw.Text(
+            '${labels.period}: ${_range(report)}',
+            style: const pw.TextStyle(color: _muted, fontSize: 10),
+          ),
+          pw.SizedBox(height: 12),
+          table(
+            [labels.income, labels.expense, labels.net],
+            [
+              [
+                amount(report.income, color: _green, bold: true),
+                amount(report.expense, color: _red, bold: true),
+                amount(report.net, bold: true),
+              ],
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Text(
+            labels.monthsComparison,
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 6),
+          table(
+            [labels.month, labels.income, labels.expense, labels.net],
+            [
+              for (final m in report.months)
+                [
+                  pw.Text(
+                    monthFmt.format(m.month),
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  amount(m.income),
+                  amount(m.expense),
+                  amount(m.net),
+                ],
+            ],
+          ),
+          if (report.expenseByCategory.isNotEmpty) ...[
+            pw.SizedBox(height: 16),
+            pw.Text(
+              labels.expenseByCategory,
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+            table([
+              labels.category,
+              labels.amount,
+              labels.share,
+            ], categoryRows(report.expenseByCategory)),
+          ],
+          if (report.incomeByCategory.isNotEmpty) ...[
+            pw.SizedBox(height: 16),
+            pw.Text(
+              labels.incomeByCategory,
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+            table([
+              labels.category,
+              labels.amount,
+              labels.share,
+            ], categoryRows(report.incomeByCategory)),
+          ],
+          pw.SizedBox(height: 12),
+          pw.Text(
+            labels.excludedNote,
+            style: const pw.TextStyle(fontSize: 9, color: _muted),
+          ),
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Excel
+  // ---------------------------------------------------------------------------
+
+  /// ملف Excel بورقتين: الملخص، وتفاصيل المعاملات في الفترة.
+  Uint8List buildExcel(
+    PeriodReport report,
+    List<TransactionView> transactions,
+  ) {
+    final excel = Excel.createExcel();
+    final defaultSheet = excel.getDefaultSheet();
+
+    final summary = excel[labels.title];
+    summary.isRTL = rtl;
+    double v(int minor) => money.toDouble(minor);
+    TextCellValue t(String s) => TextCellValue(s);
+
+    summary
+      ..appendRow([t(labels.period), t(_range(report))])
+      ..appendRow([t(labels.income), DoubleCellValue(v(report.income))])
+      ..appendRow([t(labels.expense), DoubleCellValue(v(report.expense))])
+      ..appendRow([t(labels.net), DoubleCellValue(v(report.net))])
+      ..appendRow([])
+      ..appendRow([
+        t(labels.month),
+        t(labels.income),
+        t(labels.expense),
+        t(labels.net),
+      ]);
+    final monthFmt = DateFormat('yyyy-MM');
+    for (final m in report.months) {
+      summary.appendRow([
+        t(monthFmt.format(m.month)),
+        DoubleCellValue(v(m.income)),
+        DoubleCellValue(v(m.expense)),
+        DoubleCellValue(v(m.net)),
+      ]);
+    }
+    summary
+      ..appendRow([])
+      ..appendRow([t(labels.expenseByCategory)])
+      ..appendRow([t(labels.category), t(labels.amount), t(labels.share)]);
+    for (final c in report.expenseByCategory) {
+      summary.appendRow([
+        t(c.category.name),
+        DoubleCellValue(v(c.total)),
+        DoubleCellValue(double.parse((c.share * 100).toStringAsFixed(2))),
+      ]);
+    }
+
+    final details = excel[labels.transactions];
+    details.isRTL = rtl;
+    details.appendRow([
+      t(labels.date),
+      t(labels.type),
+      t(labels.category),
+      t(labels.account),
+      t(labels.amount),
+      t(labels.note),
+    ]);
+    final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
+    for (final tx in transactions) {
+      details.appendRow([
+        t(dateFmt.format(tx.tx.date)),
+        t(labels.typeName(tx.type)),
+        t(tx.category?.name ?? tx.contactName ?? tx.toAccountName ?? ''),
+        t(tx.accountName),
+        DoubleCellValue(
+          v(tx.signedAmount == 0 ? tx.tx.amount : tx.signedAmount),
+        ),
+        t(tx.tx.note ?? ''),
+      ]);
+    }
+
+    if (defaultSheet != null) excel.delete(defaultSheet);
+    excel.setDefaultSheet(labels.title);
+    return Uint8List.fromList(excel.encode()!);
+  }
+}

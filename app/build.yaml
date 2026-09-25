@@ -1,0 +1,13 @@
+# إعدادات توليد الكود لمكتبة Drift.
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # لا نستخدم واجهة "Manager" المولّدة؛ نكتب الاستعلامات بوضوح في طبقة الخدمات.
+          generate_manager: false
+          # توليد استعلامات أسرع عبر تحويل الأعمدة إلى SQL مباشرة.
+          sql:
+            dialect: sqlite
+            options:
+              version: "3.45"
