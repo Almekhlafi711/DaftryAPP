@@ -1,5 +1,5 @@
 name: daftry
-description: "A new Flutter project."
+description: "دفتري — دفتر حسابات شخصي وإدارة ديون، يعمل بدون تسجيل دخول وبدون إنترنت."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -47,3 +47,21 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # توليد ملفات الترجمة تلقائياً من lib/l10n/*.arb
+  generate: true
+
+  assets:
+    - assets/fonts/
+
+  # الخط العربي المضمَّن (رخصة OFL) — لا يُحمَّل من الإنترنت.
+  fonts:
+    - family: IBMPlexSansArabic
+      fonts:
+        - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700

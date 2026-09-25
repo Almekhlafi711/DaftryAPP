@@ -39,8 +39,18 @@ abstract final class AppIcons {
 
   /// ألوان مقترحة للفئات والحسابات الجديدة.
   static const List<int> palette = [
-    0xFFDC2626, 0xFFEA580C, 0xFFD97706, 0xFF65A30D, 0xFF15803D, 0xFF059669,
-    0xFF0F766E, 0xFF0891B2, 0xFF2563EB, 0xFF4F46E5, 0xFF7C3AED, 0xFFDB2777,
+    0xFFDC2626,
+    0xFFEA580C,
+    0xFFD97706,
+    0xFF65A30D,
+    0xFF15803D,
+    0xFF059669,
+    0xFF0F766E,
+    0xFF0891B2,
+    0xFF2563EB,
+    0xFF4F46E5,
+    0xFF7C3AED,
+    0xFFDB2777,
     0xFF64748B,
   ];
 

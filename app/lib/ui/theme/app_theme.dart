@@ -59,12 +59,24 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: text.copyWith(
         // العناوين 21 نقطة، النص 13–15، الأرقام الكبيرة 30–38 عريضة.
-        titleLarge: text.titleLarge?.copyWith(fontSize: 21, fontWeight: FontWeight.w700),
-        titleMedium: text.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+        titleLarge: text.titleLarge?.copyWith(
+          fontSize: 21,
+          fontWeight: FontWeight.w700,
+        ),
+        titleMedium: text.titleMedium?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: text.bodyLarge?.copyWith(fontSize: 15),
         bodyMedium: text.bodyMedium?.copyWith(fontSize: 14),
-        bodySmall: text.bodySmall?.copyWith(fontSize: 12.5, color: c.textSecondary),
-        displaySmall: text.displaySmall?.copyWith(fontSize: 34, fontWeight: FontWeight.w700),
+        bodySmall: text.bodySmall?.copyWith(
+          fontSize: 12.5,
+          color: c.textSecondary,
+        ),
+        displaySmall: text.displaySmall?.copyWith(
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: c.background,
@@ -92,13 +104,17 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
           backgroundColor: c.primary,
-          foregroundColor: brightness == Brightness.light ? Colors.white : c.background,
+          foregroundColor: brightness == Brightness.light
+              ? Colors.white
+              : c.background,
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.button)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Radii.button),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -112,20 +128,28 @@ abstract final class AppTheme {
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.button)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Radii.button),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: c.primary,
           minimumSize: const Size(44, 44),
-          textStyle: const TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: c.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Radii.button),
           borderSide: BorderSide(color: c.border),
@@ -147,27 +171,38 @@ abstract final class AppTheme {
         backgroundColor: c.surface,
         selectedColor: c.primary,
         side: BorderSide(color: c.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.chip)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.chip),
+        ),
         labelStyle: TextStyle(fontFamily: fontFamily, color: c.textPrimary),
-        secondaryLabelStyle: const TextStyle(fontFamily: fontFamily, color: Colors.white),
+        secondaryLabelStyle: const TextStyle(
+          fontFamily: fontFamily,
+          color: Colors.white,
+        ),
         showCheckmark: false,
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surface,
         showDragHandle: true,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.sheet)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Radii.sheet),
+          ),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: c.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.card)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.card),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: c.textPrimary,
         contentTextStyle: TextStyle(fontFamily: fontFamily, color: c.surface),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.chip)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.chip),
+        ),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
@@ -181,7 +216,9 @@ abstract final class AppTheme {
       listTileTheme: ListTileThemeData(
         iconColor: c.textSecondary,
         minTileHeight: 56,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.card)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.card),
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: c.surface,
@@ -191,13 +228,19 @@ abstract final class AppTheme {
           (s) => TextStyle(
             fontFamily: fontFamily,
             fontSize: 12,
-            fontWeight: s.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
-            color: s.contains(WidgetState.selected) ? c.primary : c.textSecondary,
+            fontWeight: s.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            color: s.contains(WidgetState.selected)
+                ? c.primary
+                : c.textSecondary,
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (s) => IconThemeData(
-            color: s.contains(WidgetState.selected) ? c.primary : c.textSecondary,
+            color: s.contains(WidgetState.selected)
+                ? c.primary
+                : c.textSecondary,
           ),
         ),
       ),
