@@ -110,12 +110,15 @@ class AccountsScreen extends ConsumerWidget {
                                     color: c.textSecondary,
                                   ),
                                 ),
+                              // الرصيد تحت الاسم حتى يبقى مكان لزر «رفع الأرشفة».
+                              AmountText(
+                                a.balance,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                        AmountText(
-                          a.balance,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(width: 8),
                         TextButton(

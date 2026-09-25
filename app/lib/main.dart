@@ -12,13 +12,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'data/database/connection.dart';
 import 'services/providers.dart';
 import 'ui/app.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // بيانات تنسيق التواريخ للعربية والإنجليزية (للواجهة وملفات PDF).
+  await initializeDateFormatting();
 
   // قاعدة البيانات تُفتح مرة واحدة طوال عمر التطبيق (في Isolate خلفي).
   final database = openAppDatabase();

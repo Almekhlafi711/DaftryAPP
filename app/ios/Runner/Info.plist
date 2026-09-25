@@ -7,7 +7,32 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Daftry</string>
+	<string>دفتري</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>en</string>
+	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>لفتح دفتري بأمان باستخدام Face ID.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>لتصوير إيصال وإرفاقه بالمعاملة.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>لاختيار صورة إيصال وإرفاقها بالمعاملة.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>لإضافة شخص إلى دفتر الديون من جهات الاتصال.</string>
+	<key>NSUbiquitousContainers</key>
+	<dict>
+		<key>iCloud.com.daftry.daftry</key>
+		<dict>
+			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+			<false/>
+			<key>NSUbiquitousContainerName</key>
+			<string>Daftari</string>
+			<key>NSUbiquitousContainerSupportedFolderLevels</key>
+			<string>Any</string>
+		</dict>
+	</dict>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

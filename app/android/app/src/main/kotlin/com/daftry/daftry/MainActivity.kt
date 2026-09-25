@@ -1,5 +1,6 @@
 package com.daftry.daftry
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity مطلوبة لعمل البصمة/الوجه (local_auth / BiometricPrompt).
+class MainActivity : FlutterFragmentActivity()
