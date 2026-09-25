@@ -20,7 +20,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
-import '../../widgets/labels.dart';
 import 'restore_flow.dart';
 
 final _backupLogsProvider = StreamProvider(
@@ -122,7 +121,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final c = context.colors;
     final prefs = ref.watch(preferencesProvider).value;
     if (prefs == null) return const Scaffold();
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final enabled = prefs.backupEnabled;
     final logs = ref.watch(_backupLogsProvider).value ?? const [];
 
@@ -136,7 +135,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             if (_busy) const LinearProgressIndicator(),
             // مفتاح التفعيل الرئيسي
             AppCard(
-              color: enabled ? c.primary : null,
+              color: enabled ? c.brand : null,
               child: Row(
                 children: [
                   Icon(

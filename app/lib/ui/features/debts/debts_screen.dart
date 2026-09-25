@@ -102,7 +102,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'new-debt',
-        backgroundColor: c.primary,
+        backgroundColor: c.brand,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: Text(l10n.newDebt),

@@ -125,7 +125,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final c = context.colors;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final report = ref.watch(_reportProvider((_range, _months)));
 
     return Scaffold(
@@ -359,7 +359,7 @@ class _MonthsBarChart extends ConsumerWidget {
     final c = context.colors;
     final l10n = context.l10n;
     final money = ref.watch(moneyFormatterProvider);
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     // في العربية يسير الزمن من اليمين لليسار: الأحدث على اليسار.
     final data = rtl ? months.reversed.toList() : months;
@@ -399,13 +399,19 @@ class _MonthsBarChart extends ConsumerWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 44,
-                getTitlesWidget: (value, meta) => SideTitleWidget(
-                  meta: meta,
-                  child: Text(
-                    _compact(value),
-                    style: TextStyle(fontSize: 10, color: c.textSecondary),
-                  ),
-                ),
+                getTitlesWidget: (value, meta) {
+                  // لا نكرر تسمية الحد الأعلى إن لم تكن على خطوة الشبكة.
+                  if (value == meta.max && value % meta.appliedInterval != 0) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    meta: meta,
+                    child: Text(
+                      _compact(value),
+                      style: TextStyle(fontSize: 10, color: c.textSecondary),
+                    ),
+                  );
+                },
               ),
             ),
             bottomTitles: AxisTitles(

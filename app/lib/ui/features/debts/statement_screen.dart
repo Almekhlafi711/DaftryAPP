@@ -22,7 +22,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
-import '../../widgets/labels.dart';
 
 enum _Period { last30, month, last3Months, custom }
 
@@ -300,7 +299,7 @@ class _StatementPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final c = context.colors;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final closing = data.closingBalance;
 
     return AppCard(

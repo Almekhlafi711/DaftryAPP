@@ -131,34 +131,30 @@ class BigAmountDisplay extends ConsumerWidget {
     final money = ref.watch(moneyFormatterProvider);
     final c = context.colors;
     final shown = text.isEmpty ? '0' : text;
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              money.useArabicDigits
-                  ? MoneyFormatter.toArabicDigits(shown)
-                  : shown,
-              style: TextStyle(
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                color: text.isEmpty
-                    ? c.textSecondary
-                    : (color ?? c.textPrimary),
-              ),
+    // الرمز يتبع اتجاه الواجهة: يسار الرقم في العربية ويمينه في الإنجليزية.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            money.useArabicDigits
+                ? MoneyFormatter.toArabicDigits(shown)
+                : shown,
+            style: TextStyle(
+              fontSize: 44,
+              fontWeight: FontWeight.w700,
+              color: text.isEmpty ? c.textSecondary : (color ?? c.textPrimary),
             ),
-            const SizedBox(width: 8),
-            Text(
-              money.symbol,
-              style: TextStyle(fontSize: 18, color: c.textSecondary),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            money.symbol,
+            style: TextStyle(fontSize: 18, color: c.textSecondary),
+          ),
+        ],
       ),
     );
   }

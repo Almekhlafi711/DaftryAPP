@@ -18,7 +18,6 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
-import '../../widgets/labels.dart';
 
 Color levelColor(BudgetLevel level, AppColors c) => switch (level) {
   BudgetLevel.safe => c.income,
@@ -34,7 +33,7 @@ class BudgetScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final c = context.colors;
     final overview = ref.watch(budgetOverviewProvider);
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
 
     return Scaffold(
       appBar: AppBar(

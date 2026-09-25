@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/money/money.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -57,16 +58,22 @@ extension TxTypeVisuals on TxType {
 }
 
 /// تنسيق التواريخ حسب لغة الواجهة.
+/// أرقام التواريخ تتبع إعداد «الأرقام الهندية» لتطابق أرقام المبالغ
+/// (مكتبة intl تكتب التواريخ العربية بالأرقام الهندية افتراضياً).
 class DateLabels {
-  DateLabels(this.locale);
+  DateLabels(this.locale, {this.latinDigits = true});
 
   final String locale;
+  final bool latinDigits;
 
-  String day(DateTime d) => DateFormat.MMMd(locale).format(d);
-  String full(DateTime d) => DateFormat.yMMMd(locale).format(d);
-  String month(DateTime d) => DateFormat.yMMMM(locale).format(d);
-  String monthShort(DateTime d) => DateFormat.MMM(locale).format(d);
-  String dateTime(DateTime d) => DateFormat.yMMMd(locale).add_jm().format(d);
+  String _digits(String s) => latinDigits ? MoneyParser.normalizeDigits(s) : s;
+
+  String day(DateTime d) => _digits(DateFormat.MMMd(locale).format(d));
+  String full(DateTime d) => _digits(DateFormat.yMMMd(locale).format(d));
+  String month(DateTime d) => _digits(DateFormat.yMMMM(locale).format(d));
+  String monthShort(DateTime d) => _digits(DateFormat.MMM(locale).format(d));
+  String dateTime(DateTime d) =>
+      _digits(DateFormat.yMMMd(locale).add_jm().format(d));
 
   /// «اليوم» / «أمس» / التاريخ — لعناوين مجموعات سجل المعاملات.
   String relativeDay(DateTime d, AppLocalizations l10n) {

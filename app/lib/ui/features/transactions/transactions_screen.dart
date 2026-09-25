@@ -60,7 +60,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final filter = ref.watch(transactionFilterProvider);
     final items = ref.watch(filteredTransactionsProvider);
     final totals = ref.watch(filteredTotalsProvider).value;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.transactionsTitle)),
@@ -90,7 +90,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   backgroundColor: c.warning,
                   child: IconButton.filled(
                     style: IconButton.styleFrom(
-                      backgroundColor: c.primary,
+                      backgroundColor: c.brand,
                       minimumSize: const Size(50, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(Radii.button),

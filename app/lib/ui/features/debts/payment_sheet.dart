@@ -18,7 +18,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/inputs.dart';
-import '../../widgets/labels.dart';
 
 Future<void> showPaymentSheet(
   BuildContext context, {
@@ -116,7 +115,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final l10n = context.l10n;
     final c = context.colors;
     final money = ref.watch(moneyFormatterProvider);
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final owedToMe = _debt.direction == DebtDirection.owedToMe;
 
     return Padding(

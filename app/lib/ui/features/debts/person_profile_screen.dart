@@ -88,8 +88,9 @@ class PersonProfileScreen extends ConsumerWidget {
                   Expanded(
                     flex: 3,
                     child: FilledButton.icon(
+                      style: _compact,
                       icon: const Icon(Icons.add_rounded),
-                      label: Text(l10n.recordPayment),
+                      label: _OneLine(l10n.recordPayment),
                       onPressed: p.openDebts.isEmpty
                           ? null
                           : () => showPaymentSheet(context, profile: p),
@@ -99,17 +100,19 @@ class PersonProfileScreen extends ConsumerWidget {
                   Expanded(
                     flex: 2,
                     child: OutlinedButton(
+                      style: _compact,
                       onPressed: () =>
                           context.push(AppRoutes.newDebt(contactId: contactId)),
-                      child: Text(l10n.newDebt),
+                      child: _OneLine(l10n.newDebt),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     flex: 2,
                     child: OutlinedButton.icon(
+                      style: _compact,
                       icon: const Icon(Icons.description_outlined, size: 18),
-                      label: Text(l10n.statement),
+                      label: _OneLine(l10n.statement),
                       onPressed: () =>
                           context.push(AppRoutes.personStatement(contactId)),
                     ),
@@ -141,6 +144,22 @@ class PersonProfileScreen extends ConsumerWidget {
   }
 }
 
+/// أزرار الإجراءات الثلاثة بحشوة أصغر حتى تتسع نصوصها في سطر واحد.
+final _compact = ButtonStyle(
+  padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 10)),
+);
+
+/// نص زر بسطر واحد يتقلص عند ضيق المساحة بدل الانقسام على سطرين.
+class _OneLine extends StatelessWidget {
+  const _OneLine(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) =>
+      FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1));
+}
+
 class _SummaryCard extends ConsumerWidget {
   const _SummaryCard({required this.profile});
 
@@ -151,7 +170,7 @@ class _SummaryCard extends ConsumerWidget {
     final l10n = context.l10n;
     final c = context.colors;
     final money = ref.watch(moneyFormatterProvider);
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final net = profile.net;
     final color = net >= 0 ? c.income : c.expense;
     final status = profile.status;
@@ -239,7 +258,7 @@ class _TimelineRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final c = context.colors;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final isPayment = entry.kind == TimelineKind.payment;
     // الدفعات بالأخضر والديون بالأحمر الداكن (لون وحدة الديون).
     final dotColor = isPayment ? c.income : const Color(0xFFBE123C);

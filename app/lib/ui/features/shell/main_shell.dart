@@ -81,7 +81,7 @@ class MainShell extends StatelessWidget {
                     child: Tooltip(
                       message: l10n.addTransaction,
                       child: Material(
-                        color: c.primary,
+                        color: c.brand,
                         elevation: 4,
                         shadowColor: c.primary.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(

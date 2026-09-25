@@ -26,6 +26,19 @@
 
 ---
 
+## لقطات من التطبيق
+
+| الرئيسية | إضافة معاملة | سجل المعاملات | الملف المالي |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/home_ar.png" width="200"> | <img src="docs/screenshots/add_tx_ar.png" width="200"> | <img src="docs/screenshots/transactions_ar.png" width="200"> | <img src="docs/screenshots/person_ar.png" width="200"> |
+| **كشف الحساب** | **التقارير** | **الوضع الداكن** | **English (LTR)** |
+| <img src="docs/screenshots/statement_ar.png" width="200"> | <img src="docs/screenshots/reports_ar.png" width="200"> | <img src="docs/screenshots/home_ar_dark.png" width="200"> | <img src="docs/screenshots/home_en.png" width="200"> |
+
+المزيد في [docs/screenshots](docs/screenshots). تُولَّد اللقطات من الكود نفسه بالخطوط الحقيقية:
+`flutter test test/screenshots --update-goldens --run-skipped` (من داخل `app/`).
+
+---
+
 ## التقنيات
 
 | المجال | الأداة | السبب |

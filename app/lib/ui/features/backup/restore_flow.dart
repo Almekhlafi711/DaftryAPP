@@ -11,10 +11,10 @@ import '../../../domain/enums.dart';
 import '../../../services/backup/cloud_provider.dart';
 import '../../../services/providers.dart';
 import '../../../services/settings_service.dart';
+import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
-import '../../widgets/labels.dart';
 
 /// نافذة إدخال كلمة مرور التشفير. [confirm] لطلب إعادة إدخالها (عند الإنشاء).
 Future<String?> askBackupPassword(
@@ -165,7 +165,7 @@ Future<void> restoreFromCloud(
       showMessage(context, l10n.noCloudBackups, error: true);
       return;
     }
-    final dates = DateLabels(Localizations.localeOf(context).languageCode);
+    final dates = ref.read(dateLabelsProvider);
     final picked = await showModalBottomSheet<CloudBackupFile>(
       context: context,
       builder: (ctx) => SafeArea(

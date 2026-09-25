@@ -162,7 +162,7 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final c = context.colors;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final owedToMe = _direction == DebtDirection.owedToMe;
     // لا يتغير الاتجاه بعد وجود دفعات.
     final directionLocked = (_original?.paidAmount ?? 0) > 0;

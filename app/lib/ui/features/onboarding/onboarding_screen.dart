@@ -98,7 +98,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: c.primary,
+                        color: c.brand,
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: const Icon(

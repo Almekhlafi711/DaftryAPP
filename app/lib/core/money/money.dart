@@ -134,10 +134,12 @@ class MoneyFormatter {
     return withSymbol ? '$text $symbol' : text;
   }
 
-  /// نسخة معزولة الاتجاه (LTR) لاستخدامها داخل جملة عربية دون أن تنقلب
-  /// إشارة السالب أو ترتيب الأرقام.
-  String inline(int minor, {bool withSymbol = true, bool showSign = false}) =>
-      '\u2066${format(minor, withSymbol: withSymbol, showSign: showSign)}\u2069';
+  /// مبلغ لاستخدامه داخل جملة: الرقم معزول باتجاه LTR حتى لا تنقلب إشارة
+  /// السالب، والرمز يتبع اتجاه الجملة (بعد الرقم في القراءة العربية).
+  String inline(int minor, {bool withSymbol = true, bool showSign = false}) {
+    final number = '\u2066${format(minor, showSign: showSign)}\u2069';
+    return withSymbol ? '$number $symbol' : number;
+  }
 
   /// تحويل الأرقام اللاتينية إلى الأرقام الهندية المستخدمة في المشرق.
   static String toArabicDigits(String input) {

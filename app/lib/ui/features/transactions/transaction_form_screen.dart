@@ -281,7 +281,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final c = context.colors;
     final active = ref.watch(activeAccountsProvider).value ?? const <Account>[];
     final all = ref.watch(allAccountsProvider).value ?? const <Account>[];
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
     final decimals = ref.watch(baseCurrencyProvider).value?.decimals ?? 2;
 
     Account? byId(int? id) => all.where((a) => a.id == id).firstOrNull;

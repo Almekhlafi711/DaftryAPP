@@ -46,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                Container(height: 190, color: c.primary),
+                Container(height: 190, color: c.brand),
                 SafeArea(
                   bottom: false,
                   child: Padding(

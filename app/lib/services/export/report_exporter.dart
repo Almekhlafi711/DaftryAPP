@@ -79,6 +79,12 @@ class ReportExporter {
   final String locale;
   final bool rtl;
 
+  /// أرقام التواريخ تتبع إعداد الأرقام (intl يكتب العربية بالأرقام الهندية افتراضياً).
+  String _date(DateFormat format, DateTime d) {
+    final text = format.format(d);
+    return money.useArabicDigits ? text : MoneyParser.normalizeDigits(text);
+  }
+
   static const _primary = PdfColor.fromInt(0xFF0F766E);
   static const _green = PdfColor.fromInt(0xFF15803D);
   static const _red = PdfColor.fromInt(0xFFDC2626);
@@ -86,8 +92,8 @@ class ReportExporter {
 
   String _range(PeriodReport r) {
     final f = DateFormat.yMMMd(locale);
-    return '${f.format(r.range.start)} — '
-        '${f.format(r.range.end.subtract(const Duration(days: 1)))}';
+    return '${_date(f, r.range.start)} — '
+        '${_date(f, r.range.end.subtract(const Duration(days: 1)))}';
   }
 
   // ---------------------------------------------------------------------------
@@ -205,7 +211,7 @@ class ReportExporter {
               for (final m in report.months)
                 [
                   pw.Text(
-                    monthFmt.format(m.month),
+                    _date(monthFmt, m.month),
                     style: const pw.TextStyle(fontSize: 10),
                   ),
                   amount(m.income),
@@ -283,7 +289,7 @@ class ReportExporter {
     final monthFmt = DateFormat('yyyy-MM');
     for (final m in report.months) {
       summary.appendRow([
-        t(monthFmt.format(m.month)),
+        t(_date(monthFmt, m.month)),
         DoubleCellValue(v(m.income)),
         DoubleCellValue(v(m.expense)),
         DoubleCellValue(v(m.net)),
@@ -314,7 +320,7 @@ class ReportExporter {
     final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
     for (final tx in transactions) {
       details.appendRow([
-        t(dateFmt.format(tx.tx.date)),
+        t(_date(dateFmt, tx.tx.date)),
         t(labels.typeName(tx.type)),
         t(tx.category?.name ?? tx.contactName ?? tx.toAccountName ?? ''),
         t(tx.accountName),

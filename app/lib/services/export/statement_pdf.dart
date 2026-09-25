@@ -76,6 +76,12 @@ class StatementPdf {
   final String locale;
   final bool rtl;
 
+  /// أرقام التواريخ تتبع إعداد الأرقام (intl يكتب العربية بالأرقام الهندية افتراضياً).
+  String _date(DateFormat format, DateTime d) {
+    final text = format.format(d);
+    return money.useArabicDigits ? text : MoneyParser.normalizeDigits(text);
+  }
+
   static const _primary = PdfColor.fromInt(0xFF0F766E);
   static const _green = PdfColor.fromInt(0xFF15803D);
   static const _red = PdfColor.fromInt(0xFFDC2626);
@@ -87,8 +93,8 @@ class StatementPdf {
     final dir = rtl ? pw.TextDirection.rtl : pw.TextDirection.ltr;
     final dateFmt = DateFormat.yMMMd(locale);
     final range =
-        '${dateFmt.format(data.range.start)} — '
-        '${dateFmt.format(data.range.end.subtract(const Duration(days: 1)))}';
+        '${_date(dateFmt, data.range.start)} — '
+        '${_date(dateFmt, data.range.end.subtract(const Duration(days: 1)))}';
 
     doc.addPage(
       pw.MultiPage(
@@ -105,7 +111,7 @@ class StatementPdf {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              '${labels.generatedAt}: ${DateFormat.yMMMd(locale).add_Hm().format(DateTime.now())}',
+              '${labels.generatedAt}: ${_date(DateFormat.yMMMd(locale).add_Hm(), DateTime.now())}',
               style: const pw.TextStyle(fontSize: 8, color: _muted),
             ),
             pw.Text(
@@ -229,7 +235,7 @@ class StatementPdf {
             children: [
               cell(
                 pw.Text(
-                  dateFmt.format(line.date),
+                  _date(dateFmt, line.date),
                   style: const pw.TextStyle(fontSize: 9),
                 ),
               ),

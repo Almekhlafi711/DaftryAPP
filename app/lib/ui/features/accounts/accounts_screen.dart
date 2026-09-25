@@ -37,7 +37,7 @@ class AccountsScreen extends ConsumerWidget {
     final archived =
         ref.watch(_archivedAccountsProvider).value ?? const <Account>[];
     final total = ref.watch(totalBalanceProvider).value ?? 0;
-    final dates = DateLabels(ref.watch(localeProvider).languageCode);
+    final dates = ref.watch(dateLabelsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -55,7 +55,7 @@ class AccountsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(Insets.screen),
         children: [
           AppCard(
-            color: c.primary,
+            color: c.brand,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

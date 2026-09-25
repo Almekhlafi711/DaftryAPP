@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.primary,
+    required this.brand,
     required this.income,
     required this.expense,
     required this.warning,
@@ -27,7 +28,12 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.textSecondary,
   });
 
+  /// اللون الأساسي للنصوص والأيقونات والعناصر النشطة.
   final Color primary;
+
+  /// اللون الأساسي للأسطح الممتلئة التي يُكتب عليها بالأبيض (الترويسة، زر
+  /// الإضافة...). يبقى داكناً في الوضعين ليحقق تباين WCAG AA مع النص الأبيض.
+  final Color brand;
   final Color income;
   final Color expense;
   final Color warning;
@@ -45,6 +51,7 @@ class AppColors extends ThemeExtension<AppColors> {
   /// الوضع الفاتح — مطابق تماماً لجدول الألوان في الوثيقة.
   static const light = AppColors(
     primary: Color(0xFF0F766E),
+    brand: Color(0xFF0F766E),
     income: Color(0xFF15803D),
     expense: Color(0xFFDC2626),
     warning: Color(0xFFD97706),
@@ -61,6 +68,7 @@ class AppColors extends ThemeExtension<AppColors> {
   /// الوضع الداكن — نفس الهوية بدرجات أفتح قليلاً لتباين WCAG AA.
   static const dark = AppColors(
     primary: Color(0xFF2DD4BF),
+    brand: Color(0xFF115E59),
     income: Color(0xFF4ADE80),
     expense: Color(0xFFF87171),
     warning: Color(0xFFFBBF24),
@@ -86,6 +94,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color l(Color a, Color b) => Color.lerp(a, b, t)!;
     return AppColors(
       primary: l(primary, other.primary),
+      brand: l(brand, other.brand),
       income: l(income, other.income),
       expense: l(expense, other.expense),
       warning: l(warning, other.warning),

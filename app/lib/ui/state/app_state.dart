@@ -13,6 +13,7 @@ import '../../core/money/money.dart';
 import '../../data/database/app_database.dart';
 import '../../services/providers.dart';
 import '../../services/settings_service.dart';
+import '../widgets/labels.dart';
 
 /// كل الإعدادات (تدفق من جدول settings).
 final preferencesProvider = StreamProvider<AppPreferences>(
@@ -86,4 +87,12 @@ final activeAccountsProvider = StreamProvider<List<Account>>(
 /// كل الحسابات (بما فيها المؤرشفة) — للفلترة والعرض التاريخي.
 final allAccountsProvider = StreamProvider<List<Account>>(
   (ref) => ref.watch(accountServiceProvider).watchAll(),
+);
+
+/// تنسيق التواريخ حسب اللغة وإعداد الأرقام.
+final dateLabelsProvider = Provider<DateLabels>(
+  (ref) => DateLabels(
+    ref.watch(localeProvider).languageCode,
+    latinDigits: !(ref.watch(preferencesProvider).value?.arabicDigits ?? false),
+  ),
 );

@@ -110,27 +110,26 @@ class AmountText extends ConsumerWidget {
       color: color,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(text: text),
-            if (withSymbol && !hidden)
-              TextSpan(
-                text: ' ${money.symbol}',
-                style: base.copyWith(
-                  fontSize: (base.fontSize ?? 14) * 0.55,
-                  fontWeight: FontWeight.w600,
-                  color: color ?? context.colors.textSecondary,
-                ),
+    // نعزل الرقم وحده باتجاه LTR (حتى لا تنقلب إشارة السالب)، ويبقى الرمز
+    // تابعاً لاتجاه الواجهة: «24,850.00 ر.س» في العربية و «24,850.00 SAR».
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: '\u2066$text\u2069'),
+          if (withSymbol && !hidden)
+            TextSpan(
+              text: ' ${money.symbol}',
+              style: base.copyWith(
+                fontSize: (base.fontSize ?? 14) * 0.55,
+                fontWeight: FontWeight.w600,
+                color: color ?? context.colors.textSecondary,
               ),
-          ],
-        ),
-        style: base,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+            ),
+        ],
       ),
+      style: base,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
