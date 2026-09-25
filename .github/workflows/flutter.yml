@@ -1,0 +1,40 @@
+# فحص تلقائي لكل دفع وطلب دمج: التنسيق، التحليل، ملفات التوليد، الاختبارات.
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Generated code is up to date
+        run: |
+          dart run build_runner build
+          flutter gen-l10n
+          git diff --exit-code -- lib
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --coverage

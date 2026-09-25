@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../services/providers.dart';
+import '../../../services/security_service.dart';
 import '../../../services/settings_service.dart';
 import '../../router/routes.dart';
 import '../../state/app_state.dart';
@@ -271,7 +272,10 @@ class SettingsScreen extends ConsumerWidget {
       confirmLabel: l10n.deleteAllData,
     );
     if (!second) return;
-    await ref.read(securityServiceProvider).clearPin();
+    // نمسح أسرار الجهاز أيضاً (رمز PIN وكلمة مرور النسخ الاحتياطي).
+    final security = ref.read(securityServiceProvider);
+    await security.clearPin();
+    await security.store.delete(SecurityService.backupPasswordKey);
     await ref.read(settingsServiceProvider).wipeAllData();
     // المُوجّه ينقل المستخدم تلقائياً إلى شاشة الإعداد الأول.
   }
