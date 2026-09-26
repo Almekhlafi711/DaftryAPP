@@ -82,6 +82,7 @@ flutter build apk --release
 | الرسالة | الحل |
 |---|---|
 | `The current Dart SDK version is ... requires ^3.13.4` | حدّث Flutter: `flutter upgrade` |
+| `flutter upgrade` على Windows: `Rename-Item ... being used by another process` | أغلق Android Studio و VS Code تماماً، وأنهِ `dart.exe` من مدير المهام، ثم نفّذ `flutter upgrade` من PowerShell خارجي. إن تكرر: احذف مجلد `flutter\bin\cache` ثم `flutter --version` |
 | خطأ في إصدار Gradle / Android Gradle Plugin | حدّث Android Studio لأحدث إصدار مستقر |
 | `NDK not configured` أو `No version of NDK matched` | SDK Manager ← SDK Tools ← فعّل **NDK (Side by side)** |
 | فشل تنزيل `sqlite3` أثناء البناء | أول بناء يحتاج إنترنت للوصول إلى github.com |
