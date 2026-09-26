@@ -129,7 +129,9 @@ HomeScreen / TransactionsScreen / AccountsScreen تتحدث تلقائياً (ب
 | `test/ui/app_flow_test.dart` | تدفق كامل: الإعداد الأول ← إضافة مصروف ← تحديث الرئيسية |
 | `test/ui/debt_flow_test.dart` | دين جديد ← سداد كامل من الملف المالي |
 | `test/ui/all_screens_render_test.dart` | عرض الشاشات الـ19 بالعربية والإنجليزية دون أي خطأ أو تجاوز للعرض |
-| `test/ui/interactions_test.dart` | الأرشفة، نافذة الفلترة، إنشاء PIN وتفعيل القفل |
+| `test/ui/interactions_test.dart` | الأرشفة، نافذة الفلترة، إنشاء PIN وتفعيل القفل، عرض الإيصال |
+| `test/services/demo_data_test.dart` | البيانات التجريبية متسقة (إعادة الاحتساب لا تجد فرقاً) |
+| `integration_test/` (على الجهاز) | التدفقات السابقة على Android/iOS + قاعدة حقيقية بـ WAL + Keystore + نسخ مشفّر لملف وحذف واستعادة + أداء كشف 100 حركة |
 
 الاختبارات تعمل على قاعدة SQLite حقيقية في الذاكرة (`NativeDatabase.memory()`)، فتختبر الـ SQL والمشغّلات والقيود فعلياً.
 

@@ -96,6 +96,7 @@ S = [
 ('attachReceipt', 'إرفاق إيصال', 'Attach receipt'),
 ('receiptAttached', 'تم إرفاق الإيصال', 'Receipt attached'),
 ('removeReceipt', 'إزالة الإيصال', 'Remove receipt'),
+('viewReceipt', 'عرض الإيصال', 'View receipt'),
 ('receiptCamera', 'الكاميرا', 'Camera'),
 ('receiptGallery', 'المعرض', 'Gallery'),
 ('chooseCategory', 'اختر فئة', 'Choose a category'),
@@ -300,6 +301,10 @@ S = [
 ('deleteAllDataBody', 'سيُحذف كل شيء نهائياً وتعود للإعداد الأول. هذه هي الطريقة الوحيدة لتغيير العملة.', 'Everything will be permanently deleted and you will return to setup. This is the only way to change the currency.'),
 ('sectionManage', 'الإدارة', 'Manage'),
 ('version', 'الإصدار {version}', 'Version {version}'),
+('developerSection', 'للمطوّر (نسخة التطوير فقط)', 'Developer (debug build only)'),
+('loadDemoData', 'تحميل بيانات تجريبية', 'Load demo data'),
+('loadDemoDataHint', 'ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.', 'Six months of transactions, debts and budgets to try every screen. Added to your current data.'),
+('demoDataLoaded', 'تم تحميل البيانات التجريبية', 'Demo data loaded'),
 # ---- الأمان ----
 ('lockedTitle', 'دفتري مقفل', 'Daftari is locked'),
 ('enterPin', 'أدخل رمز PIN', 'Enter your PIN'),

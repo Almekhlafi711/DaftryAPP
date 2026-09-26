@@ -64,6 +64,8 @@
 DaftryAPP/
 ├── README.md                     ← هذا الملف
 ├── docs/
+│   ├── ANDROID_STUDIO.md         ← خطوة بخطوة: التشغيل على Android Studio والمحاكي
+│   ├── TESTING_GUIDE.md          ← قائمة اختبار يدوي لكل المهام والأمان ونقل البيانات
 │   ├── ARCHITECTURE.md           ← المعمارية، تدفق البيانات، قرارات الأداء، ربط المتطلبات بالكود
 │   └── CLOUD_BACKUP_SETUP.md     ← إعداد Google Drive و iCloud (مرة واحدة)
 ├── .github/workflows/flutter.yml ← فحص تلقائي: التحليل + الاختبارات
@@ -85,7 +87,8 @@ DaftryAPP/
     │   │   ├── router/           ←    خريطة التنقل
     │   │   └── features/         ←    الشاشات: مجلد لكل ميزة
     │   └── l10n/                 ← ملفات الترجمة ARB (تُولَّد من tool/strings.py)
-    ├── test/                     ← اختبارات الوحدة والواجهة (79 اختباراً)
+    ├── test/                     ← اختبارات الوحدة والواجهة (81 اختباراً)
+    ├── integration_test/         ← اختبارات على المحاكي/الجهاز (قاعدة حقيقية، Keystore، نسخ واستعادة)
     ├── assets/fonts/             ← خط IBM Plex Sans Arabic (OFL) مضمَّن
     └── tool/strings.py           ← مصدر نصوص الواجهة بالعربية والإنجليزية
 ```
@@ -95,6 +98,9 @@ DaftryAPP/
 ---
 
 ## التشغيل
+
+> **Android Studio:** افتح مجلد `app` واتبع [docs/ANDROID_STUDIO.md](docs/ANDROID_STUDIO.md)، ثم اختبر بالقائمة في [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
+> في نسخة التطوير: **المزيد ← للمطوّر ← تحميل بيانات تجريبية** لملء التطبيق ببيانات ستة أشهر.
 
 ```bash
 cd app
@@ -115,7 +121,8 @@ flutter gen-l10n
 
 ```bash
 flutter analyze
-flutter test                # 79 اختباراً: قواعد العمل + الواجهة باللغتين
+flutter test                # 81 اختباراً: قواعد العمل + الواجهة باللغتين
+flutter test integration_test   # على محاكي أو جهاز يعمل
 flutter test --coverage     # التغطية ≈ 75% (الهدف في الوثيقة ≥ 70%)
 ```
 

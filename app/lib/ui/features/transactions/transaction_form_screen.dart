@@ -134,6 +134,18 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_receiptPath != null)
+              ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: _receiptImage(size: 40),
+                ),
+                title: Text(l10n.viewReceipt),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _viewReceipt();
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
               title: Text(l10n.receiptCamera),
@@ -176,6 +188,42 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     await File(image.path).copy(dest);
     if (mounted) setState(() => _receiptPath = dest);
   }
+
+  /// صورة الإيصال، أو أيقونة بديلة إن لم يعد الملف موجوداً
+  /// (مثلاً بعد الاستعادة على جهاز آخر: النسخة تحمل البيانات دون الصور).
+  Widget _receiptImage({double? size}) => Image.file(
+    File(_receiptPath!),
+    width: size,
+    height: size,
+    fit: size == null ? BoxFit.contain : BoxFit.cover,
+    errorBuilder: (_, _, _) =>
+        Icon(Icons.broken_image_outlined, size: size ?? 64, color: Colors.grey),
+  );
+
+  /// عرض الإيصال بملء الشاشة مع إمكانية التكبير بإصبعين.
+  Future<void> _viewReceipt() => showDialog<void>(
+    context: context,
+    builder: (ctx) => Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: InteractiveViewer(
+              maxScale: 5,
+              child: Center(child: _receiptImage()),
+            ),
+          ),
+          SafeArea(
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white),
+              tooltip: MaterialLocalizations.of(ctx).closeButtonTooltip,
+              onPressed: () => Navigator.pop(ctx),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _save(List<Account> activeAccounts) async {
     final l10n = context.l10n;

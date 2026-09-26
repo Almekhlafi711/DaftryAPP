@@ -38,6 +38,12 @@ void main() {
   }
 
   testWidgets('الإعداد الأول ثم إضافة مصروف يظهر في الرئيسية', (tester) async {
+    // نثبّت الإنجليزية حتى لا يعتمد الاختبار على لغة الجهاز/المحاكي.
+    await tester.runAsync(
+      () => db
+          .into(db.settings)
+          .insert(SettingsCompanion.insert(key: 'locale', value: 'en')),
+    );
     await pumpApp(tester);
 
     // لغة جهاز الاختبار الإنجليزية ← الواجهة بالإنجليزية (LTR).

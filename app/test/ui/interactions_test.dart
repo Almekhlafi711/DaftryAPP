@@ -1,6 +1,8 @@
-// اختبارات تفاعل: الحسابات والأرشفة، نافذة الفلترة، وقفل التطبيق برمز PIN.
+// اختبارات تفاعل: الحسابات والأرشفة، نافذة الفلترة، قفل التطبيق برمز PIN،
+// وعرض الإيصال المرفق.
 import 'package:daftry/core/constants/currencies.dart';
 import 'package:daftry/data/database/app_database.dart';
+import 'package:daftry/domain/enums.dart';
 import 'package:daftry/services/providers.dart';
 import 'package:daftry/services/security_service.dart';
 import 'package:daftry/services/settings_service.dart';
@@ -170,4 +172,51 @@ void main() {
     expect(prefs!.lockEnabled, isTrue);
     expect(await tester.runAsync(() => security.verifyPin('1234')), isTrue);
   });
+
+  testWidgets(
+    'عرض الإيصال: ملف مفقود (بعد النقل لجهاز آخر) يظهر كأيقونة بديلة',
+    (tester) async {
+      final app = await startApp(tester);
+      final id = await tester.runAsync(() async {
+        final cash = await (app.db.select(
+          app.db.accounts,
+        )..limit(1)).getSingle();
+        final food =
+            await (app.db.select(app.db.categories)
+                  ..where((c) => c.kind.equals(CategoryKind.expense.name))
+                  ..limit(1))
+                .getSingle();
+        return app.db
+            .into(app.db.transactions)
+            .insert(
+              TransactionsCompanion.insert(
+                type: TxType.expense,
+                amount: 1000,
+                currencyId: 1,
+                accountId: cash.id,
+                categoryId: Value(food.id),
+                date: DateTime.now(),
+                receiptPath: const Value('/missing/receipt.jpg'),
+              ),
+            );
+      });
+      app.router.push(AppRoutes.editTransaction(id!));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.receipt_long_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove receipt'), findsOneWidget);
+      await tester.tap(find.text('View receipt'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(InteractiveViewer), findsOneWidget);
+      expect(find.byIcon(Icons.broken_image_outlined), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InteractiveViewer), findsNothing);
+    },
+  );
 }

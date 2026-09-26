@@ -7,6 +7,7 @@
 //   الأرصدة، وحذف جميع البيانات (الطريقة الوحيدة لتغيير العملة).
 // =============================================================================
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -232,6 +233,18 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ]),
+          // أداة للاختبار اليدوي — لا تظهر في نسخة الإصدار (Release).
+          if (kDebugMode) ...[
+            SectionTitle(l10n.developerSection),
+            group([
+              tile(
+                icon: Icons.science_outlined,
+                color: c.archive,
+                title: l10n.loadDemoData,
+                onTap: () => _loadDemoData(context, ref),
+              ),
+            ]),
+          ],
           const SizedBox(height: Insets.lg),
           group([
             tile(
@@ -252,6 +265,23 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _loadDemoData(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final ok = await confirmAction(
+      context,
+      title: l10n.loadDemoData,
+      message: l10n.loadDemoDataHint,
+      confirmLabel: l10n.continueLabel,
+      destructive: false,
+      icon: Icons.science_outlined,
+    );
+    if (!ok) return;
+    await ref
+        .read(demoDataServiceProvider)
+        .load(arabic: ref.read(isArabicProvider));
+    if (context.mounted) showMessage(context, l10n.demoDataLoaded);
   }
 
   /// حذف جميع البيانات بتأكيد مزدوج (عملية لا يمكن التراجع عنها).

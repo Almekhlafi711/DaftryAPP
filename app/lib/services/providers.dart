@@ -21,6 +21,7 @@ import 'budget_service.dart';
 import 'category_service.dart';
 import 'contact_service.dart';
 import 'debt_service.dart';
+import 'demo_data_service.dart';
 import 'export/file_share_service.dart';
 import 'notification_service.dart';
 import 'report_service.dart';
@@ -108,5 +109,17 @@ final backupServiceProvider = Provider(
     isOnWifi: () async => (await Connectivity().checkConnectivity()).contains(
       ConnectivityResult.wifi,
     ),
+  ),
+);
+
+/// بيانات تجريبية للاختبار اليدوي (يظهر زرها في نسخة التطوير فقط).
+final demoDataServiceProvider = Provider(
+  (ref) => DemoDataService(
+    db: ref.watch(databaseProvider),
+    accounts: ref.watch(accountServiceProvider),
+    transactions: ref.watch(transactionServiceProvider),
+    budgets: ref.watch(budgetServiceProvider),
+    contacts: ref.watch(contactServiceProvider),
+    debts: ref.watch(debtServiceProvider),
   ),
 );

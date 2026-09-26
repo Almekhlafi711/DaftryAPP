@@ -277,6 +277,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get removeReceipt => 'إزالة الإيصال';
 
   @override
+  String get viewReceipt => 'عرض الإيصال';
+
+  @override
   String get receiptCamera => 'الكاميرا';
 
   @override
@@ -960,6 +963,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String version(String version) {
     return 'الإصدار $version';
   }
+
+  @override
+  String get developerSection => 'للمطوّر (نسخة التطوير فقط)';
+
+  @override
+  String get loadDemoData => 'تحميل بيانات تجريبية';
+
+  @override
+  String get loadDemoDataHint =>
+      'ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.';
+
+  @override
+  String get demoDataLoaded => 'تم تحميل البيانات التجريبية';
 
   @override
   String get lockedTitle => 'دفتري مقفل';

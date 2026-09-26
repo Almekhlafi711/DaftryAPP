@@ -51,5 +51,8 @@ flutter {
 }
 
 dependencies {
+    // مطلوب لجدولة الإشعارات (flutter_local_notifications).
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // ثيمات AppCompat المستخدمة في styles.xml (مطلوبة لنافذة البصمة).
+    implementation("androidx.appcompat:appcompat:1.7.1")
 }

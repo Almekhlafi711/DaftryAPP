@@ -596,6 +596,12 @@ abstract class AppLocalizations {
   /// **'إزالة الإيصال'**
   String get removeReceipt;
 
+  /// No description provided for @viewReceipt.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الإيصال'**
+  String get viewReceipt;
+
   /// No description provided for @receiptCamera.
   ///
   /// In ar, this message translates to:
@@ -1781,6 +1787,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الإصدار {version}'**
   String version(String version);
+
+  /// No description provided for @developerSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'للمطوّر (نسخة التطوير فقط)'**
+  String get developerSection;
+
+  /// No description provided for @loadDemoData.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحميل بيانات تجريبية'**
+  String get loadDemoData;
+
+  /// No description provided for @loadDemoDataHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.'**
+  String get loadDemoDataHint;
+
+  /// No description provided for @demoDataLoaded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحميل البيانات التجريبية'**
+  String get demoDataLoaded;
 
   /// No description provided for @lockedTitle.
   ///

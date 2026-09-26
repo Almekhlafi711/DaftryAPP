@@ -103,6 +103,7 @@
   "attachReceipt": "إرفاق إيصال",
   "receiptAttached": "تم إرفاق الإيصال",
   "removeReceipt": "إزالة الإيصال",
+  "viewReceipt": "عرض الإيصال",
   "receiptCamera": "الكاميرا",
   "receiptGallery": "المعرض",
   "chooseCategory": "اختر فئة",
@@ -536,6 +537,10 @@
       }
     }
   },
+  "developerSection": "للمطوّر (نسخة التطوير فقط)",
+  "loadDemoData": "تحميل بيانات تجريبية",
+  "loadDemoDataHint": "ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.",
+  "demoDataLoaded": "تم تحميل البيانات التجريبية",
   "lockedTitle": "دفتري مقفل",
   "enterPin": "أدخل رمز PIN",
   "wrongPin": "رمز غير صحيح",

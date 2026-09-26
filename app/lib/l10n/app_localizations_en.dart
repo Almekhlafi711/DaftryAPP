@@ -274,6 +274,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeReceipt => 'Remove receipt';
 
   @override
+  String get viewReceipt => 'View receipt';
+
+  @override
   String get receiptCamera => 'Camera';
 
   @override
@@ -954,6 +957,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String version(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get developerSection => 'Developer (debug build only)';
+
+  @override
+  String get loadDemoData => 'Load demo data';
+
+  @override
+  String get loadDemoDataHint =>
+      'Six months of transactions, debts and budgets to try every screen. Added to your current data.';
+
+  @override
+  String get demoDataLoaded => 'Demo data loaded';
 
   @override
   String get lockedTitle => 'Daftari is locked';
