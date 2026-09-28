@@ -5,7 +5,7 @@
 | الأداة | الإصدار | ملاحظات |
 |---|---|---|
 | **Flutter SDK** | 3.47.5 أو أحدث (stable) | من https://docs.flutter.dev/get-started/install — أضفه إلى PATH ثم نفّذ `flutter doctor` |
-| **Android Studio** | أحدث إصدار مستقر | المشروع يستخدم Android Gradle Plugin 9.1 و Gradle 9.3 |
+| **Android Studio** | 2025.2.1 أو أحدث | المشروع يستخدم Android Gradle Plugin 8.13 و Gradle 8.14.3 و Kotlin 2.3.20 |
 | **إضافة Flutter** في Android Studio | الأحدث | Settings ← Plugins ← Marketplace ← Flutter (تُثبّت Dart معها) |
 | **Android SDK** | Platform 36 + Build-Tools | Settings ← Languages & Frameworks ← Android SDK |
 | **الإنترنت** | لأول بناء فقط | لتنزيل مكتبات Gradle ومكتبة SQLite |
@@ -85,6 +85,7 @@ flutter build apk --release
 | `The current Dart SDK version is ... requires ^3.13.4` | حدّث Flutter: `flutter upgrade` |
 | `flutter upgrade` على Windows: `Rename-Item ... being used by another process` | أغلق Android Studio و VS Code تماماً، وأنهِ `dart.exe` من مدير المهام، ثم نفّذ `flutter upgrade` من PowerShell خارجي. إن تكرر: احذف مجلد `flutter\bin\cache` ثم `flutter --version` |
 | خطأ في إصدار Gradle / Android Gradle Plugin | حدّث Android Studio لأحدث إصدار مستقر |
+| `cannot be cast to class com.android.build.gradle.AbstractAppExtension` أو «Starting AGP 9+, only the new DSL interface will be read» | المشروع أصبح على AGP 8 فلا يظهر هذا الخطأ. إن ظهر في مشروع آخر: افتح `C:\Users\<اسمك>\.gradle\gradle.properties` واحذف السطر `android.newDsl=true` إن وُجد |
 | `NDK not configured` أو `No version of NDK matched` أو `CMake ... was not found` | Settings ← Languages & Frameworks ← Android SDK ← **SDK Tools** ← فعّل **NDK (Side by side)** و **CMake** ← Apply |
 | `Failed to install the following SDK components` أو `licences have not been accepted` | في الطرفية: `flutter doctor --android-licenses` واقبل الكل ثم أعد التشغيل |
 | فشل تنزيل `sqlite3` أثناء البناء | أول بناء يحتاج إنترنت للوصول إلى github.com |
