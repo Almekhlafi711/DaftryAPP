@@ -5,13 +5,15 @@
 // - عام: الحساب الافتراضي، الفئات، اللغة والمظهر.
 // - الأمان والبيانات: القفل، النسخ السحابي، التصدير المحلي، إعادة احتساب
 //   الأرصدة، وحذف جميع البيانات (الطريقة الوحيدة لتغيير العملة).
+// - التواصل مع فريق الدعم: شعارات واتساب والاتصال وإنستغرام.
 // =============================================================================
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/support.dart';
 import '../../../services/providers.dart';
 import '../../../services/security_service.dart';
 import '../../../services/settings_service.dart';
@@ -22,6 +24,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/inputs.dart';
+import '../security/app_lock_gate.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -233,18 +236,8 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ]),
-          // أداة للاختبار اليدوي — لا تظهر في نسخة الإصدار (Release).
-          if (kDebugMode) ...[
-            SectionTitle(l10n.developerSection),
-            group([
-              tile(
-                icon: Icons.science_outlined,
-                color: c.archive,
-                title: l10n.loadDemoData,
-                onTap: () => _loadDemoData(context, ref),
-              ),
-            ]),
-          ],
+          SectionTitle(l10n.contactSupport),
+          const _SupportLinks(),
           const SizedBox(height: Insets.lg),
           group([
             tile(
@@ -267,24 +260,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _loadDemoData(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
-    final ok = await confirmAction(
-      context,
-      title: l10n.loadDemoData,
-      message: l10n.loadDemoDataHint,
-      confirmLabel: l10n.continueLabel,
-      destructive: false,
-      icon: Icons.science_outlined,
-    );
-    if (!ok) return;
-    await ref
-        .read(demoDataServiceProvider)
-        .load(arabic: ref.read(isArabicProvider));
-    if (context.mounted) showMessage(context, l10n.demoDataLoaded);
-  }
-
-  /// حذف جميع البيانات بتأكيد مزدوج (عملية لا يمكن التراجع عنها).
+  /// حذف جميع البيانات بتأكيد مزدوج (عملية لا يمكن التراجع عنها). إن كان
+  /// التطبيق مقفلاً برمز: تأكيد ← البصمة (أو رمز PIN) ← تأكيد أخير.
   Future<void> _wipe(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final first = await confirmAction(
@@ -295,6 +272,13 @@ class SettingsScreen extends ConsumerWidget {
       icon: Icons.warning_amber_rounded,
     );
     if (!first || !context.mounted) return;
+    if (ref.read(preferencesProvider).value?.lockEnabled ?? false) {
+      final verified = await verifyIdentity(
+        context,
+        reason: l10n.deleteAllDataReason,
+      );
+      if (!verified || !context.mounted) return;
+    }
     final second = await confirmAction(
       context,
       title: l10n.areYouSure,
@@ -369,6 +353,103 @@ class SettingsScreen extends ConsumerWidget {
           ),
         );
       },
+    ),
+  );
+}
+
+/// شعارات التواصل مع فريق الدعم — كل شعار يفتح تطبيقه مباشرة.
+class _SupportLinks extends ConsumerWidget {
+  const _SupportLinks();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+
+    Future<void> open(Uri uri) async {
+      final ok = await ref.read(externalLinkServiceProvider).open(uri);
+      if (!ok && context.mounted) {
+        showMessage(context, l10n.linkOpenFailed, error: true);
+      }
+    }
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: Insets.lg),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _BrandButton(
+            label: l10n.supportWhatsApp,
+            icon: const FaIcon(FontAwesomeIcons.whatsapp),
+            color: const Color(0xFF25D366),
+            onTap: () => open(SupportContacts.whatsappUri),
+          ),
+          _BrandButton(
+            label: l10n.supportCall,
+            icon: const Icon(Icons.call_rounded),
+            color: context.colors.primary,
+            onTap: () => open(SupportContacts.phoneUri),
+          ),
+          _BrandButton(
+            label: l10n.supportInstagram,
+            icon: const FaIcon(FontAwesomeIcons.instagram),
+            gradient: const LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
+              colors: [
+                Color(0xFFFEDA75),
+                Color(0xFFFA7E1E),
+                Color(0xFFD62976),
+                Color(0xFF962FBF),
+                Color(0xFF4F5BD5),
+              ],
+            ),
+            onTap: () => open(SupportContacts.instagramUri),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// زر دائري بشعار فقط (الاسم يظهر كتلميح ولقارئ الشاشة).
+class _BrandButton extends StatelessWidget {
+  const _BrandButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.color,
+    this.gradient,
+  });
+
+  final String label;
+  final Widget icon;
+  final VoidCallback onTap;
+  final Color? color;
+  final Gradient? gradient;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: label,
+    child: Material(
+      type: MaterialType.transparency,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: Ink(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          gradient: gradient,
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: IconTheme(
+            data: const IconThemeData(color: Colors.white, size: 28),
+            child: Center(child: icon),
+          ),
+        ),
+      ),
     ),
   );
 }

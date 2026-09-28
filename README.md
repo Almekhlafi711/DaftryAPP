@@ -47,12 +47,13 @@
 | قاعدة البيانات | SQLite عبر **Drift** | محلية وسريعة، استعلامات آمنة الأنواع، تدفقات تفاعلية |
 | إدارة الحالة | Riverpod 3 | بسيطة وقابلة للاختبار، وحقن تبعيات |
 | التنقل | go_router | تبويبات تحتفظ بحالتها وروابط واضحة |
-| اللغات | flutter_localizations + intl (ARB) | 346 نصاً بالعربية والإنجليزية |
+| اللغات | flutter_localizations + intl (ARB) | 354 نصاً بالعربية والإنجليزية |
 | الرسوم | fl_chart | خفيفة وقابلة للتخصيص |
 | الأمان | local_auth, flutter_secure_storage, cryptography | البصمة، حفظ الأسرار في Keychain/Keystore، PBKDF2 و AES-256-GCM |
 | التصدير | pdf, printing, share_plus, excel | صورة و PDF ومشاركة وطباعة و Excel |
 | السحابة (اختياري) | google_sign_in + googleapis / iCloud (Swift) | بحساب المستخدم، بلا خوادم خاصة |
 | الإشعارات | flutter_local_notifications | تذكير محلي |
+| التواصل مع الدعم | url_launcher, font_awesome_flutter | فتح واتساب والاتصال وإنستغرام بشعاراتها |
 
 > **ملاحظة حول الـ Backend:** الوثيقة (القسم 1.9 وسجل القرارات 3.13) تنص على أن التطبيق **محلي بالكامل (Local-first)** دون خادم ولا تسجيل دخول، وترفض المزامنة بين الأجهزة. لذلك لا يوجد خادم ‎.NET/SQL Server؛ و«الباك إند» هنا هو **طبقة البيانات والخدمات المحلية** المفصولة تماماً عن طبقة التصميم (انظر المعمارية أدناه).
 
@@ -100,7 +101,6 @@ DaftryAPP/                        ← مشروع Flutter (افتحه مباشر�
 ## التشغيل
 
 > **Android Studio:** افتح مجلد `DaftryAPP` نفسه ← **Pub get** ← اختر جهازك ← ▶. التفاصيل في [docs/ANDROID_STUDIO.md](docs/ANDROID_STUDIO.md)، ثم اختبر بالقائمة في [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
-> في نسخة التطوير: **المزيد ← للمطوّر ← تحميل بيانات تجريبية** لملء التطبيق ببيانات ستة أشهر.
 
 ```bash
 flutter pub get

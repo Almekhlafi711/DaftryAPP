@@ -959,17 +959,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get developerSection => 'Developer (debug build only)';
+  String get contactSupport => 'Contact support';
 
   @override
-  String get loadDemoData => 'Load demo data';
+  String get supportWhatsApp => 'WhatsApp';
 
   @override
-  String get loadDemoDataHint =>
-      'Six months of transactions, debts and budgets to try every screen. Added to your current data.';
+  String get supportCall => 'Call';
 
   @override
-  String get demoDataLoaded => 'Demo data loaded';
+  String get supportInstagram => 'Instagram';
+
+  @override
+  String get linkOpenFailed => 'Couldn\'t open the link';
 
   @override
   String get lockedTitle => 'Daftari is locked';
@@ -985,6 +987,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlockReason => 'Unlock Daftari';
+
+  @override
+  String get verifyIdentity => 'Verify it\'s you';
+
+  @override
+  String get deleteAllDataReason => 'Confirm deleting all data';
 
   @override
   String get createPin => 'Create a 4-digit PIN';

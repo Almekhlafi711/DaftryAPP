@@ -21,8 +21,8 @@ import 'budget_service.dart';
 import 'category_service.dart';
 import 'contact_service.dart';
 import 'debt_service.dart';
-import 'demo_data_service.dart';
 import 'export/file_share_service.dart';
+import 'external_link_service.dart';
 import 'notification_service.dart';
 import 'report_service.dart';
 import 'security_service.dart';
@@ -83,6 +83,10 @@ final securityServiceProvider = Provider((ref) => SecurityService());
 
 final fileShareServiceProvider = Provider((ref) => const FileShareService());
 
+final externalLinkServiceProvider = Provider(
+  (ref) => const ExternalLinkService(),
+);
+
 /// معرّف Google OAuth (Web client) يُمرَّر وقت البناء:
 /// flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=xxxx.apps.googleusercontent.com
 const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
@@ -109,17 +113,5 @@ final backupServiceProvider = Provider(
     isOnWifi: () async => (await Connectivity().checkConnectivity()).contains(
       ConnectivityResult.wifi,
     ),
-  ),
-);
-
-/// بيانات تجريبية للاختبار اليدوي (يظهر زرها في نسخة التطوير فقط).
-final demoDataServiceProvider = Provider(
-  (ref) => DemoDataService(
-    db: ref.watch(databaseProvider),
-    accounts: ref.watch(accountServiceProvider),
-    transactions: ref.watch(transactionServiceProvider),
-    budgets: ref.watch(budgetServiceProvider),
-    contacts: ref.watch(contactServiceProvider),
-    debts: ref.watch(debtServiceProvider),
   ),
 );

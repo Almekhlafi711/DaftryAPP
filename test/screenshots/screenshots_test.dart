@@ -39,6 +39,14 @@ Future<void> _loadFonts() async {
       ),
     );
   await icons.load();
+  // شعارات التواصل مع الدعم (واتساب وإنستغرام).
+  final brands = FontLoader('packages/font_awesome_flutter/FontAwesomeBrands')
+    ..addFont(
+      rootBundle.load(
+        'packages/font_awesome_flutter/lib/fonts/Font-Awesome-7-Brands-Regular-400.otf',
+      ),
+    );
+  await brands.load();
 }
 
 void main() {

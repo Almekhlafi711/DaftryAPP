@@ -1,8 +1,9 @@
 // اختبارات تفاعل: الحسابات والأرشفة، نافذة الفلترة، قفل التطبيق برمز PIN،
-// وعرض الإيصال المرفق.
+// حذف كل البيانات مع تأكيد الهوية، روابط الدعم، وعرض الإيصال المرفق.
 import 'package:daftry/core/constants/currencies.dart';
 import 'package:daftry/data/database/app_database.dart';
 import 'package:daftry/domain/enums.dart';
+import 'package:daftry/services/external_link_service.dart';
 import 'package:daftry/services/providers.dart';
 import 'package:daftry/services/security_service.dart';
 import 'package:daftry/services/settings_service.dart';
@@ -18,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 Future<({AppDatabase db, dynamic router})> startApp(
   WidgetTester tester, {
   SecurityService? security,
+  ExternalLinkService? links,
 }) async {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   final db = AppDatabase(
@@ -41,6 +43,7 @@ Future<({AppDatabase db, dynamic router})> startApp(
         databaseProvider.overrideWithValue(db),
         if (security != null)
           securityServiceProvider.overrideWithValue(security),
+        if (links != null) externalLinkServiceProvider.overrideWithValue(links),
       ],
       child: const DaftryApp(),
     ),
@@ -52,6 +55,30 @@ Future<({AppDatabase db, dynamic router})> startApp(
     tester.element(find.byType(DaftryApp)),
   ).read(routerProvider);
   return (db: db, router: router);
+}
+
+/// يُدخل رمز PIN على لوحة الأرقام وينتظر التحقق (PBKDF2 يأخذ وقتاً حقيقياً).
+Future<void> enterPin(WidgetTester tester, String pin) async {
+  for (final d in pin.split('')) {
+    await tester.tap(find.widgetWithText(TextButton, d));
+    await tester.pump();
+  }
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 300)),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// يسجّل الروابط بدل فتحها فعلياً.
+class _FakeLinks implements ExternalLinkService {
+  final opened = <Uri>[];
+  bool result = true;
+
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return result;
+  }
 }
 
 void main() {
@@ -146,31 +173,114 @@ void main() {
 
     await tester.tap(find.byType(Switch).first);
     await tester.pumpAndSettle();
-    Future<void> enter(String pin) async {
-      for (final d in pin.split('')) {
-        await tester.tap(find.widgetWithText(TextButton, d));
-        await tester.pump();
-      }
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await tester.pumpAndSettle();
-    }
 
     expect(find.text('Create a 4-digit PIN'), findsOneWidget);
-    await enter('1234');
+    await enterPin(tester, '1234');
     expect(find.text('Re-enter to confirm'), findsOneWidget);
-    await enter('1234');
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 300)),
-    );
-    await tester.pumpAndSettle();
+    await enterPin(tester, '1234');
 
     final prefs = await tester.runAsync(
       () => SettingsService(app.db).getPreferences(),
     );
     expect(prefs!.lockEnabled, isTrue);
     expect(await tester.runAsync(() => security.verifyPin('1234')), isTrue);
+  });
+
+  testWidgets('حذف جميع البيانات: تأكيد الهوية مطلوب فقط عند تفعيل القفل', (
+    tester,
+  ) async {
+    final security = SecurityService(store: MemorySecretStore());
+    final app = await startApp(tester, security: security);
+    app.router.go(AppRoutes.more);
+    await tester.pumpAndSettle();
+    Future<bool?> onboarded() =>
+        tester.runAsync(() => SettingsService(app.db).isOnboarded());
+
+    Future<void> startWipe() async {
+      await tester.scrollUntilVisible(
+        find.text('Delete all data'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Delete all data'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+      await tester.pumpAndSettle();
+    }
+
+    // دون قفل: التأكيد الأخير مباشرة.
+    await startWipe();
+    expect(find.text("Verify it's you"), findsNothing);
+    expect(find.text('Are you sure?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    // مع القفل: تأكيد ← التحقق من الهوية ← تأكيد أخير.
+    await tester.runAsync(() async {
+      await security.setPin('1234');
+      await SettingsService(app.db).setFlag(SettingKeys.lockEnabled, true);
+    });
+    await tester.pumpAndSettle();
+
+    // الخروج من صفحة التحقق يلغي الحذف.
+    await startWipe();
+    expect(find.text("Verify it's you"), findsOneWidget);
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Are you sure?'), findsNothing);
+    expect(await onboarded(), isTrue);
+
+    // رمز خاطئ لا يتقدم، والصحيح ينقل للتأكيد الأخير.
+    await startWipe();
+    await enterPin(tester, '0000');
+    expect(find.text('Wrong PIN'), findsOneWidget);
+    expect(find.text('Are you sure?'), findsNothing);
+    await enterPin(tester, '1234');
+    expect(find.text('Are you sure?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete all data'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await onboarded(), isFalse);
+    expect(await tester.runAsync(security.hasPin), isFalse);
+  });
+
+  testWidgets('التواصل مع الدعم: شعارات فقط تفتح واتساب والاتصال وإنستغرام', (
+    tester,
+  ) async {
+    final links = _FakeLinks();
+    final app = await startApp(tester, links: links);
+    app.router.go(AppRoutes.more);
+    await tester.pumpAndSettle();
+
+    // قسم البيانات التجريبية أُزيل من الإعدادات.
+    expect(find.byIcon(Icons.science_outlined), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.text('Contact support'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    // الشعار وحده دون اسم ظاهر.
+    expect(find.text('WhatsApp'), findsNothing);
+    for (final label in ['WhatsApp', 'Call', 'Instagram']) {
+      await tester.tap(find.byTooltip(label));
+      await tester.pumpAndSettle();
+    }
+    expect(links.opened, [
+      Uri.parse('https://wa.me/ec9'),
+      Uri.parse('tel:+967777953434'),
+      Uri.parse('https://www.instagram.com/mo.div/'),
+    ]);
+
+    // إن لم يوجد تطبيق يفتح الرابط تظهر رسالة خطأ.
+    links.result = false;
+    await tester.tap(find.byTooltip('WhatsApp'));
+    await tester.pumpAndSettle();
+    expect(find.text("Couldn't open the link"), findsOneWidget);
   });
 
   testWidgets(

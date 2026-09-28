@@ -1788,29 +1788,35 @@ abstract class AppLocalizations {
   /// **'الإصدار {version}'**
   String version(String version);
 
-  /// No description provided for @developerSection.
+  /// No description provided for @contactSupport.
   ///
   /// In ar, this message translates to:
-  /// **'للمطوّر (نسخة التطوير فقط)'**
-  String get developerSection;
+  /// **'تواصل مع فريق الدعم'**
+  String get contactSupport;
 
-  /// No description provided for @loadDemoData.
+  /// No description provided for @supportWhatsApp.
   ///
   /// In ar, this message translates to:
-  /// **'تحميل بيانات تجريبية'**
-  String get loadDemoData;
+  /// **'واتساب'**
+  String get supportWhatsApp;
 
-  /// No description provided for @loadDemoDataHint.
+  /// No description provided for @supportCall.
   ///
   /// In ar, this message translates to:
-  /// **'ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.'**
-  String get loadDemoDataHint;
+  /// **'اتصال'**
+  String get supportCall;
 
-  /// No description provided for @demoDataLoaded.
+  /// No description provided for @supportInstagram.
   ///
   /// In ar, this message translates to:
-  /// **'تم تحميل البيانات التجريبية'**
-  String get demoDataLoaded;
+  /// **'إنستغرام'**
+  String get supportInstagram;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر فتح الرابط'**
+  String get linkOpenFailed;
 
   /// No description provided for @lockedTitle.
   ///
@@ -1841,6 +1847,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'افتح دفتري'**
   String get unlockReason;
+
+  /// No description provided for @verifyIdentity.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد هويتك'**
+  String get verifyIdentity;
+
+  /// No description provided for @deleteAllDataReason.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد حذف جميع البيانات'**
+  String get deleteAllDataReason;
 
   /// No description provided for @createPin.
   ///

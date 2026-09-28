@@ -965,17 +965,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get developerSection => 'للمطوّر (نسخة التطوير فقط)';
+  String get contactSupport => 'تواصل مع فريق الدعم';
 
   @override
-  String get loadDemoData => 'تحميل بيانات تجريبية';
+  String get supportWhatsApp => 'واتساب';
 
   @override
-  String get loadDemoDataHint =>
-      'ستة أشهر من المعاملات والديون والميزانيات لتجربة كل الشاشات. تُضاف إلى بياناتك الحالية.';
+  String get supportCall => 'اتصال';
 
   @override
-  String get demoDataLoaded => 'تم تحميل البيانات التجريبية';
+  String get supportInstagram => 'إنستغرام';
+
+  @override
+  String get linkOpenFailed => 'تعذّر فتح الرابط';
 
   @override
   String get lockedTitle => 'دفتري مقفل';
@@ -991,6 +993,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unlockReason => 'افتح دفتري';
+
+  @override
+  String get verifyIdentity => 'تأكيد هويتك';
+
+  @override
+  String get deleteAllDataReason => 'تأكيد حذف جميع البيانات';
 
   @override
   String get createPin => 'أنشئ رمز PIN من 4 أرقام';
