@@ -13,7 +13,7 @@
    - **Android**: اسم الحزمة `com.daftry.daftry` مع بصمة SHA-1 لمفتاح التوقيع (`keytool -list -v -keystore <keystore>`).
    - **iOS**: معرّف الحزمة `com.daftry.daftry`.
    - **Web application**: هذا هو `serverClientId` الذي يحتاجه Android.
-4. **iOS** — أضف إلى `app/ios/Runner/Info.plist`:
+4. **iOS** — أضف إلى `ios/Runner/Info.plist`:
    ```xml
    <key>GIDClientID</key>
    <string>IOS_CLIENT_ID.apps.googleusercontent.com</string>
@@ -32,11 +32,11 @@
 
 ## iCloud (iOS فقط)
 
-1. افتح `app/ios/Runner.xcworkspace` في Xcode.
+1. افتح `ios/Runner.xcworkspace` في Xcode.
 2. **Runner ← Signing & Capabilities ← + Capability ← iCloud**، وفعّل **iCloud Documents**، وأضف الحاوية `iCloud.com.daftry.daftry` (أو غيّرها في `Runner.entitlements` و `Info.plist` لتطابق حسابك).
 3. تأكد أن `Runner.entitlements` مرتبط بالهدف (Xcode يربطه تلقائياً عند إضافة القدرة).
 
-التنفيذ الأصلي في `app/ios/Runner/AppDelegate.swift` (`ICloudBackupChannel`) ويتصل به `lib/services/backup/icloud_provider.dart` عبر القناة `daftry/icloud_backup`.
+التنفيذ الأصلي في `ios/Runner/AppDelegate.swift` (`ICloudBackupChannel`) ويتصل به `lib/services/backup/icloud_provider.dart` عبر القناة `daftry/icloud_backup`.
 
 ## كيف يعمل التشفير؟
 

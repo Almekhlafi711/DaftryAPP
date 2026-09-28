@@ -19,13 +19,14 @@ flutter doctor --android-licenses   # اقبل التراخيص
 
 ## 2) فتح المشروع
 
-1. فك ضغط `DaftryAPP.zip`.
-2. في Android Studio: **File ← Open** واختر المجلد **`DaftryAPP/app`** (مجلد `app` تحديداً وليس المجلد الرئيسي).
-3. إن طُلب مسار Flutter: Settings ← Languages & Frameworks ← Flutter ← Flutter SDK path.
-4. اضغط **Pub get** في الشريط الذي يظهر أعلى `pubspec.yaml`، أو في الطرفية (Terminal) داخل Android Studio:
+1. فك ضغط `DaftryAPP.zip` (مثلاً في `C:\Users\<اسمك>\StudioProjects\DaftryAPP`).
+2. في Android Studio: **File ← Open** واختر المجلد **`DaftryAPP`** نفسه (الذي فيه `pubspec.yaml`)، تماماً كأي مشروع Flutter تنشئه.
+3. اضغط **Pub get** في الشريط أعلى `pubspec.yaml`، أو في الطرفية (Terminal):
    ```bash
    flutter pub get
    ```
+4. يظهر **`main.dart`** بجانب زر ▶ أعلى النافذة. إن ظهر بدلاً منه «Add Configuration...»:
+   **Run ← Edit Configurations ← + ← Flutter** ← في **Dart entrypoint** اختر `lib\main.dart` ← OK.
 
 ## 3) إنشاء محاكي (Emulator)
 
@@ -36,7 +37,7 @@ flutter doctor --android-licenses   # اقبل التراخيص
 ## 4) التشغيل
 
 - اختر المحاكي من قائمة الأجهزة أعلى النافذة، واختر `main.dart`، ثم اضغط **▶ Run**.
-- **أول بناء يستغرق عدة دقائق** (تنزيل Gradle والمكتبات)، والبناءات التالية أسرع بكثير.
+- **أول بناء يستغرق عدة دقائق** (تنزيل Gradle والمكتبات، وأداتي **NDK** و **CMake** تلقائياً لأن قاعدة البيانات والملفات تستخدم كوداً أصلياً)، والبناءات التالية أسرع بكثير.
 - **جهاز حقيقي:** فعّل «خيارات المطوّر» و«تصحيح USB» في الهاتف ثم وصّله بالكابل.
 - أثناء التشغيل: **Hot Reload ⚡** يطبّق تعديلات الكود فوراً دون إعادة التشغيل.
 
@@ -73,7 +74,7 @@ flutter doctor --android-licenses   # اقبل التراخيص
 flutter build apk --release
 ```
 
-الملف: `app/build/app/outputs/flutter-apk/app-release.apk` — انسخه للهاتف وثبّته.
+الملف: `build/app/outputs/flutter-apk/app-release.apk` — انسخه للهاتف وثبّته.
 
 > النسخة موقّعة حالياً بمفتاح التطوير، وهذا يكفي للتجربة. قبل النشر على Google Play أنشئ مفتاح توقيع خاصاً: https://docs.flutter.dev/deployment/android
 
@@ -84,7 +85,8 @@ flutter build apk --release
 | `The current Dart SDK version is ... requires ^3.13.4` | حدّث Flutter: `flutter upgrade` |
 | `flutter upgrade` على Windows: `Rename-Item ... being used by another process` | أغلق Android Studio و VS Code تماماً، وأنهِ `dart.exe` من مدير المهام، ثم نفّذ `flutter upgrade` من PowerShell خارجي. إن تكرر: احذف مجلد `flutter\bin\cache` ثم `flutter --version` |
 | خطأ في إصدار Gradle / Android Gradle Plugin | حدّث Android Studio لأحدث إصدار مستقر |
-| `NDK not configured` أو `No version of NDK matched` | SDK Manager ← SDK Tools ← فعّل **NDK (Side by side)** |
+| `NDK not configured` أو `No version of NDK matched` أو `CMake ... was not found` | Settings ← Languages & Frameworks ← Android SDK ← **SDK Tools** ← فعّل **NDK (Side by side)** و **CMake** ← Apply |
+| `Failed to install the following SDK components` أو `licences have not been accepted` | في الطرفية: `flutter doctor --android-licenses` واقبل الكل ثم أعد التشغيل |
 | فشل تنزيل `sqlite3` أثناء البناء | أول بناء يحتاج إنترنت للوصول إلى github.com |
 | `Unsupported class file major version` | Settings ← Build Tools ← Gradle ← Gradle JDK: اختر **JBR 21** أو **17** |
 | البصمة لا تظهر | أضف قفل شاشة وبصمة في إعدادات المحاكي أولاً، ثم فعّل «الفتح بالبصمة» داخل التطبيق |
