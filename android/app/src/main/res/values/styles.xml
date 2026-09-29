@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ثيمات AppCompat مطلوبة لنافذة البصمة (local_auth) حتى لا يتعطل التطبيق على Android 8. -->
+    <!-- يظهر أثناء بدء التطبيق (الوضع الفاتح). -->
+    <style name="LaunchTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <!-- خلفية النافذة بعد البدء وخلف واجهة Flutter. -->
+    <style name="NormalTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

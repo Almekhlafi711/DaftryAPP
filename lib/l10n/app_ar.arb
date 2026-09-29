@@ -1,0 +1,970 @@
+{
+  "@@locale": "ar",
+  "appName": "دفتري",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "delete": "حذف",
+  "edit": "تعديل",
+  "confirm": "تأكيد",
+  "back": "رجوع",
+  "apply": "تطبيق",
+  "reset": "إعادة ضبط",
+  "undo": "تراجع",
+  "continueLabel": "متابعة",
+  "optional": "اختياري",
+  "today": "اليوم",
+  "yesterday": "أمس",
+  "saved": "تم الحفظ",
+  "seeAll": "عرض الكل",
+  "note": "ملاحظة",
+  "date": "التاريخ",
+  "amount": "المبلغ",
+  "account": "الحساب",
+  "category": "الفئة",
+  "name": "الاسم",
+  "phone": "رقم الجوال",
+  "comingSoon": "قريباً",
+  "archivedBadge": "مؤرشف",
+  "defaultBadge": "افتراضي",
+  "all": "الكل",
+  "more": "المزيد",
+  "noResults": "لا توجد نتائج",
+  "password": "كلمة المرور",
+  "passwordTooShort": "6 أحرف على الأقل",
+  "areYouSure": "هل أنت متأكد؟",
+  "navHome": "الرئيسية",
+  "navTransactions": "المعاملات",
+  "navDebts": "الديون",
+  "navMore": "المزيد",
+  "pressBackAgainToExit": "اضغط رجوع مرة أخرى للخروج",
+  "chooseCurrency": "اختر عملتك",
+  "currencyWarning": "ستُستخدم في كل التطبيق ولا يمكن تغييرها لاحقاً",
+  "searchCurrency": "ابحث عن عملة",
+  "cloudBackupOptionalHint": "اختياري — يمكن تفعيله لاحقاً من الإعدادات",
+  "confirmCurrencyTitle": "تأكيد عملة التطبيق",
+  "confirmCurrencyBody": "ستُسجَّل كل الحسابات والمعاملات والديون بهذه العملة.",
+  "confirmCurrencyWarning": "لا يمكن تغييرها بعد التأكيد",
+  "confirmAndStart": "تأكيد والبدء",
+  "backAndChange": "رجوع وتغيير العملة",
+  "restoreExisting": "لديك نسخة احتياطية؟ استعادة",
+  "greetingMorning": "صباح الخير",
+  "greetingEvening": "مساء الخير",
+  "totalBalance": "إجمالي أرصدة الحسابات",
+  "monthIncome": "دخل الشهر",
+  "monthExpense": "مصروف الشهر",
+  "quickExpense": "مصروف",
+  "quickIncome": "دخل",
+  "quickTransfer": "تحويل",
+  "quickDebt": "دين",
+  "monthlyBudget": "الميزانية الشهرية",
+  "budgetOf": "{spent} من {limit}",
+  "@budgetOf": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "remainingForDays": "متبقٍ {amount} لـ {days, plural, =0{اليوم} =1{يوم واحد} =2{يومين} few{{days} أيام} many{{days} يوماً} other{{days} يوم}}",
+  "@remainingForDays": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "owedToMe": "لي عند الناس",
+  "iOwe": "عليّ للناس",
+  "recentTransactions": "آخر المعاملات",
+  "noTransactionsYet": "لا توجد معاملات بعد. اضغط + لإضافة أول معاملة.",
+  "hideBalances": "إخفاء الأرصدة",
+  "transactionsTitle": "المعاملات",
+  "searchTransactions": "ابحث بالاسم أو المبلغ",
+  "addTransaction": "إضافة معاملة",
+  "editTransaction": "تعديل معاملة",
+  "typeExpense": "مصروف",
+  "typeIncome": "دخل",
+  "typeTransfer": "تحويل",
+  "typeAdjustment": "تسوية",
+  "typeDebtOut": "حركة دين — خرج",
+  "typeDebtIn": "حركة دين — دخل",
+  "debtMovement": "حركة دين",
+  "fromAccount": "من حساب",
+  "toAccount": "إلى حساب",
+  "suggestedForCategory": "مقترح: آخر حساب للفئة",
+  "attachReceipt": "إرفاق إيصال",
+  "receiptAttached": "تم إرفاق الإيصال",
+  "removeReceipt": "إزالة الإيصال",
+  "viewReceipt": "عرض الإيصال",
+  "receiptCamera": "الكاميرا",
+  "receiptGallery": "المعرض",
+  "chooseCategory": "اختر فئة",
+  "deleteTransactionTitle": "حذف هذه المعاملة؟",
+  "deleteTransactionBody": "{description} — {amount}\nسيُعاد المبلغ إلى رصيد «{account}» تلقائياً.",
+  "@deleteTransactionBody": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionDeleted": "تم حذف المعاملة",
+  "debtMovementHint": "حركة دين تحرّك الرصيد ولا تُحتسب دخلاً ولا مصروفاً. تُعدَّل من ملف الشخص.",
+  "openPersonProfile": "فتح ملف الشخص",
+  "budgetWarning": "اقتربت من ميزانية «{category}»: {percent}%",
+  "@budgetWarning": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetExceeded": "تجاوزت ميزانية «{category}» ({percent}%)",
+  "@budgetExceeded": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "filterTitle": "فلترة المعاملات",
+  "period": "الفترة",
+  "periodToday": "اليوم",
+  "periodWeek": "هذا الأسبوع",
+  "periodMonth": "هذا الشهر",
+  "periodLast30": "آخر 30 يوماً",
+  "periodLast3Months": "آخر 3 أشهر",
+  "periodYear": "هذه السنة",
+  "periodCustom": "مخصص",
+  "periodAll": "كل الفترات",
+  "typeAndCategory": "النوع والفئة",
+  "showDebtMovements": "إظهار حركات الديون",
+  "showDebtMovementsHint": "تظهر في السجل فقط ولا تدخل في الدخل والمصروف",
+  "sort": "الترتيب",
+  "sortNewest": "الأحدث أولاً",
+  "sortOldest": "الأقدم أولاً",
+  "sortAmountDesc": "الأعلى مبلغاً",
+  "sortAmountAsc": "الأقل مبلغاً",
+  "allCategories": "كل الفئات",
+  "summaryIncome": "دخل {amount}",
+  "@summaryIncome": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryExpense": "مصروف {amount}",
+  "@summaryExpense": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "accountsTitle": "الحسابات",
+  "totalActiveAccounts": "إجمالي الحسابات النشطة",
+  "activeAccountsCount": "نشطة ({count})",
+  "@activeAccountsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "archivedAccountsCount": "المؤرشفة ({count})",
+  "@archivedAccountsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "archivedSince": "مؤرشف منذ {date}",
+  "@archivedSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "addAccount": "إضافة حساب",
+  "editAccount": "تعديل الحساب",
+  "accountName": "اسم الحساب",
+  "accountType": "نوع الحساب",
+  "openingBalance": "الرصيد الافتتاحي",
+  "accountTypeCash": "نقدي",
+  "accountTypeBank": "بنكي",
+  "accountTypeWallet": "محفظة",
+  "accountTypeSavings": "توفير",
+  "setAsDefault": "تعيين كافتراضي",
+  "archive": "أرشفة",
+  "unarchive": "رفع الأرشفة",
+  "adjustBalance": "تسوية الرصيد",
+  "adjustBalanceHint": "أدخل الرصيد الفعلي وسيُسجَّل الفرق كمعاملة «تسوية» في السجل.",
+  "actualBalance": "الرصيد الفعلي",
+  "archiveTitle": "أرشفة «{name}»؟",
+  "@archiveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveBody": "لن يظهر في الرئيسية ولا عند إضافة معاملة أو دين جديد. المعاملات السابقة تبقى كما هي وتظهر في التقارير.",
+  "archiveHasBalance": "رصيده الحالي {amount}",
+  "@archiveHasBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "transferBalanceTo": "تحويل الرصيد إلى",
+  "transferAndArchive": "تحويل الرصيد ثم الأرشفة",
+  "newDefaultAccount": "الحساب الافتراضي البديل",
+  "recalculateBalances": "إعادة احتساب الأرصدة",
+  "recalculateDone": "تمت المراجعة — صُحح {count} حساب",
+  "@recalculateDone": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsTitle": "الديون",
+  "debtsSubtitle": "منفصلة عن الدخل والمصروف",
+  "tabOwedToMe": "لي",
+  "tabIOwe": "عليّ",
+  "newDebt": "دين جديد",
+  "dueInDays": "يستحق بعد {days, plural, =1{يوم} =2{يومين} few{{days} أيام} many{{days} يوماً} other{{days} يوم}}",
+  "@dueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "overdueDays": "متأخر {days, plural, =1{يوماً} =2{يومين} few{{days} أيام} many{{days} يوماً} other{{days} يوم}}",
+  "@overdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "dueToday": "يستحق اليوم",
+  "statusClosed": "مغلق",
+  "statusOverdue": "متأخر",
+  "statusPartial": "مسدَّد جزئياً",
+  "statusOpen": "مفتوح",
+  "ofTotal": "من {amount}",
+  "@ofTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noDebts": "لا توجد ديون مسجلة. سجّل ديناً لتتابع ما لك وما عليك.",
+  "directionOwedToMeHint": "أقرضت / بعت بالآجل",
+  "directionIOweHint": "اقترضت / اشتريت بالآجل",
+  "person": "الشخص",
+  "choosePerson": "اختر شخصاً",
+  "fromContacts": "من جهات الاتصال",
+  "addPerson": "إضافة شخص",
+  "dueDateOptional": "الاستحقاق (اختياري)",
+  "decreasesBalanceNotExpense": "ينقص الرصيد — ليس مصروفاً",
+  "increasesBalanceNotIncome": "يزيد الرصيد — ليس دخلاً",
+  "remindBeforeDue": "ذكّرني قبل الموعد بيوم",
+  "saveDebt": "حفظ الدين",
+  "editDebt": "تعديل الدين",
+  "deleteDebt": "حذف الدين",
+  "deleteDebtBody": "يُحذف الدين مع قيده فيعود الحساب أو الدخل أو المصروف كما كان. (للديون المسجلة خطأً فقط.)",
+  "remainingAmount": "المتبقي الحالي: {amount}",
+  "@remainingAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "fullRemaining": "كامل المتبقي",
+  "receivedIntoAccount": "استلمتُ في",
+  "paidFromAccount": "دفعتُ من",
+  "profileOwedToMe": "المتبقي لي عند {name}",
+  "@profileOwedToMe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "profileIOwe": "المتبقي عليّ لـ {name}",
+  "@profileIOwe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paidAmount": "المدفوع {amount}",
+  "@paidAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "totalDebtsAmount": "الإجمالي {amount}",
+  "@totalDebtsAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dueOn": "يستحق {date}",
+  "@dueOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statement": "كشف",
+  "timeline": "الخط الزمني والرصيد بعد كل عملية",
+  "balanceShort": "الرصيد {amount}",
+  "@balanceShort": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tlFrom": "من {account}",
+  "@tlFrom": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "tlInto": "في {account}",
+  "@tlInto": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "tlIncomeCat": "دخل {category}",
+  "@tlIncomeCat": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "tlExpenseCat": "مصروف {category}",
+  "@tlExpenseCat": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "tlNoAccount": "بدون حساب",
+  "tlLedgerOnly": "الدفتر فقط",
+  "tlCancelled": "ملغاة — لا تُحتسب",
+  "paymentReceived": "استلام",
+  "paymentMade": "سداد",
+  "editPerson": "تعديل بيانات الشخص",
+  "searchPeople": "بحث بالاسم أو الهاتف",
+  "noDueDate": "بدون موعد",
+  "quickActions": "الإجراءات السريعة",
+  "closeLabel": "إغلاق",
+  "sourceTitle": "مصدر الدين",
+  "sourceLoanOwed": "أقرضته من حساب",
+  "sourceLoanOwe": "اقترضتُ إلى حساب",
+  "sourceCreditSale": "بعتُ له بالآجل",
+  "sourceCreditPurchase": "اشتريتُ بالآجل",
+  "sourceOpening": "دين سابق",
+  "sourceCreditSaleHint": "يُسجَّل دخلاً ({category}) — بدون حركة حساب",
+  "@sourceCreditSaleHint": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceCreditPurchaseHint": "يُسجَّل مصروفاً ({category}) — بدون حركة حساب",
+  "@sourceCreditPurchaseHint": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceOpeningHint": "كان موجوداً قبل استخدام التطبيق — الدفتر فقط",
+  "loanOwedHint": "ينقص رصيد الحساب — ليس مصروفاً",
+  "loanOweHint": "يزيد رصيد الحساب — ليس دخلاً",
+  "segOwedToMe": "لي (عند شخص)",
+  "segIOwe": "عليّ (لشخص)",
+  "deviceContacts": "جهات الاتصال",
+  "labelLoanOwed": "سلفة نقدية",
+  "labelLoanOwe": "اقتراض",
+  "labelCreditSale": "بيع بالآجل",
+  "labelCreditPurchase": "شراء بالآجل",
+  "labelOpening": "دين سابق",
+  "debtLockedHint": "عليه دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة",
+  "receiveAmount": "استلام مبلغ",
+  "payAmount": "سداد مبلغ",
+  "receiveFrom": "استلام مبلغ — {name}",
+  "@receiveFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "payTo": "سداد مبلغ — {name}",
+  "@payTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "remainingAfterReceive": "المتبقي بعد الاستلام",
+  "remainingAfterPay": "المتبقي بعد السداد",
+  "amountReceivedLabel": "المبلغ المستلم",
+  "amountPaidLabel": "المبلغ المدفوع",
+  "autoDistTitle": "التوزيع التلقائي — الأقدم أولاً",
+  "selectedDebtTitle": "الدين المختار",
+  "allocCloses": "يُغلق",
+  "allocLeaves": "يتبقى {amount}",
+  "@allocLeaves": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseSpecificDebt": "اختيار دين معيّن",
+  "autoDistribute": "توزيع تلقائي",
+  "excessTitle": "مبلغ زائد عن المتبقي",
+  "excessOwedToMe": "الزائد {amount} — هل تسجّله ديناً عليك لـ {name}؟",
+  "@excessOwedToMe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "excessIOwe": "الزائد {amount} — هل تسجّله ديناً لك على {name}؟",
+  "@excessIOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recordExcess": "تسجيل الزائد",
+  "editAmount": "تعديل المبلغ",
+  "excessNote": "زيادة عن المستحق",
+  "noOneOwesYou": "لا توجد ديون مفتوحة لك عند أحد",
+  "youOweNoOne": "لا توجد ديون مفتوحة عليك",
+  "distribution": "تفصيل التوزيع",
+  "cancelOperation": "إلغاء العملية",
+  "cancelOperationBody": "تُلغى كل دفعات العملية معاً ويُعكس أثرها على الحساب، وتبقى ظاهرة مشطوبة في الخط الزمني.",
+  "cancelledBadge": "ملغاة",
+  "negativeCashWarning": "تنبيه: رصيد «{account}» أصبح سالباً",
+  "@negativeCashWarning": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "forgiveRemaining": "مسامحة بالمتبقي",
+  "forgivenRemaining": "إعفاء من المتبقي",
+  "forgiveBodyOwedToMe": "يُغلق الدين ويُسجَّل المتبقي {amount} مصروفاً بفئة «مسامحة ديون». لا تتحرك أرصدة الحسابات.",
+  "@forgiveBodyOwedToMe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forgiveBodyIOwe": "يُغلق الدين ويُسجَّل المتبقي {amount} دخلاً بفئة «إعفاء دين». لا تتحرك أرصدة الحسابات.",
+  "@forgiveBodyIOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "writeOffEntry": "مسامحة",
+  "forgivenEntry": "إعفاء من الدين",
+  "paymentRate": "نسبة السداد {percent}%",
+  "@paymentRate": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "writtenOffRate": "مُسامَح {percent}%",
+  "@writtenOffRate": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "netForYou": "الصافي لصالحك {amount}",
+  "@netForYou": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "netForThem": "الصافي لصالح {name} {amount}",
+  "@netForThem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "netEven": "الصافي متعادل",
+  "netInfoHint": "معلومة فقط — لا يُخصم أحدهما من الآخر",
+  "balanceAfter": "الرصيد بعد العملية: {amount}",
+  "@balanceAfter": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "archivePerson": "أرشفة الشخص",
+  "archivePersonBody": "يختفي من القوائم والاختيار مع بقاء سجله كاملاً، ويمكن رفع أرشفته لاحقاً.",
+  "deletePerson": "حذف الشخص",
+  "deletePersonBody": "لا توجد له أي حركة، وسيُحذف نهائياً.",
+  "personArchivedBanner": "هذا الشخص مؤرشف",
+  "peopleCount": "{count, plural, =0{لا أحد} =1{شخص واحد} =2{شخصان} few{{count} أشخاص} many{{count} شخصاً} other{{count} شخص}}",
+  "@peopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overdueCount": "{count, plural, =0{لا متأخرات} other{{count} متأخر}}",
+  "@overdueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterDebts": "فلترة الديون",
+  "statusFilter": "الحالة",
+  "sortNearestDue": "الأقرب استحقاقاً",
+  "sortLastActivity": "آخر حركة",
+  "duplicatePerson": "«{name}» موجود، هل تقصده؟",
+  "@duplicatePerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "useExisting": "نعم، هو",
+  "reconcileOk": "معادلة التطابق الشاملة متحققة ✓",
+  "reconcileGap": "تنبيه: فرق {amount} في معادلة التطابق — راجع البيانات",
+  "@reconcileGap": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveNeedsZero": "لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً",
+  "statementTitle": "كشف حساب — {name}",
+  "@statementTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "outputFormat": "طريقة الإخراج",
+  "outputImage": "صورة",
+  "outputImageHint": "للكشف القصير",
+  "outputPdf": "PDF",
+  "outputPdfHint": "للكشف الطويل",
+  "preview": "معاينة",
+  "whatsapp": "واتساب",
+  "share": "مشاركة",
+  "print": "طباعة",
+  "closingBalance": "الرصيد الختامي = المتبقي",
+  "colMovement": "الحركة",
+  "statementShareText": "كشف حساب {name} — دفتري",
+  "@statementShareText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "generatedAt": "أُنشئ في",
+  "noMovementsInPeriod": "لا توجد حركات في هذه الفترة",
+  "description": "البيان",
+  "balance": "الرصيد",
+  "dueFromPerson": "المبلغ المستحق على {name}",
+  "@dueFromPerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dueToPerson": "المبلغ المستحق لـ {name}",
+  "@dueToPerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reportsTitle": "التقارير",
+  "income": "الدخل",
+  "expense": "المصروف",
+  "net": "الصافي",
+  "incomeVsExpense": "الدخل مقابل المصروف",
+  "expenseByCategory": "المصروف حسب الفئة",
+  "incomeByCategory": "الدخل حسب الفئة",
+  "reportsExcludedNote": "حركات الديون والتسويات والتحويلات مستبعدة من هذه الأرقام.",
+  "monthlyView": "شهري",
+  "yearlyView": "سنوي",
+  "reportTitle": "تقرير دفتري",
+  "month": "الشهر",
+  "shareOfTotal": "النسبة",
+  "transactions": "المعاملات",
+  "type": "النوع",
+  "export": "تصدير",
+  "budgetTitle": "الميزانية",
+  "spentOfBudget": "مصروف {month} من الميزانية",
+  "@spentOfBudget": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "addBudget": "إضافة ميزانية",
+  "editBudget": "تعديل الميزانية",
+  "budgetLimit": "سقف الإنفاق الشهري",
+  "alertAtPercent": "التنبيه عند {percent}%",
+  "@alertAtPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetOverBy": "تجاوزت الميزانية بـ {amount}",
+  "@budgetOverBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "legendSafe": "أقل من 75%",
+  "legendWarning": "75–99%",
+  "legendExceeded": "تجاوز",
+  "noBudgets": "لا توجد ميزانيات. أضف سقفاً لفئة لتتابع إنفاقك.",
+  "deleteBudget": "حذف الميزانية",
+  "categoriesTitle": "الفئات",
+  "addCategory": "إضافة فئة",
+  "editCategory": "تعديل الفئة",
+  "categoryName": "اسم الفئة",
+  "icon": "الأيقونة",
+  "color": "اللون",
+  "expenseCategories": "فئات المصروف",
+  "incomeCategories": "فئات الدخل",
+  "settingsTitle": "الإعدادات",
+  "sectionCurrency": "العملة",
+  "appCurrencyLocked": "عملة التطبيق (مقفلة)",
+  "addCurrency": "إضافة عملة جديدة",
+  "sectionGeneral": "عام",
+  "defaultAccount": "الحساب الافتراضي",
+  "languageAndAppearance": "اللغة والمظهر",
+  "language": "اللغة",
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "followDevice": "حسب الجهاز",
+  "theme": "المظهر",
+  "themeLight": "فاتح",
+  "themeDark": "داكن",
+  "arabicDigits": "الأرقام الهندية (١٢٣)",
+  "sectionSecurityData": "الأمان والبيانات",
+  "appLock": "قفل التطبيق بالبصمة / PIN",
+  "cloudBackup": "النسخ السحابي",
+  "localBackup": "تصدير / استيراد ملف محلي",
+  "deleteAllData": "حذف جميع البيانات",
+  "deleteAllDataBody": "سيُحذف كل شيء نهائياً وتعود للإعداد الأول. هذه هي الطريقة الوحيدة لتغيير العملة.",
+  "sectionManage": "الإدارة",
+  "version": "الإصدار {version}",
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "contactSupport": "تواصل معنا",
+  "supportWhatsApp": "واتساب",
+  "supportCall": "اتصال",
+  "supportInstagram": "إنستغرام",
+  "linkOpenFailed": "تعذّر فتح الرابط",
+  "developedByPrefix": "تم التطوير من قبل",
+  "developerName": "محمد المخلافي",
+  "sectionData": "البيانات",
+  "sectionSecurity": "الأمان والنسخ الاحتياطي",
+  "ePayments": "الدفع الإلكتروني",
+  "underDevelopment": "قيد التطوير",
+  "ePaymentsSoon": "الدفع الإلكتروني قيد التطوير وسيتوفر قريباً",
+  "payLocalWallets": "المحافظ المحلية",
+  "payLocalWalletsHint": "محافظ إلكترونية محلية",
+  "payCards": "فيزا / ماستركارد",
+  "payCardsHint": "بطاقات ائتمان وخصم",
+  "payOtherCards": "بطاقات دفع أخرى",
+  "payOtherCardsHint": "مدى وغيرها",
+  "lockedTitle": "دفتري مقفل",
+  "enterPin": "أدخل رمز PIN",
+  "wrongPin": "رمز غير صحيح",
+  "useBiometrics": "استخدام البصمة / الوجه",
+  "unlockReason": "افتح دفتري",
+  "verifyIdentity": "تأكيد هويتك",
+  "deleteAllDataReason": "تأكيد حذف جميع البيانات",
+  "disableLockReason": "تأكيد إيقاف قفل التطبيق",
+  "changePinReason": "تأكيد تغيير رمز PIN",
+  "createPin": "أنشئ رمز PIN من 4 أرقام",
+  "confirmPin": "أعد إدخال الرمز للتأكيد",
+  "pinMismatch": "الرمزان غير متطابقين",
+  "biometricUnlock": "الفتح بالبصمة / الوجه",
+  "changePin": "تغيير رمز PIN",
+  "lockAfterHint": "يُقفل التطبيق بعد دقيقة من الخروج منه",
+  "backupTitle": "النسخ الاحتياطي",
+  "cloudBackupOff": "النسخ السحابي معطّل",
+  "cloudBackupOn": "النسخ السحابي مفعّل",
+  "cloudBackupHint": "بحسابك الشخصي، مشفّر، دون خوادم خاصة بالتطبيق",
+  "storageProvider": "مزوّد التخزين (حسابك الشخصي)",
+  "googleDrive": "Google Drive",
+  "iCloud": "iCloud",
+  "appleDevicesOnly": "لأجهزة Apple",
+  "connected": "متصل",
+  "frequency": "التكرار",
+  "daily": "يومي",
+  "weekly": "أسبوعي",
+  "monthly": "شهري",
+  "wifiOnly": "النسخ عبر Wi-Fi فقط",
+  "encryptionInfo": "تشفير النسخة AES-256",
+  "lastBackup": "آخر نسخة: {date}",
+  "@lastBackup": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "neverBackedUp": "لم تُنسخ بعد",
+  "backupNow": "نسخ الآن",
+  "restore": "استعادة",
+  "backupPassword": "كلمة مرور التشفير",
+  "backupPasswordHint": "تحتاجها لاستعادة النسخة على جهاز جديد. لا يمكن استرجاعها إن نسيتها.",
+  "backupDone": "تم النسخ بنجاح",
+  "restoreDone": "تمت الاستعادة بنجاح",
+  "restoreConfirm": "ستُستبدل كل البيانات الحالية بمحتوى النسخة. متابعة؟",
+  "chooseBackup": "اختر نسخة",
+  "exportLocalFile": "تصدير ملف نسخة مشفّر",
+  "importLocalFile": "استيراد ملف نسخة",
+  "noCloudBackups": "لا توجد نسخ في السحابة",
+  "errInvalidAmount": "أدخل مبلغاً أكبر من صفر",
+  "errEmptyName": "الاسم مطلوب",
+  "errInvalidPhone": "رقم الجوال غير صحيح",
+  "errContactArchived": "الشخص مؤرشف — ارفع أرشفته أولاً",
+  "errInvalidDebtSource": "مصدر الدين لا يناسب اتجاهه",
+  "errAccountRequired": "اختر الحساب",
+  "errDateInFuture": "التاريخ لا يكون بعد اليوم",
+  "errDueBeforeStart": "تاريخ الاستحقاق قبل تاريخ الدين",
+  "errPaymentBeforeDebt": "التاريخ يسبق تاريخ الدين — غيّره أو اختر ديناً معيّناً",
+  "errDebtHasMovements": "على الدين دفعات أو مسامحة — ألغِ الدفعات أولاً",
+  "errPaymentAlreadyCancelled": "العملية ملغاة مسبقاً",
+  "errAccountHasBalance": "لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً",
+  "errPersonHasBalance": "لا يُؤرشف الشخص إلا ومتبقّيه صفر في الاتجاهين",
+  "errPersonHasMovements": "للشخص حركات مسجلة — يمكن أرشفته فقط",
+  "errDuplicateAccountName": "يوجد حساب بنفس الاسم",
+  "errAccountArchived": "الحساب مؤرشف — ارفع أرشفته أولاً",
+  "errCannotArchiveLast": "لا يمكن أرشفة آخر حساب نشط",
+  "errMustChooseNewDefault": "اختر حساباً افتراضياً بديلاً أولاً",
+  "errSameAccountTransfer": "اختر حسابين مختلفين للتحويل",
+  "errCategoryKindMismatch": "الفئة لا تناسب نوع المعاملة",
+  "errCategoryRequired": "اختر فئة",
+  "errDebtMovementReadOnly": "قيود الديون تُعدَّل من ملف الشخص",
+  "errCannotMoveArchived": "لا يمكن نقل معاملة من حساب مؤرشف أو إليه",
+  "errPaymentExceeds": "المبلغ أكبر من المتبقي ({amount})",
+  "@errPaymentExceeds": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "errDebtSettled": "لا توجد ديون مفتوحة لهذه العملية",
+  "errDebtAmountBelowPaid": "الأصل لا يقل عن المدفوع والمُسامَح ({amount})",
+  "@errDebtAmountBelowPaid": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "errCurrencyLocked": "العملة مقفلة ولا يمكن تغييرها",
+  "errNotOnboarded": "أكمل الإعداد الأول أولاً",
+  "errCategoryInUse": "الفئة مستخدمة في معاملات ولا يمكن حذفها",
+  "errNotFound": "العنصر غير موجود",
+  "errBackupDecryption": "كلمة المرور خاطئة أو الملف تالف",
+  "errBackupInvalid": "الملف ليس نسخة دفتري صالحة",
+  "errNoConnection": "لا يوجد اتصال — سيُعاد المحاولة لاحقاً",
+  "errCloudNotAuthorized": "لم يتم منح الإذن لحساب التخزين",
+  "errUnexpected": "حدث خطأ غير متوقع",
+  "notifChannel": "تذكير الديون",
+  "notifTitle": "تذكير بدين",
+  "notifOwedToMe": "غداً موعد استحقاق {amount} على {name}",
+  "@notifOwedToMe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifIOwe": "غداً موعد سداد {amount} لـ {name}",
+  "@notifIOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "introSkip": "تخطي",
+  "introNext": "التالي",
+  "introStart": "ابدأ الآن",
+  "intro1Title": "دفترك المالي في جيبك",
+  "intro1Body": "سجّل دخلك ومصروفك وتحويلاتك بين حساباتك في ثوانٍ وتابع ميزانيتك بألوان واضحة.",
+  "intro2Title": "ديونك منظمة… وحقك محفوظ",
+  "intro2Body": "ملف مالي لكل شخص، واستلام يُوزَّع تلقائياً على الأقدم، وكشف حساب تُرسله عبر واتساب بضغطة.",
+  "intro3Title": "خصوصية كاملة وبداية سهلة",
+  "intro3Body": "بدون حساب أو كلمة مرور، بياناتك على جهازك، والنسخ السحابي اختياري. ثلاث خطوات فقط وتبدأ.",
+  "introStepName": "أدخل اسمك",
+  "introStepCurrency": "اختر عملتك",
+  "introStepFirstTx": "أضف أول معاملة",
+  "introSampleShop": "سوبرماركت",
+  "introSampleFood": "طعام",
+  "introSamplePerson1": "أحمد علي",
+  "introSamplePerson2": "خالد سعيد",
+  "introSamplePerson3": "محمد حسن",
+  "introSampleReceive": "استلام 500",
+  "introSampleSplit": "وُزّع تلقائياً على الأقدم",
+  "introSampleIncome": "دخل",
+  "introSampleExpense": "مصروف",
+  "introSampleBalance": "إجمالي الأرصدة",
+  "introSampleStatement": "كشف حساب",
+  "stepOf": "الخطوة {current} من {total}",
+  "@stepOf": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTitle": "عرّفنا بك",
+  "profileSubtitle": "يظهر اسمك في رأس كشوف الحساب والتقارير",
+  "profileChangeLater": "يمكنك تغيير الاسم والهاتف لاحقاً من الإعدادات",
+  "yourName": "الاسم",
+  "phoneOptional": "رقم الهاتف (اختياري)",
+  "phoneHint": "05xxxxxxxx",
+  "welcomeName": "مرحباً {name}",
+  "@welcomeName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyStepSubtitle": "الخطوة 2 من 2 — اختر عملة التطبيق",
+  "sectionProfile": "الملف الشخصي",
+  "editProfile": "تعديل الملف الشخصي",
+  "addYourName": "أضف اسمك",
+  "noPhone": "لم يُضف رقم هاتف",
+  "greetingName": "{greeting}، {name}",
+  "@greetingName": {
+    "placeholders": {
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "issuedBy": "صادر من: {name}",
+  "@issuedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# إعدادات توليد ملفات الترجمة (flutter gen-l10n).
+# الملفات المصدر: lib/l10n/app_ar.arb (الأساسية) و app_en.arb.
+arb-dir: lib/l10n
+template-arb-file: app_ar.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

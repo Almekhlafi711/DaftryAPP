@@ -1,0 +1,6 @@
+# لقطات الشاشة أداة توثيق وليست اختباراً: تُتخطى في التشغيل العادي و CI.
+# لتوليدها يدوياً:
+#   flutter test test/screenshots --update-goldens --run-skipped
+tags:
+  screenshots:
+    skip: "أداة توليد لقطات الشاشة — شغّلها يدوياً"
