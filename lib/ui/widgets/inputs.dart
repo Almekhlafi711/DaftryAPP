@@ -18,6 +18,63 @@ import '../theme/app_theme.dart';
 import 'common.dart';
 import 'labels.dart';
 
+/// مُنسِّق حقول المبالغ النصية (الدين، الاستلام، الرصيد، الميزانية):
+/// - الأرقام العربية/الهندية تُحوَّل إلى أرقام لاتينية.
+/// - «.» و«٫» و«,» كلها تُقبل فاصلةً عشرية (بعض لوحات المفاتيح تكتب «,»)،
+///   وفاصلة واحدة فقط.
+/// - لا يتجاوز الكسر خانات عملة التطبيق، والجزء الصحيح 12 خانة؛ فما يراه
+///   المستخدم هو بالضبط ما يُحفظ (لا اقتطاع صامت عند التحليل).
+/// - [allowNegative] للرصيد الفعلي والرصيد الافتتاحي فقط.
+class AmountInputFormatter extends TextInputFormatter {
+  const AmountInputFormatter(this.decimals, {this.allowNegative = false});
+
+  final int decimals;
+  final bool allowNegative;
+
+  static const maxWholeDigits = 12;
+
+  /// ينظّف النص وفق القواعد أعلاه (يُستخدم أيضاً في الاختبارات).
+  String clean(String input) {
+    final text = MoneyParser.normalizeDigits(input).replaceAll(',', '.');
+    final out = StringBuffer();
+    var dot = false;
+    var whole = 0;
+    var fraction = 0;
+    for (final ch in text.split('')) {
+      if (ch == '-') {
+        if (allowNegative && out.isEmpty) out.write(ch);
+      } else if (ch == '.') {
+        if (decimals == 0 || dot) continue;
+        dot = true;
+        out.write(whole == 0 ? '0.' : '.');
+      } else if ('0123456789'.contains(ch)) {
+        if (dot) {
+          if (fraction >= decimals) continue;
+          fraction++;
+        } else {
+          if (whole >= maxWholeDigits) continue;
+          whole++;
+        }
+        out.write(ch);
+      }
+    }
+    return out.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = clean(newValue.text);
+    if (text == newValue.text) return newValue;
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
 /// حالة نص المبلغ الذي يكتبه المستخدم على لوحة الأرقام.
 class AmountInput {
   const AmountInput(this.text);

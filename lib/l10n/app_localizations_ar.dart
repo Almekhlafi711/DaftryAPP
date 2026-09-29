@@ -118,6 +118,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navMore => 'المزيد';
 
   @override
+  String get pressBackAgainToExit => 'اضغط رجوع مرة أخرى للخروج';
+
+  @override
   String get chooseCurrency => 'اختر عملتك';
 
   @override

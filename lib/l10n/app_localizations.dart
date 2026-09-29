@@ -314,6 +314,12 @@ abstract class AppLocalizations {
   /// **'المزيد'**
   String get navMore;
 
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط رجوع مرة أخرى للخروج'**
+  String get pressBackAgainToExit;
+
   /// No description provided for @chooseCurrency.
   ///
   /// In ar, this message translates to:

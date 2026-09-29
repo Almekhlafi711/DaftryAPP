@@ -44,6 +44,11 @@ class AccountsScreen extends ConsumerWidget {
         title: Text(l10n.accountsTitle),
         actions: [
           IconButton.filled(
+            // ألوان صريحة: شريط التطبيق يفرض لون نصه على أزرار الإجراءات.
+            style: IconButton.styleFrom(
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.onPrimary,
+            ),
             tooltip: l10n.addAccount,
             icon: const Icon(Icons.add_rounded),
             onPressed: () => showAccountForm(context),
@@ -314,7 +319,7 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
                   selected: _type == t,
                   onSelected: (_) => setState(() => _type = t),
                   labelStyle: TextStyle(
-                    color: _type == t ? Colors.white : c.textPrimary,
+                    color: _type == t ? c.onPrimary : c.textPrimary,
                   ),
                 ),
             ],
@@ -345,6 +350,12 @@ class _AccountFormState extends ConsumerState<_AccountForm> {
                 decimal: true,
                 signed: true,
               ),
+              inputFormatters: [
+                AmountInputFormatter(
+                  ref.watch(moneyParserProvider).decimals,
+                  allowNegative: true,
+                ),
+              ],
               decoration: InputDecoration(
                 labelText: l10n.openingBalance,
                 suffixText: ref.watch(moneyFormatterProvider).symbol,
@@ -403,6 +414,12 @@ Future<void> showAdjustBalance(BuildContext context, Account account) async {
                   decimal: true,
                   signed: true,
                 ),
+                inputFormatters: [
+                  AmountInputFormatter(
+                    ref.read(moneyParserProvider).decimals,
+                    allowNegative: true,
+                  ),
+                ],
                 decoration: InputDecoration(
                   labelText: l10n.actualBalance,
                   suffixText: money.symbol,
@@ -596,14 +613,20 @@ class _ArchiveSheetState extends ConsumerState<_ArchiveSheet> {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: c.archive),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: c.archive,
+                    foregroundColor: c.onColor(c.archive),
+                  ),
                   onPressed: () => _archive(transfer: true),
                   child: Text(l10n.transferAndArchive),
                 ),
               ] else ...[
                 const SizedBox(height: 16),
                 FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: c.archive),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: c.archive,
+                    foregroundColor: c.onColor(c.archive),
+                  ),
                   onPressed: () => _archive(transfer: false),
                   child: Text(l10n.archive),
                 ),

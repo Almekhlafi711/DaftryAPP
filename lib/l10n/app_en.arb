@@ -36,6 +36,7 @@
   "navTransactions": "Activity",
   "navDebts": "Debts",
   "navMore": "More",
+  "pressBackAgainToExit": "Press back again to exit",
   "chooseCurrency": "Choose your currency",
   "currencyWarning": "Used across the app and cannot be changed later",
   "searchCurrency": "Search currency",

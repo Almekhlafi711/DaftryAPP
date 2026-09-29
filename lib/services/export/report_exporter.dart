@@ -15,6 +15,7 @@ import '../../domain/models/budget_report_models.dart';
 import '../../domain/models/transaction_models.dart';
 import 'document_owner.dart';
 import 'pdf_fonts.dart';
+import 'pdf_text.dart';
 
 /// نصوص التقرير بلغة المستخدم.
 class ReportLabels {
@@ -109,13 +110,26 @@ class ReportExporter {
     final doc = pw.Document(title: labels.title);
     final monthFmt = DateFormat.yMMM(locale);
 
-    pw.Widget amount(int v, {PdfColor? color, bool bold = false}) => pw.Text(
-      money.format(v, withSymbol: true),
-      textDirection: pw.TextDirection.ltr,
-      style: pw.TextStyle(
-        color: color,
-        fontWeight: bold ? pw.FontWeight.bold : null,
-        fontSize: 10,
+    pw.Widget amount(int v, {PdfColor? color, bool bold = false}) =>
+        pdfTextWidget(
+          money.format(v, withSymbol: true),
+          textDirection: pw.TextDirection.ltr,
+          style: pw.TextStyle(
+            color: color,
+            fontWeight: bold ? pw.FontWeight.bold : null,
+            fontSize: 10,
+          ),
+        );
+
+    final dir = rtl ? pw.TextDirection.rtl : pw.TextDirection.ltr;
+    // جداول مكتبة PDF تُرتَّب دائماً من اليسار ولا ترث اتجاه الصفحة: نعكس
+    // الأعمدة في العربية (العمود الأول يميناً) ونحدد اتجاه كل نص.
+    List<T> ordered<T>(List<T> cells) => rtl ? cells.reversed.toList() : cells;
+    pw.Widget cell(pw.Widget child) => pw.Padding(
+      padding: const pw.EdgeInsets.all(5),
+      child: pw.Align(
+        alignment: rtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+        child: child,
       ),
     );
 
@@ -125,12 +139,12 @@ class ReportExporter {
           children: [
             pw.TableRow(
               decoration: const pw.BoxDecoration(color: _primary),
-              children: [
+              children: ordered([
                 for (final h in headers)
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(5),
-                    child: pw.Text(
+                  cell(
+                    pdfTextWidget(
                       h,
+                      textDirection: dir,
                       style: pw.TextStyle(
                         color: PdfColors.white,
                         fontWeight: pw.FontWeight.bold,
@@ -138,24 +152,23 @@ class ReportExporter {
                       ),
                     ),
                   ),
-              ],
+              ]),
             ),
             for (final r in rows)
-              pw.TableRow(
-                children: [
-                  for (final c in r)
-                    pw.Padding(padding: const pw.EdgeInsets.all(5), child: c),
-                ],
-              ),
+              pw.TableRow(children: ordered([for (final c in r) cell(c)])),
           ],
         );
 
     List<List<pw.Widget>> categoryRows(List<CategoryTotal> items) => [
       for (final c in items)
         [
-          pw.Text(c.category.name, style: const pw.TextStyle(fontSize: 10)),
+          pdfTextWidget(
+            c.category.name,
+            textDirection: dir,
+            style: const pw.TextStyle(fontSize: 10),
+          ),
           amount(c.total),
-          pw.Text(
+          pdfTextWidget(
             '${(c.share * 100).toStringAsFixed(1)}%',
             textDirection: pw.TextDirection.ltr,
             style: const pw.TextStyle(fontSize: 10),
@@ -172,7 +185,7 @@ class ReportExporter {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text(
+              pdfTextWidget(
                 labels.title,
                 style: pw.TextStyle(
                   fontSize: 18,
@@ -182,7 +195,7 @@ class ReportExporter {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text(
+                  pdfTextWidget(
                     labels.appName,
                     style: pw.TextStyle(
                       fontSize: 16,
@@ -191,12 +204,12 @@ class ReportExporter {
                     ),
                   ),
                   if (owner != null)
-                    pw.Text(
+                    pdfTextWidget(
                       owner!.label,
                       style: const pw.TextStyle(fontSize: 10, color: _muted),
                     ),
                   if (owner?.phone != null)
-                    pw.Text(
+                    pdfTextWidget(
                       owner!.phone!,
                       style: const pw.TextStyle(fontSize: 10, color: _muted),
                       textDirection: pw.TextDirection.ltr,
@@ -205,7 +218,7 @@ class ReportExporter {
               ),
             ],
           ),
-          pw.Text(
+          pdfTextWidget(
             '${labels.period}: ${_range(report)}',
             style: const pw.TextStyle(color: _muted, fontSize: 10),
           ),
@@ -221,7 +234,7 @@ class ReportExporter {
             ],
           ),
           pw.SizedBox(height: 16),
-          pw.Text(
+          pdfTextWidget(
             labels.monthsComparison,
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           ),
@@ -231,8 +244,9 @@ class ReportExporter {
             [
               for (final m in report.months)
                 [
-                  pw.Text(
+                  pdfTextWidget(
                     _date(monthFmt, m.month),
+                    textDirection: dir,
                     style: const pw.TextStyle(fontSize: 10),
                   ),
                   amount(m.income),
@@ -243,7 +257,7 @@ class ReportExporter {
           ),
           if (report.expenseByCategory.isNotEmpty) ...[
             pw.SizedBox(height: 16),
-            pw.Text(
+            pdfTextWidget(
               labels.expenseByCategory,
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
@@ -256,7 +270,7 @@ class ReportExporter {
           ],
           if (report.incomeByCategory.isNotEmpty) ...[
             pw.SizedBox(height: 16),
-            pw.Text(
+            pdfTextWidget(
               labels.incomeByCategory,
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
@@ -268,7 +282,7 @@ class ReportExporter {
             ], categoryRows(report.incomeByCategory)),
           ],
           pw.SizedBox(height: 12),
-          pw.Text(
+          pdfTextWidget(
             labels.excludedNote,
             style: const pw.TextStyle(fontSize: 9, color: _muted),
           ),

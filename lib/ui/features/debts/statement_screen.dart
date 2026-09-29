@@ -6,10 +6,9 @@
 // 4) واتساب / مشاركة / طباعة. لا يُحفظ الكشف داخل التطبيق.
 // =============================================================================
 
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../core/utils/date_range.dart';
 import '../../../domain/enums.dart';
@@ -75,7 +74,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
   }
 
   /// توليد ملف PDF بنصوص لغة المستخدم.
-  Future<Uint8List> _buildPdf(StatementData data) async {
+  Future<StatementPdf> _statementPdf(StatementData data) async {
     final l10n = context.l10n;
     final locale = ref.read(localeProvider).languageCode;
     final owner = documentOwner(context, ref);
@@ -103,7 +102,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
         generatedAt: l10n.generatedAt,
       ),
     );
-    return pdf.build(data);
+    return pdf;
   }
 
   Future<void> _export(StatementData data, {required bool print}) async {
@@ -112,18 +111,21 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
     final l10n = context.l10n;
     final name = 'statement-${data.contact.name}';
     try {
-      final pdf = await _buildPdf(data);
+      final statement = await _statementPdf(data);
       if (print) {
-        await share.printPdf(pdf, name);
+        await share.printPdf(await statement.build(data), name);
       } else if (_output == _Output.pdf) {
         await share.share(
-          pdf,
+          await statement.build(data),
           '$name.pdf',
           mimeType: 'application/pdf',
           text: l10n.statementShareText(data.contact.name),
         );
       } else {
-        final png = await StatementPdf.rasterFirstPage(pdf);
+        // صورة بطول الكشف كله (لا تُقصّ أي حركة) بعرض الهاتف.
+        final png = await StatementPdf.rasterImage(
+          await statement.buildImage(data),
+        );
         await share.share(
           png,
           '$name.png',
@@ -148,7 +150,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
       label: Text(label),
       selected: _period == p,
       onSelected: (_) => _setPeriod(p),
-      labelStyle: TextStyle(color: _period == p ? Colors.white : c.textPrimary),
+      labelStyle: TextStyle(color: _period == p ? c.onPrimary : c.textPrimary),
     );
 
     return Scaffold(
@@ -224,10 +226,12 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
                     Expanded(
                       flex: 3,
                       child: FilledButton.icon(
+                        // لون واتساب المعروف مع نص أبيض في الوضعين.
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF16A34A),
+                          foregroundColor: Colors.white,
                         ),
-                        icon: const Icon(Icons.chat_outlined),
+                        icon: const FaIcon(FontAwesomeIcons.whatsapp),
                         label: Text(l10n.whatsapp),
                         // يفتح ورقة المشاركة ويظهر فيها واتساب.
                         onPressed: _busy

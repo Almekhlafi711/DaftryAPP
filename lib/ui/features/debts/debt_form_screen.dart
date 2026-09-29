@@ -383,6 +383,11 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          inputFormatters: [
+                            AmountInputFormatter(
+                              ref.watch(moneyParserProvider).decimals,
+                            ),
+                          ],
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,

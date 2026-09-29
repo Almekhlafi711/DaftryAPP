@@ -3,9 +3,12 @@
 // - الخط: IBM Plex Sans Arabic (مضمَّن، يدعم العربية واللاتينية).
 // - البطاقات بزوايا 18، الأزرار 16 وارتفاع 50، شبكة مسافات من مضاعفات 4 و 8.
 // - مساحة لمس لا تقل عن 44 نقطة.
+// - الوضع الداكن بمخطط ألوان Material 3 كامل (الأسطح، الحواف، النص فوق
+//   الأزرار) وشريطا الحالة والتنقل في النظام يتبعان الوضع.
 // =============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 
@@ -35,13 +38,28 @@ abstract final class AppTheme {
   static ThemeData light() => _build(AppColors.light, Brightness.light);
   static ThemeData dark() => _build(AppColors.dark, Brightness.dark);
 
+  /// شريط الحالة وشريط التنقل في النظام بألوان الوضع الحالي.
+  static SystemUiOverlayStyle overlayStyle(AppColors c) =>
+      (c.isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: c.surface,
+            systemNavigationBarIconBrightness: c.isDark
+                ? Brightness.light
+                : Brightness.dark,
+          );
+
   static ThemeData _build(AppColors c, Brightness brightness) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: c.primary,
+      seedColor: AppColors.light.brand,
       brightness: brightness,
       primary: c.primary,
+      onPrimary: c.onPrimary,
       error: c.expense,
-      surface: c.surface,
+      surface: c.isDark ? c.background : c.surface,
+      onSurface: c.textPrimary,
+      onSurfaceVariant: c.textSecondary,
+      outlineVariant: c.border,
     );
     final base = ThemeData(
       useMaterial3: true,
@@ -79,6 +97,7 @@ abstract final class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
+        systemOverlayStyle: overlayStyle(c),
         backgroundColor: c.background,
         foregroundColor: c.textPrimary,
         elevation: 0,
@@ -104,9 +123,7 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
           backgroundColor: c.primary,
-          foregroundColor: brightness == Brightness.light
-              ? Colors.white
-              : c.background,
+          foregroundColor: c.onPrimary,
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontSize: 16,
@@ -175,9 +192,9 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(Radii.chip),
         ),
         labelStyle: TextStyle(fontFamily: fontFamily, color: c.textPrimary),
-        secondaryLabelStyle: const TextStyle(
+        secondaryLabelStyle: TextStyle(
           fontFamily: fontFamily,
-          color: Colors.white,
+          color: c.onPrimary,
         ),
         showCheckmark: false,
       ),
@@ -206,7 +223,7 @@ abstract final class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? Colors.white : null,
+          (s) => s.contains(WidgetState.selected) ? c.onPrimary : null,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected) ? c.primary : null,

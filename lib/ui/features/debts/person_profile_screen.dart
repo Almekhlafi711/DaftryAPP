@@ -57,6 +57,7 @@ class PersonProfileScreen extends ConsumerWidget {
             ? openDirections.single
             : null;
         const compact = EdgeInsets.symmetric(horizontal: 8);
+        final settleColor = single == DebtDirection.iOwe ? c.expense : c.income;
         return Scaffold(
           appBar: AppBar(
             centerTitle: true,
@@ -139,9 +140,8 @@ class PersonProfileScreen extends ConsumerWidget {
                       flex: 5,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: single == DebtDirection.owedToMe
-                              ? c.income
-                              : c.expense,
+                          backgroundColor: settleColor,
+                          foregroundColor: c.onColor(settleColor),
                           padding: compact,
                         ),
                         onPressed: () => showPaymentSheet(
@@ -385,6 +385,7 @@ class _DirectionCard extends ConsumerWidget {
                   child: FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: color,
+                      foregroundColor: c.onColor(color),
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                     ),
                     onPressed: () => showPaymentSheet(
@@ -630,76 +631,83 @@ class _TimelineRow extends ConsumerWidget {
     final canAct = !profile.contact.isArchived;
     final action = await showModalBottomSheet<String>(
       context: context,
+      // عملية موزّعة على ديون كثيرة قد تطول: يُمرَّر المحتوى عند الحاجة.
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (entry.kind == TimelineKind.debt && debt != null) ...[
-              if (debt.isOpen && canAct) ...[
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (entry.kind == TimelineKind.debt && debt != null) ...[
+                if (debt.isOpen && canAct) ...[
+                  ListTile(
+                    leading: const Icon(Icons.payments_outlined),
+                    title: Text(l10n.settleAction(debt.direction)),
+                    onTap: () => Navigator.pop(ctx, 'pay'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.handshake_outlined),
+                    title: Text(
+                      debt.direction == DebtDirection.owedToMe
+                          ? l10n.forgiveRemaining
+                          : l10n.forgivenRemaining,
+                    ),
+                    onTap: () => Navigator.pop(ctx, 'forgive'),
+                  ),
+                ],
                 ListTile(
-                  leading: const Icon(Icons.payments_outlined),
-                  title: Text(l10n.settleAction(debt.direction)),
-                  onTap: () => Navigator.pop(ctx, 'pay'),
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(l10n.editDebt),
+                  onTap: () => Navigator.pop(ctx, 'edit'),
                 ),
+                if (!debt.hasMovements)
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: c.expense,
+                    ),
+                    title: Text(
+                      l10n.deleteDebt,
+                      style: TextStyle(color: c.expense),
+                    ),
+                    onTap: () => Navigator.pop(ctx, 'delete'),
+                  ),
+              ],
+              if (entry.kind == TimelineKind.payment) ...[
+                ListTile(
+                  title: Text(
+                    l10n.distribution,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                for (final a in entry.allocations)
+                  if (profile.debt(a.debtId) case final d?)
+                    ListTile(
+                      dense: true,
+                      title: Text(debtLabel(ctx, d)),
+                      trailing: Text(money.inline(a.amount)),
+                    ),
+                if (!entry.cancelled)
+                  ListTile(
+                    leading: Icon(Icons.block_rounded, color: c.expense),
+                    title: Text(
+                      l10n.cancelOperation,
+                      style: TextStyle(color: c.expense),
+                    ),
+                    onTap: () => Navigator.pop(ctx, 'cancel'),
+                  ),
+              ],
+              if (entry.kind == TimelineKind.writeOff)
                 ListTile(
                   leading: const Icon(Icons.handshake_outlined),
-                  title: Text(
-                    debt.direction == DebtDirection.owedToMe
-                        ? l10n.forgiveRemaining
-                        : l10n.forgivenRemaining,
-                  ),
-                  onTap: () => Navigator.pop(ctx, 'forgive'),
-                ),
-              ],
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: Text(l10n.editDebt),
-                onTap: () => Navigator.pop(ctx, 'edit'),
-              ),
-              if (!debt.hasMovements)
-                ListTile(
-                  leading: Icon(Icons.delete_outline_rounded, color: c.expense),
-                  title: Text(
-                    l10n.deleteDebt,
-                    style: TextStyle(color: c.expense),
-                  ),
-                  onTap: () => Navigator.pop(ctx, 'delete'),
+                  title: Text(l10n.writeOffName(entry.direction)),
+                  subtitle: entry.categoryName == null
+                      ? null
+                      : Text(entry.categoryName!),
+                  trailing: Text(money.inline(entry.amount)),
                 ),
             ],
-            if (entry.kind == TimelineKind.payment) ...[
-              ListTile(
-                title: Text(
-                  l10n.distribution,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              for (final a in entry.allocations)
-                if (profile.debt(a.debtId) case final d?)
-                  ListTile(
-                    dense: true,
-                    title: Text(debtLabel(ctx, d)),
-                    trailing: Text(money.inline(a.amount)),
-                  ),
-              if (!entry.cancelled)
-                ListTile(
-                  leading: Icon(Icons.block_rounded, color: c.expense),
-                  title: Text(
-                    l10n.cancelOperation,
-                    style: TextStyle(color: c.expense),
-                  ),
-                  onTap: () => Navigator.pop(ctx, 'cancel'),
-                ),
-            ],
-            if (entry.kind == TimelineKind.writeOff)
-              ListTile(
-                leading: const Icon(Icons.handshake_outlined),
-                title: Text(l10n.writeOffName(entry.direction)),
-                subtitle: entry.categoryName == null
-                    ? null
-                    : Text(entry.categoryName!),
-                trailing: Text(money.inline(entry.amount)),
-              ),
-          ],
+          ),
         ),
       ),
     );

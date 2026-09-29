@@ -55,23 +55,29 @@ void main() {
     await _loadFonts();
   });
 
+  // كل شاشة عربية تُلتقط بالوضعين الفاتح والداكن (اللاحقة «_dark»).
+  final screens = <(String, String)>[
+    ('home_ar', AppRoutes.home),
+    ('add_tx_ar', AppRoutes.newTransaction()),
+    ('transactions_ar', AppRoutes.transactions),
+    ('debts_ar', AppRoutes.debts),
+    ('speed_dial_ar', AppRoutes.debts),
+    ('receive_sheet_ar', AppRoutes.person(1)),
+    ('person_ar', AppRoutes.person(1)),
+    ('statement_ar', AppRoutes.personStatement(1)),
+    ('new_debt_ar', AppRoutes.newDebt()),
+    ('reports_ar', AppRoutes.reports),
+    ('budget_ar', AppRoutes.budget),
+    ('accounts_ar', AppRoutes.accounts),
+    ('settings_ar', AppRoutes.more),
+    ('settings_bottom_ar', AppRoutes.more),
+  ];
   final shots = <(String, String, bool, bool)>[
-    ('home_ar', AppRoutes.home, true, false),
-    ('add_tx_ar', AppRoutes.newTransaction(), true, false),
-    ('transactions_ar', AppRoutes.transactions, true, false),
-    ('debts_ar', AppRoutes.debts, true, false),
-    ('speed_dial_ar', AppRoutes.debts, true, false),
-    ('receive_sheet_ar', AppRoutes.person(1), true, false),
-    ('person_ar', AppRoutes.person(1), true, false),
-    ('statement_ar', AppRoutes.personStatement(1), true, false),
-    ('new_debt_ar', AppRoutes.newDebt(), true, false),
-    ('reports_ar', AppRoutes.reports, true, false),
-    ('budget_ar', AppRoutes.budget, true, false),
-    ('accounts_ar', AppRoutes.accounts, true, false),
-    ('settings_ar', AppRoutes.more, true, false),
-    ('settings_bottom_ar', AppRoutes.more, true, false),
+    for (final (name, route) in screens) ...[
+      (name, route, true, false),
+      ('${name}_dark', route, true, true),
+    ],
     ('home_en', AppRoutes.home, false, false),
-    ('home_ar_dark', AppRoutes.home, true, true),
   ];
 
   for (final (name, route, arabic, dark) in shots) {
@@ -148,16 +154,29 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      ProviderScope.containerOf(tester.element(find.byType(DaftryApp)))
-          .read(routerProvider)
-          .go(route);
+      // التبويبات بـ go، والصفحات الفرعية بـ push كما في التطبيق (فيظهر زر
+      // الرجوع ويبقى المسار الحقيقي للتنقل).
+      final router = ProviderScope.containerOf(
+        tester.element(find.byType(DaftryApp)),
+      ).read(routerProvider);
+      const tabs = [
+        AppRoutes.home,
+        AppRoutes.transactions,
+        AppRoutes.debts,
+        AppRoutes.more,
+      ];
+      if (tabs.contains(route)) {
+        router.go(route);
+      } else {
+        router.push(route);
+      }
       await tester.pumpAndSettle();
       // لقطات تفاعلية: قائمة الإجراءات السريعة ونافذة الاستلام.
-      if (name == 'speed_dial_ar') {
+      if (name.startsWith('speed_dial_ar')) {
         await tester.tap(find.byTooltip('دين جديد'));
         await tester.pumpAndSettle();
       }
-      if (name == 'receive_sheet_ar') {
+      if (name.startsWith('receive_sheet_ar')) {
         await tester.tap(find.text('استلام مبلغ').first);
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextField).first, '500');

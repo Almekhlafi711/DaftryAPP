@@ -435,7 +435,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         for (final cat in visibleCats)
                           _CategoryCell(
                             icon: AppIcons.category(cat.icon),
-                            color: Color(cat.color),
+                            color: c.accent(Color(cat.color)),
                             label: cat.name,
                             selected: cat.id == _categoryId,
                             onTap: () {

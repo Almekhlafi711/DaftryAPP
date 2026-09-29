@@ -118,6 +118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMore => 'More';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get chooseCurrency => 'Choose your currency';
 
   @override

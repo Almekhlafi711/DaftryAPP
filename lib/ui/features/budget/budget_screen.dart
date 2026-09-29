@@ -18,6 +18,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
+import '../../widgets/inputs.dart';
 
 Color levelColor(BudgetLevel level, AppColors c) => switch (level) {
   BudgetLevel.safe => c.income,
@@ -40,6 +41,11 @@ class BudgetScreen extends ConsumerWidget {
         title: Text(l10n.budgetTitle),
         actions: [
           IconButton.filled(
+            // ألوان صريحة: شريط التطبيق يفرض لون نصه على أزرار الإجراءات.
+            style: IconButton.styleFrom(
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.onPrimary,
+            ),
             tooltip: l10n.addBudget,
             icon: const Icon(Icons.add_rounded),
             onPressed: () => showBudgetForm(context),
@@ -172,7 +178,7 @@ class _BudgetTile extends ConsumerWidget {
             children: [
               Icon(
                 AppIcons.category(cat.icon),
-                color: Color(cat.color),
+                color: c.accent(Color(cat.color)),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -294,12 +300,14 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
                   avatar: Icon(
                     AppIcons.category(cat.icon),
                     size: 18,
-                    color: Color(cat.color),
+                    color: _categoryId == cat.id
+                        ? c.onPrimary
+                        : c.accent(Color(cat.color)),
                   ),
                   label: Text(cat.name),
                   selected: _categoryId == cat.id,
                   labelStyle: TextStyle(
-                    color: _categoryId == cat.id ? Colors.white : c.textPrimary,
+                    color: _categoryId == cat.id ? c.onPrimary : c.textPrimary,
                   ),
                   onSelected: widget.existing == null
                       ? (_) => setState(() => _categoryId = cat.id)
@@ -311,6 +319,9 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
           TextField(
             controller: _limit,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              AmountInputFormatter(ref.watch(moneyParserProvider).decimals),
+            ],
             decoration: InputDecoration(
               labelText: l10n.budgetLimit,
               suffixText: ref.watch(moneyFormatterProvider).symbol,

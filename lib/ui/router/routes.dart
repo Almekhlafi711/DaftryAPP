@@ -3,8 +3,11 @@
 //
 // - أربعة تبويبات بشريط سفلي: الرئيسية، المعاملات، الديون، المزيد.
 //   كل تبويب يحتفظ بحالته عند التنقل (StatefulShellRoute.indexedStack).
-// - الشاشات التي تحتاج تركيزاً كاملاً (إضافة معاملة، ملف الشخص، كشف الحساب)
-//   تُفتح فوق الشريط السفلي.
+// - الشاشات الفرعية (إضافة معاملة، ملف الشخص، كشف الحساب، الحسابات،
+//   التقارير، الميزانية، الفئات، النسخ، القفل) تُفتح بـ push فوق الشريط
+//   السفلي، فيعود زر الرجوع دائماً إلى الصفحة السابقة نفسها.
+// - زر الرجوع في التبويبات يعود إلى «الرئيسية»، وفيها يُطلب ضغطه مرتين للخروج
+//   (انظر [MainShell]).
 // - إن لم يكتمل الإعداد الأول يُعاد التوجيه تلقائياً إلى شاشة اختيار العملة.
 //
 // لإضافة شاشة: أضف مساراً في [AppRoutes] ثم GoRoute في [routerProvider].
@@ -42,12 +45,13 @@ abstract final class AppRoutes {
   static const debts = '/debts';
   static const more = '/more';
 
-  static const accounts = '/more/accounts';
-  static const reports = '/more/reports';
-  static const budget = '/more/budget';
-  static const categories = '/more/categories';
-  static const backup = '/more/backup';
-  static const security = '/more/security';
+  // صفحات فرعية تُفتح دائماً بـ context.push (لا go) ليعمل الرجوع خطوة بخطوة.
+  static const accounts = '/accounts';
+  static const reports = '/reports';
+  static const budget = '/budget';
+  static const categories = '/categories';
+  static const backup = '/backup';
+  static const security = '/security';
 
   static String newTransaction([TxType type = TxType.expense]) =>
       '/tx/new?type=${type.name}';
@@ -128,32 +132,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.more,
                 builder: (_, _) => const SettingsScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'accounts',
-                    builder: (_, _) => const AccountsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'reports',
-                    builder: (_, _) => const ReportsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'budget',
-                    builder: (_, _) => const BudgetScreen(),
-                  ),
-                  GoRoute(
-                    path: 'categories',
-                    builder: (_, _) => const CategoriesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'backup',
-                    builder: (_, _) => const BackupScreen(),
-                  ),
-                  GoRoute(
-                    path: 'security',
-                    builder: (_, _) => const SecurityScreen(),
-                  ),
-                ],
               ),
             ],
           ),
@@ -161,6 +139,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ---------------- شاشات كاملة فوق الشريط السفلي ----------------
+      for (final (path, screen) in const <(String, Widget)>[
+        (AppRoutes.accounts, AccountsScreen()),
+        (AppRoutes.reports, ReportsScreen()),
+        (AppRoutes.budget, BudgetScreen()),
+        (AppRoutes.categories, CategoriesScreen()),
+        (AppRoutes.backup, BackupScreen()),
+        (AppRoutes.security, SecurityScreen()),
+      ])
+        GoRoute(
+          parentNavigatorKey: _rootKey,
+          path: path,
+          builder: (_, _) => screen,
+        ),
       GoRoute(
         parentNavigatorKey: _rootKey,
         path: '/tx/new',

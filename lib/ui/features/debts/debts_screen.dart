@@ -185,6 +185,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
 
   Future<void> _showFilter(BuildContext context) => showModalBottomSheet<void>(
     context: context,
+    // بارتفاع المحتوى، ويُمرَّر إن لم يتسع (الخطوط الكبيرة أو الإنجليزية).
+    isScrollControlled: true,
     builder: (ctx) => Consumer(
       builder: (ctx, ref, _) {
         final l10n = ctx.l10n;
@@ -195,12 +197,12 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
               label: Text(label),
               selected: selected,
               labelStyle: TextStyle(
-                color: selected ? Colors.white : ctx.colors.textPrimary,
+                color: selected ? ctx.colors.onPrimary : ctx.colors.textPrimary,
               ),
               onSelected: (_) => onTap(),
             );
         return SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               Insets.screen,
               0,
@@ -393,7 +395,7 @@ class _SpeedDialMenu extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 26),
+              child: Icon(icon, color: c.onColor(color), size: 26),
             ),
             const SizedBox(width: 12),
             Container(

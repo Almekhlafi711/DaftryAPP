@@ -274,16 +274,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 }
 
-/// ألوان الأعمدة: الفاتح من لوحة الوثيقة؛ الداكن بدرجات مُتحقق منها للوضع الداكن.
-Color _chartIncome(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark
-    ? const Color(0xFF16A34A)
-    : const Color(0xFF15803D);
+/// ألوان الأعمدة من لوحة التطبيق نفسها (الداكن بدرجات Material 3 الهادئة).
+Color _chartIncome(BuildContext context) => context.colors.income;
 
-Color _chartExpense(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark
-    ? const Color(0xFFF66D75)
-    : const Color(0xFFDC2626);
+Color _chartExpense(BuildContext context) => context.colors.expense;
 
 class _Stat extends StatelessWidget {
   const _Stat({required this.label, required this.value, required this.color});
@@ -490,7 +484,7 @@ class _CategoryDonut extends ConsumerWidget {
       for (final t in top)
         (
           t.category.name,
-          Color(t.category.color),
+          c.accent(Color(t.category.color)),
           t.total,
           t.share,
           AppIcons.category(t.category.icon),

@@ -190,7 +190,7 @@ void main() {
       final data = await StatementService(db)
           .build(contact, DateRange.lastDays(90));
       expect(data.section(DebtDirection.owedToMe)!.lines, hasLength(100));
-      final pdf = await StatementPdf(
+      final statement = StatementPdf(
         fonts: await PdfFonts.load(),
         money: MoneyFormatter(decimals: 2, symbol: 'ر.س'),
         locale: 'ar',
@@ -212,8 +212,12 @@ void main() {
           noMovements: 'لا توجد حركات',
           generatedAt: 'أُنشئ في',
         ),
-      ).build(data);
-      final png = await StatementPdf.rasterFirstPage(pdf);
+      );
+      final pdf = await statement.build(data);
+      // صورة واتساب: صفحة واحدة بطول الكشف كله (100 حركة دون قصّ).
+      final png = await StatementPdf.rasterImage(
+        await statement.buildImage(data),
+      );
       watch.stop();
       debugPrint('statement 100 lines: ${watch.elapsedMilliseconds} ms');
       expect(pdf.length, greaterThan(1000));

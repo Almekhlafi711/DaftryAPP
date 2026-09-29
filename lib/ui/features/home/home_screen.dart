@@ -10,6 +10,7 @@
 // =============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,141 +41,151 @@ class HomeScreen extends ConsumerWidget {
     final greeting = hour < 12 ? l10n.greetingMorning : l10n.greetingEvening;
     final userName = ref.watch(preferencesProvider).value?.userName;
 
-    return Scaffold(
-      backgroundColor: c.background,
-      body: CustomScrollView(
-        slivers: [
-          // الترويسة الملونة + بطاقة الرصيد
-          SliverToBoxAdapter(
-            child: Stack(
-              children: [
-                Container(height: 190, color: c.brand),
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Insets.screen,
-                      Insets.sm,
-                      Insets.screen,
-                      0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userName == null
-                                        ? greeting
-                                        : l10n.greetingName(greeting, userName),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.appName,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton.filledTonal(
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.white12,
-                                foregroundColor: Colors.white,
-                              ),
-                              icon: const Icon(
-                                Icons.notifications_none_rounded,
-                              ),
-                              onPressed: () => _showUpcoming(context, ref),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: Insets.lg),
-                        const _BalanceCard(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // العمليات السريعة — ثابتة عند التمرير
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _QuickActionsHeader(
-              extent: 96 + 24 * MediaQuery.textScalerOf(context).scale(1),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
-            sliver: SliverList.list(
-              children: [
-                if (budget != null && !budget.isEmpty) ...[
-                  const SizedBox(height: Insets.md),
-                  _BudgetCard(
-                    spent: budget.totalSpent,
-                    limit: budget.totalLimit,
-                    remaining: budget.remaining,
-                    daysLeft: budget.range.daysLeft(DateTime.now()),
-                    level: budget.level,
-                  ),
-                ],
-                if (debts != null && !debts.isEmpty) ...[
-                  const SizedBox(height: Insets.md),
-                  _DebtsCard(totals: debts),
-                ],
-                SectionTitle(
-                  l10n.recentTransactions,
-                  action: l10n.seeAll,
-                  onAction: () => context.go(AppRoutes.transactions),
-                ),
-                AsyncBody(
-                  value: recent,
-                  builder: (items) => items.isEmpty
-                      ? EmptyState(
-                          icon: Icons.receipt_long_outlined,
-                          message: l10n.noTransactionsYet,
-                        )
-                      : AppCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Column(
+    // الترويسة بلون الهوية في الوضعين: أيقونات شريط الحالة فاتحة فوقها.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.overlayStyle(c).copyWith(
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: c.background,
+        body: CustomScrollView(
+          slivers: [
+            // الترويسة الملونة + بطاقة الرصيد
+            SliverToBoxAdapter(
+              child: Stack(
+                children: [
+                  Container(height: 190, color: c.brand),
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        Insets.screen,
+                        Insets.sm,
+                        Insets.screen,
+                        0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              for (final item in items)
-                                TransactionTile(
-                                  item: item,
-                                  onTap: () =>
-                                      item.isDebtLinked &&
-                                          item.contactId != null
-                                      ? context.push(
-                                          AppRoutes.person(item.contactId!),
-                                        )
-                                      : context.push(
-                                          AppRoutes.editTransaction(item.id),
-                                        ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userName == null
+                                          ? greeting
+                                          : l10n.greetingName(
+                                              greeting,
+                                              userName,
+                                            ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    Text(
+                                      l10n.appName,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+                              IconButton.filledTonal(
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white12,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(
+                                  Icons.notifications_none_rounded,
+                                ),
+                                onPressed: () => _showUpcoming(context, ref),
+                              ),
                             ],
                           ),
-                        ),
-                ),
-                const SizedBox(height: Insets.xxl),
-              ],
+                          const SizedBox(height: Insets.lg),
+                          const _BalanceCard(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            // العمليات السريعة — ثابتة عند التمرير
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _QuickActionsHeader(
+                extent: 96 + 24 * MediaQuery.textScalerOf(context).scale(1),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
+              sliver: SliverList.list(
+                children: [
+                  if (budget != null && !budget.isEmpty) ...[
+                    const SizedBox(height: Insets.md),
+                    _BudgetCard(
+                      spent: budget.totalSpent,
+                      limit: budget.totalLimit,
+                      remaining: budget.remaining,
+                      daysLeft: budget.range.daysLeft(DateTime.now()),
+                      level: budget.level,
+                    ),
+                  ],
+                  if (debts != null && !debts.isEmpty) ...[
+                    const SizedBox(height: Insets.md),
+                    _DebtsCard(totals: debts),
+                  ],
+                  SectionTitle(
+                    l10n.recentTransactions,
+                    action: l10n.seeAll,
+                    onAction: () => context.go(AppRoutes.transactions),
+                  ),
+                  AsyncBody(
+                    value: recent,
+                    builder: (items) => items.isEmpty
+                        ? EmptyState(
+                            icon: Icons.receipt_long_outlined,
+                            message: l10n.noTransactionsYet,
+                          )
+                        : AppCard(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Column(
+                              children: [
+                                for (final item in items)
+                                  TransactionTile(
+                                    item: item,
+                                    onTap: () =>
+                                        item.isDebtLinked &&
+                                            item.contactId != null
+                                        ? context.push(
+                                            AppRoutes.person(item.contactId!),
+                                          )
+                                        : context.push(
+                                            AppRoutes.editTransaction(item.id),
+                                          ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: Insets.xxl),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

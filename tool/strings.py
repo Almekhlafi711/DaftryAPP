@@ -46,6 +46,7 @@ S = [
 ('navTransactions', 'المعاملات', 'Activity'),
 ('navDebts', 'الديون', 'Debts'),
 ('navMore', 'المزيد', 'More'),
+('pressBackAgainToExit', 'اضغط رجوع مرة أخرى للخروج', 'Press back again to exit'),
 # ---- الإعداد الأول ----
 ('chooseCurrency', 'اختر عملتك', 'Choose your currency'),
 ('currencyWarning', 'ستُستخدم في كل التطبيق ولا يمكن تغييرها لاحقاً', 'Used across the app and cannot be changed later'),

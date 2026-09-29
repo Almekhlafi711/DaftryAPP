@@ -244,6 +244,11 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      inputFormatters: [
+                        AmountInputFormatter(
+                          ref.watch(moneyParserProvider).decimals,
+                        ),
+                      ],
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -393,7 +398,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                               selected: d.id == _debtId,
                               labelStyle: TextStyle(
                                 color: d.id == _debtId
-                                    ? Colors.white
+                                    ? c.onPrimary
                                     : c.textPrimary,
                               ),
                               onSelected: (_) {

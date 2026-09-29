@@ -105,7 +105,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
       selected: selected,
       onSelected: (_) => onTap(),
       labelStyle: TextStyle(
-        color: selected ? Colors.white : c.textPrimary,
+        color: selected ? c.onPrimary : c.textPrimary,
         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
       ),
     );

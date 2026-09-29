@@ -140,7 +140,10 @@ Future<bool> confirmAction(
             const SizedBox(height: 20),
             FilledButton(
               style: destructive
-                  ? FilledButton.styleFrom(backgroundColor: c.expense)
+                  ? FilledButton.styleFrom(
+                      backgroundColor: c.expense,
+                      foregroundColor: c.onColor(c.expense),
+                    )
                   : null,
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(confirmLabel),

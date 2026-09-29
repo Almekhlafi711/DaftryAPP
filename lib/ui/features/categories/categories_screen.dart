@@ -36,6 +36,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         title: Text(l10n.categoriesTitle),
         actions: [
           IconButton.filled(
+            // ألوان صريحة: شريط التطبيق يفرض لون نصه على أزرار الإجراءات.
+            style: IconButton.styleFrom(
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.onPrimary,
+            ),
             tooltip: l10n.addCategory,
             icon: const Icon(Icons.add_rounded),
             onPressed: () => _showForm(context, kind: _kind),

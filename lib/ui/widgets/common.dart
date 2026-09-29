@@ -64,15 +64,20 @@ class IconBadge extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(size * 0.3),
-    ),
-    child: Icon(icon, color: color, size: size * 0.5),
-  );
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    // ألوان الفئات تُكيَّف مع الوضع الداكن حتى لا تكون مشبعة ومزعجة.
+    final tone = c.accent(color);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: c.tint(tone),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(icon, color: tone, size: size * 0.5),
+    );
+  }
 }
 
 /// مبلغ منسّق بعملة التطبيق — يُعرض دائماً من اليسار لليمين حتى لا تنقلب

@@ -266,10 +266,13 @@ class _SwipeableTransaction extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white),
+          Icon(icon, color: context.colors.onColor(color)),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(
+              color: context.colors.onColor(color),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
