@@ -144,35 +144,75 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  /// شريط علوي: زر رجوع مربّع، عنوان الخطوة، وتبديل اللغة.
+  PreferredSizeWidget _stepBar(String? title, Widget language) => AppBar(
+    leading: Padding(
+      padding: const EdgeInsetsDirectional.only(start: 8),
+      child: Center(
+        child: IconButton.outlined(
+          style: IconButton.styleFrom(
+            backgroundColor: context.colors.surface,
+            side: BorderSide(color: context.colors.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: _back,
+        ),
+      ),
+    ),
+    title: title == null
+        ? null
+        : Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.colors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+    centerTitle: true,
+    actions: [language],
+  );
+
   Widget _buildProfile(BuildContext context, Widget language) {
     final l10n = context.l10n;
     final c = context.colors;
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: _back),
-        actions: [language],
-      ),
+      appBar: _stepBar(l10n.stepOf('1', '2'), language),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
+                padding: const EdgeInsets.symmetric(horizontal: Insets.xl),
                 children: [
+                  const SizedBox(height: Insets.lg),
                   Center(
-                    child: IconBadge(
-                      icon: Icons.person_rounded,
-                      color: c.primary,
-                      size: 72,
+                    child: Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        color: c.tint(c.primary),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.person_outline_rounded,
+                        color: c.primary,
+                        size: 40,
+                      ),
                     ),
                   ),
                   const SizedBox(height: Insets.lg),
                   Text(
                     l10n.profileTitle,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     l10n.profileSubtitle,
                     textAlign: TextAlign.center,
@@ -193,7 +233,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(Insets.screen),
               child: FilledButton(
                 onPressed: _name.text.trim().isEmpty ? null : _submitProfile,
-                child: Text(l10n.continueLabel),
+                child: _ForwardLabel(l10n.continueLabel),
               ),
             ),
           ],
@@ -207,19 +247,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final c = context.colors;
     final arabic = ref.watch(isArabicProvider);
     final currencies = _filtered(arabic);
+    final name = _name.text.trim();
 
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: _back),
-        actions: [language],
-      ),
+      appBar: _stepBar(null, language),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
+                padding: const EdgeInsets.symmetric(horizontal: Insets.xl),
                 children: [
+                  // شعار التطبيق.
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: c.brand,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: c.brand.withValues(alpha: 0.3),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.menu_book_rounded,
+                        color: Colors.white,
+                        size: 38,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: Insets.lg),
+                  Text(
+                    l10n.welcomeName(name),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.currencyStepSubtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: c.textSecondary),
+                  ),
+                  const SizedBox(height: Insets.xl),
                   Text.rich(
                     TextSpan(
                       text: l10n.chooseCurrency,
@@ -230,7 +305,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                       ],
                     ),
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: Insets.sm),
                   // تنبيه واضح: العملة لا تتغير لاحقاً.
@@ -265,24 +341,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                     onChanged: (v) => setState(() => _query = v),
                   ),
-                  const SizedBox(height: Insets.sm),
-                  for (final currency in currencies)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: _CurrencyTile(
-                        currency: currency,
-                        arabic: arabic,
-                        selected: _selected?.code == currency.code,
-                        onTap: () => setState(() => _selected = currency),
-                      ),
+                  const SizedBox(height: Insets.md),
+                  // كل العملات في بطاقة واحدة بفواصل.
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (final (i, currency) in currencies.indexed) ...[
+                          if (i > 0)
+                            Divider(
+                              height: 1,
+                              indent: 16,
+                              endIndent: 16,
+                              color: c.border,
+                            ),
+                          _CurrencyTile(
+                            currency: currency,
+                            arabic: arabic,
+                            selected: _selected?.code == currency.code,
+                            onTap: () => setState(() => _selected = currency),
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
                   const SizedBox(height: Insets.md),
                   // النسخ السحابي خيار لا شرط — يظهر مُطفأً.
                   AppCard(
                     child: Row(
                       children: [
-                        Icon(Icons.cloud_outlined, color: c.transfer),
-                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +413,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         dimension: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(l10n.continueLabel),
+                    : _ForwardLabel(l10n.continueLabel),
               ),
             ),
           ],
@@ -334,6 +421,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
+}
+
+/// نص الزر مع سهم التقدم (ينعكس تلقائياً مع اتجاه اللغة).
+class _ForwardLabel extends StatelessWidget {
+  const _ForwardLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(text),
+      const SizedBox(width: 8),
+      const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+    ],
+  );
 }
 
 /// تبديل اللغة من أول شاشة.
@@ -369,43 +473,47 @@ class _CurrencyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return AppCard(
+    return InkWell(
       onTap: onTap,
-      color: selected ? c.primary.withValues(alpha: 0.08) : null,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: c.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              currency.symbol(arabic),
-              style: TextStyle(fontWeight: FontWeight.w700, color: c.primary),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  currency.name(arabic),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? c.tint(c.primary) : c.surfaceMuted,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                currency.symbol(arabic),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: selected ? c.primary : c.textSecondary,
                 ),
-                Text(
-                  currency.code,
-                  style: TextStyle(fontSize: 11.5, color: c.textSecondary),
-                ),
-              ],
+              ),
             ),
-          ),
-          if (selected) Icon(Icons.check_circle_rounded, color: c.primary),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    currency.name(arabic),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    currency.code,
+                    style: TextStyle(fontSize: 11.5, color: c.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            if (selected) Icon(Icons.check_rounded, color: c.primary),
+          ],
+        ),
       ),
     );
   }

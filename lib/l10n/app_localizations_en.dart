@@ -118,12 +118,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMore => 'More';
 
   @override
-  String get welcomeTitle => 'Welcome to Daftari';
-
-  @override
-  String get welcomeSubtitle => 'No account • No password • Start now';
-
-  @override
   String get chooseCurrency => 'Choose your currency';
 
   @override
@@ -586,7 +580,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String remainingAmount(String amount) {
-    return 'Remaining: $amount';
+    return 'Current remaining: $amount';
   }
 
   @override
@@ -627,7 +621,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statement => 'Statement';
 
   @override
-  String get timeline => 'Timeline';
+  String get timeline => 'Timeline & balance after each entry';
+
+  @override
+  String balanceShort(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String tlFrom(String account) {
+    return 'from $account';
+  }
+
+  @override
+  String tlInto(String account) {
+    return 'into $account';
+  }
+
+  @override
+  String tlIncomeCat(String category) {
+    return '$category income';
+  }
+
+  @override
+  String tlExpenseCat(String category) {
+    return '$category expense';
+  }
+
+  @override
+  String get tlNoAccount => 'No account';
+
+  @override
+  String get tlLedgerOnly => 'Ledger only';
+
+  @override
+  String get tlCancelled => 'Cancelled — not counted';
 
   @override
   String get paymentReceived => 'Received';
@@ -639,7 +667,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editPerson => 'Edit person';
 
   @override
-  String get searchPeople => 'Search people';
+  String get searchPeople => 'Search by name or phone';
+
+  @override
+  String get noDueDate => 'No due date';
+
+  @override
+  String get quickActions => 'Quick actions';
+
+  @override
+  String get closeLabel => 'Close';
 
   @override
   String get sourceTitle => 'Where did this debt come from?';
@@ -657,19 +694,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceCreditPurchase => 'I bought on credit';
 
   @override
-  String get sourceOpening => 'Earlier debt (before using the app)';
+  String get sourceOpening => 'Earlier debt';
 
   @override
-  String get sourceCreditSaleHint =>
-      'Recorded as income in a category — no account movement';
+  String sourceCreditSaleHint(String category) {
+    return 'Recorded as income ($category) — no account movement';
+  }
 
   @override
-  String get sourceCreditPurchaseHint =>
-      'Recorded as an expense in a category — no account movement';
+  String sourceCreditPurchaseHint(String category) {
+    return 'Recorded as an expense ($category) — no account movement';
+  }
 
   @override
-  String get sourceOpeningHint =>
-      'Ledger only — no income and no account movement';
+  String get sourceOpeningHint => 'Existed before using the app — ledger only';
+
+  @override
+  String get loanOwedHint => 'Reduces the account balance — not an expense';
+
+  @override
+  String get loanOweHint => 'Increases the account balance — not income';
+
+  @override
+  String get segOwedToMe => 'Owed to me';
+
+  @override
+  String get segIOwe => 'I owe';
+
+  @override
+  String get deviceContacts => 'Contacts';
 
   @override
   String get labelLoanOwed => 'Cash loan';
@@ -707,13 +760,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String remainingAfterPayment(String amount) {
-    return 'Remaining after payment: $amount';
-  }
+  String get remainingAfterReceive => 'Remaining after payment';
 
   @override
-  String distributedOldestFirst(String parts) {
-    return 'Applied oldest first: $parts';
+  String get remainingAfterPay => 'Remaining after payment';
+
+  @override
+  String get amountReceivedLabel => 'Amount received';
+
+  @override
+  String get amountPaidLabel => 'Amount paid';
+
+  @override
+  String get autoDistTitle => 'Automatic split — oldest first';
+
+  @override
+  String get selectedDebtTitle => 'Selected debt';
+
+  @override
+  String get allocCloses => 'closes';
+
+  @override
+  String allocLeaves(String amount) {
+    return '$amount left';
   }
 
   @override
@@ -927,7 +996,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get print => 'Print';
 
   @override
-  String get closingBalance => 'Balance due';
+  String get closingBalance => 'Closing balance = balance due';
+
+  @override
+  String get colMovement => 'Movement';
 
   @override
   String statementShareText(String name) {
@@ -1145,7 +1217,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get contactSupport => 'Contact support';
+  String get contactSupport => 'Contact us';
 
   @override
   String get supportWhatsApp => 'WhatsApp';
@@ -1160,7 +1232,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkOpenFailed => 'Couldn\'t open the link';
 
   @override
-  String get developedBy => 'Developed by Mohammed Al-Mekhlafi';
+  String get developedByPrefix => 'Developed by';
+
+  @override
+  String get developerName => 'Mohammed Al-Mekhlafi';
+
+  @override
+  String get sectionData => 'Data';
+
+  @override
+  String get sectionSecurity => 'Security & backup';
+
+  @override
+  String get ePayments => 'Electronic payments';
+
+  @override
+  String get underDevelopment => 'In development';
+
+  @override
+  String get ePaymentsSoon =>
+      'Electronic payments are in development and coming soon';
+
+  @override
+  String get payLocalWallets => 'Local wallets';
+
+  @override
+  String get payLocalWalletsHint => 'Local e-wallets';
+
+  @override
+  String get payCards => 'Visa / Mastercard';
+
+  @override
+  String get payCardsHint => 'Credit and debit cards';
+
+  @override
+  String get payOtherCards => 'Other payment cards';
+
+  @override
+  String get payOtherCardsHint => 'Mada and others';
 
   @override
   String get lockedTitle => 'Daftari is locked';
@@ -1442,86 +1551,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introStart => 'Get started';
 
   @override
+  String get intro1Title => 'Your finances in your pocket';
+
+  @override
   String get intro1Body =>
-      'Your personal ledger and debts in one place. Works offline with no sign-up, and your data stays on your device.';
+      'Record income, expenses and transfers between your accounts in seconds, and follow your budget in clear colors.';
 
   @override
-  String get introOffline => 'Offline';
+  String get intro2Title => 'Debts organized… your rights protected';
 
   @override
-  String get introNoAccount => 'No sign-up';
+  String get intro2Body =>
+      'A financial file for every person, payments split automatically oldest-first, and a statement you send on WhatsApp in one tap.';
 
   @override
-  String get introPrivate => 'Fully private';
+  String get intro3Title => 'Full privacy, easy start';
 
   @override
-  String get intro2Title => 'Everything to manage your money';
+  String get intro3Body =>
+      'No account or password, your data stays on your device, and cloud backup is optional. Just three steps and you are in.';
 
   @override
-  String get intro2Body => 'Simple, clear tools for every day.';
+  String get introStepName => 'Enter your name';
 
   @override
-  String get featTxTitle => 'Transactions & accounts';
+  String get introStepCurrency => 'Choose your currency';
 
   @override
-  String get featTxBody =>
-      'Record income, expenses and transfers between accounts';
+  String get introStepFirstTx => 'Add your first transaction';
 
   @override
-  String get featDebtsTitle => 'Debts & reminders';
+  String get introSampleShop => 'Supermarket';
 
   @override
-  String get featDebtsBody =>
-      'Track what you are owed and what you owe, with due-date reminders';
+  String get introSampleFood => 'Food';
 
   @override
-  String get featBudgetTitle => 'Budgets & reports';
+  String get introSamplePerson1 => 'Ahmed Ali';
 
   @override
-  String get featBudgetBody => 'Monthly limits, charts, and PDF & Excel export';
+  String get introSamplePerson2 => 'Khaled Saeed';
 
   @override
-  String get featStatementTitle => 'Ready-made statements';
+  String get introSamplePerson3 => 'Mohammed Hassan';
 
   @override
-  String get featStatementBody =>
-      'Send anyone their statement on WhatsApp in one tap';
+  String get introSampleReceive => 'Received 500';
 
   @override
-  String get intro3Title => 'Key steps to get started';
+  String get introSampleSplit => 'Split oldest-first';
 
   @override
-  String get intro3Body => 'Three steps that protect your data from day one.';
+  String get introSampleIncome => 'Income';
 
   @override
-  String get stepCurrencyTitle => 'Choose your currency carefully';
+  String get introSampleExpense => 'Expense';
 
   @override
-  String get stepLockTitle => 'Protect your data';
+  String get introSampleBalance => 'Total balance';
 
   @override
-  String get stepLockBody =>
-      'Turn on app lock with biometrics or a PIN in Settings';
+  String get introSampleStatement => 'Statement';
 
   @override
-  String get stepBackupTitle => 'Back up regularly';
-
-  @override
-  String get stepBackupBody =>
-      'Export an encrypted copy or turn on cloud backup to move your data safely';
+  String stepOf(String current, String total) {
+    return 'Step $current of $total';
+  }
 
   @override
   String get profileTitle => 'Tell us about you';
 
   @override
   String get profileSubtitle =>
-      'Your name appears on the reports and statements you share.';
+      'Your name appears at the top of statements and reports';
 
   @override
-  String get yourName => 'Your name';
+  String get profileChangeLater =>
+      'You can change your name and phone later in Settings';
 
   @override
-  String get phoneOptional => 'Phone (optional)';
+  String get yourName => 'Name';
+
+  @override
+  String get phoneOptional => 'Phone number (optional)';
+
+  @override
+  String get phoneHint => '05xxxxxxxx';
+
+  @override
+  String welcomeName(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String get currencyStepSubtitle => 'Step 2 of 2 — choose the app currency';
 
   @override
   String get sectionProfile => 'Profile';
@@ -1533,7 +1656,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addYourName => 'Add your name';
 
   @override
-  String get noPhone => 'No phone number';
+  String get noPhone => 'No phone number added';
 
   @override
   String greetingName(String greeting, String name) {

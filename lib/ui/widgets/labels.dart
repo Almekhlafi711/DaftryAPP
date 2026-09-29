@@ -48,14 +48,17 @@ extension EnumLabels on AppLocalizations {
     DebtSource.opening => sourceOpening,
   };
 
-  /// أثر مصدر الدين (تحت الخيار).
-  String debtSourceHint(DebtSource s, DebtDirection d) => switch (s) {
-    DebtSource.loan =>
-      d == DebtDirection.owedToMe
-          ? decreasesBalanceNotExpense
-          : increasesBalanceNotIncome,
-    DebtSource.creditSale => sourceCreditSaleHint,
-    DebtSource.creditPurchase => sourceCreditPurchaseHint,
+  /// أثر مصدر الدين (تحت الخيار)، مع اسم الفئة للبيع والشراء بالآجل.
+  String debtSourceHint(
+    DebtSource s,
+    DebtDirection d, {
+    String? category,
+  }) => switch (s) {
+    DebtSource.loan => d == DebtDirection.owedToMe ? loanOwedHint : loanOweHint,
+    DebtSource.creditSale => sourceCreditSaleHint(category ?? this.category),
+    DebtSource.creditPurchase => sourceCreditPurchaseHint(
+      category ?? this.category,
+    ),
     DebtSource.opening => sourceOpeningHint,
   };
 

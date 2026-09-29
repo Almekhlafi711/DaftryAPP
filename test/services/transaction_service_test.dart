@@ -143,10 +143,12 @@ void main() {
         type: AccountType.bank,
       );
       final r = await env.transactions.add(expense(1000, account: bank));
+      // لا أرشفة إلا والرصيد صفر.
+      await env.transactions.add(income(1000, account: bank));
       await env.accounts.archive(bank);
 
       await env.transactions.update(r.id, expense(2000, account: bank));
-      expect(await balance(bank), -2000);
+      expect(await balance(bank), -1000);
 
       expect(
         env.transactions.update(r.id, expense(2000, account: cash.id)),
@@ -284,8 +286,8 @@ void main() {
       expect((await env.transactions.suggestAccount(food.id))!.id, cash.id);
       await env.transactions.add(expense(100, account: bank));
       expect((await env.transactions.suggestAccount(food.id))!.id, bank);
-      // المؤرشف لا يُقترح
-      await env.accounts.archive(bank);
+      // المؤرشف لا يُقترح (بعد تحويل رصيده: لا أرشفة إلا والرصيد صفر).
+      await env.accounts.archive(bank, transferToId: cash.id);
       expect((await env.transactions.suggestAccount(food.id))!.id, cash.id);
     });
   });

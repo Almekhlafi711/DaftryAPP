@@ -12,6 +12,7 @@ import '../../../services/export/document_owner.dart';
 import '../../../services/providers.dart';
 import '../../../services/settings_service.dart';
 import '../../state/app_state.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
@@ -38,8 +39,11 @@ class ProfileFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final c = context.colors;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        FieldLabel(l10n.yourName, required: true),
         TextField(
           controller: name,
           autofocus: autofocus,
@@ -48,13 +52,19 @@ class ProfileFields extends StatelessWidget {
           inputFormatters: [
             LengthLimitingTextInputFormatter(SettingsService.maxNameLength),
           ],
+          style: const TextStyle(fontWeight: FontWeight.w700),
           decoration: InputDecoration(
-            labelText: '${l10n.yourName} *',
+            hintText: l10n.yourName,
             prefixIcon: const Icon(Icons.person_outline_rounded),
+            // علامة صح بعد إدخال الاسم.
+            suffixIcon: name.text.trim().isEmpty
+                ? null
+                : Icon(Icons.check_rounded, color: c.income),
           ),
           onChanged: (_) => onChanged?.call(),
         ),
-        const SizedBox(height: Insets.md),
+        const SizedBox(height: Insets.lg),
+        FieldLabel(l10n.phoneOptional),
         TextField(
           controller: phone,
           keyboardType: TextInputType.phone,
@@ -66,14 +76,65 @@ class ProfileFields extends StatelessWidget {
             LengthLimitingTextInputFormatter(20),
           ],
           decoration: InputDecoration(
-            labelText: l10n.phoneOptional,
+            hintText: l10n.phoneHint,
+            hintTextDirection: TextDirection.ltr,
             prefixIcon: const Icon(Icons.phone_outlined),
             errorText: phoneError,
           ),
           onChanged: (_) => onChanged?.call(),
           onSubmitted: (_) => onSubmitted?.call(),
         ),
+        const SizedBox(height: Insets.lg),
+        // ملاحظة: الاسم والهاتف قابلان للتغيير من الإعدادات.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: c.tint(c.transfer),
+            borderRadius: BorderRadius.circular(Radii.chip),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 18, color: c.transfer),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.profileChangeLater,
+                  style: TextStyle(fontSize: 12.5, color: c.transfer),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// عنوان الحقل فوقه، مع نجمة حمراء للحقل الإلزامي.
+class FieldLabel extends StatelessWidget {
+  const FieldLabel(this.text, {super.key, this.required = false});
+
+  final String text;
+  final bool required;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
+      child: Text.rich(
+        TextSpan(
+          text: text,
+          children: [
+            if (required)
+              TextSpan(
+                text: ' *',
+                style: TextStyle(color: c.expense),
+              ),
+          ],
+        ),
+        style: TextStyle(fontSize: 13, color: c.textSecondary),
+      ),
     );
   }
 }

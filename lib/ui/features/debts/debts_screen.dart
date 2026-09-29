@@ -1,9 +1,11 @@
 // =============================================================================
-// الشاشة 10: دفتر الديون — قائمة الأشخاص.
-// - بطاقة الملخص: مجموع «لي» و«عليّ» ومؤشرات (عدد الأشخاص والديون المتأخرة).
-// - تبويبات لي / عليّ / الكل ظاهرة دائماً، وبحث بالاسم أو الهاتف.
-// - زر فلترة واحد: الحالة (مفتوح، متأخر، مغلق، مؤرشف) والترتيب فقط.
-// - زر إجراءات سريعة: «دين جديد»، «استلام مبلغ»، «سداد مبلغ».
+// الشاشة 10: دفتر الديون — قائمة الأشخاص (الشكلان 4-17 و 4-18 في الوثيقة).
+// - بطاقة الملخص: مجموع «لي عند الناس» و«عليّ للناس»، وتحتهما عدد الأشخاص
+//   والمتأخرين.
+// - بحث دائم بالاسم أو الهاتف وبجانبه زر فلترة واحد (الحالة والترتيب فقط).
+// - تبويبات لي / عليّ / الكل، ثم الأشخاص في بطاقة واحدة: المتبقي ومن أصل كم،
+//   شارة الاستحقاق («بدون موعد» إن لم يُحدَّد)، وشريط «نسبة السداد» المرجّحة.
+// - زر الإجراءات السريعة: استلام مبلغ، سداد مبلغ، دين جديد، مع طبقة معتمة.
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -70,8 +72,6 @@ class DebtsScreen extends ConsumerStatefulWidget {
 }
 
 class _DebtsScreenState extends ConsumerState<DebtsScreen> {
-  bool _searching = false;
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -83,102 +83,62 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _searching
-            ? TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.searchPeople,
-                  border: InputBorder.none,
-                  filled: false,
-                ),
-                onChanged: ref.read(_queryProvider.notifier).set,
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.debtsTitle),
-                  Text(
-                    l10n.debtsSubtitle,
-                    style: TextStyle(fontSize: 12, color: c.textSecondary),
-                  ),
-                ],
-              ),
-        actions: [
-          IconButton(
-            tooltip: l10n.searchPeople,
-            icon: Icon(_searching ? Icons.close_rounded : Icons.search_rounded),
-            onPressed: () {
-              if (_searching) ref.read(_queryProvider.notifier).set('');
-              setState(() => _searching = !_searching);
-            },
-          ),
-          IconButton(
-            tooltip: l10n.filterDebts,
-            icon: Badge(
-              isLabelVisible: filter.activeCount > 0,
-              label: Text('${filter.activeCount}'),
-              child: const Icon(Icons.filter_alt_outlined),
+        toolbarHeight: 64,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.debtsTitle),
+            Text(
+              l10n.debtsSubtitle,
+              style: TextStyle(fontSize: 12, color: c.textSecondary),
             ),
-            onPressed: () => _showFilter(context),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const _SpeedDial(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Insets.screen, 0, Insets.screen, 96),
         children: [
+          _SummaryCard(totals: totals),
+          const SizedBox(height: Insets.md),
+          // بحث دائم + زر الفلترة بجانبه (يحمل عدد الفلاتر المفعّلة).
           Row(
             children: [
               Expanded(
-                child: _TotalBox(
-                  label: l10n.owedToMe,
-                  value: totals.owedToMe,
-                  color: c.income,
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: l10n.searchPeople,
+                    prefixIcon: const Icon(Icons.search_rounded),
+                  ),
+                  onChanged: ref.read(_queryProvider.notifier).set,
                 ),
               ),
               const SizedBox(width: Insets.sm),
-              Expanded(
-                child: _TotalBox(
-                  label: l10n.iOwe,
-                  value: totals.iOwe,
-                  color: c.expense,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // مؤشرات الملخص: عدد الأشخاص وعدد الديون المتأخرة.
-          Row(
-            children: [
-              Icon(Icons.people_alt_outlined, size: 16, color: c.textSecondary),
-              const SizedBox(width: 4),
-              Text(
-                l10n.peopleCount(totals.people),
-                style: TextStyle(fontSize: 12.5, color: c.textSecondary),
-              ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.schedule_rounded,
-                size: 16,
-                color: totals.overdueDebts > 0 ? c.expense : c.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                l10n.overdueCount(totals.overdueDebts),
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: totals.overdueDebts > 0 ? c.expense : c.textSecondary,
-                  fontWeight: totals.overdueDebts > 0
-                      ? FontWeight.w700
-                      : FontWeight.w400,
+              SizedBox.square(
+                dimension: 52,
+                child: IconButton.outlined(
+                  tooltip: l10n.filterDebts,
+                  style: IconButton.styleFrom(
+                    backgroundColor: c.surface,
+                    side: BorderSide(color: c.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(Radii.button),
+                    ),
+                  ),
+                  icon: Badge(
+                    isLabelVisible: filter.activeCount > 0,
+                    label: Text('${filter.activeCount}'),
+                    child: const Icon(Icons.filter_alt_outlined),
+                  ),
+                  onPressed: () => _showFilter(context),
                 ),
               ),
             ],
           ),
           const SizedBox(height: Insets.md),
           SegmentedTabs<DebtDirection?>(
-            values: const [null, DebtDirection.owedToMe, DebtDirection.iOwe],
+            values: const [DebtDirection.owedToMe, DebtDirection.iOwe, null],
             selected: direction,
             label: (d) => d == null ? l10n.all : l10n.directionName(d),
             colorOf: (d) => switch (d) {
@@ -200,14 +160,22 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                         ? l10n.noResults
                         : l10n.noDebts,
                   )
-                : Column(
-                    children: [
-                      for (final p in list)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _PersonTile(summary: p, direction: direction),
-                        ),
-                    ],
+                : AppCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (final (i, p) in list.indexed) ...[
+                          if (i > 0)
+                            Divider(
+                              height: 1,
+                              indent: 16,
+                              endIndent: 16,
+                              color: c.border,
+                            ),
+                          _PersonTile(summary: p),
+                        ],
+                      ],
+                    ),
                   ),
           ),
         ],
@@ -321,21 +289,77 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
   );
 }
 
-/// زر الإجراءات السريعة (Speed Dial): دين جديد، استلام مبلغ، سداد مبلغ.
-class _SpeedDial extends ConsumerStatefulWidget {
+/// زر الإجراءات السريعة: يفتح طبقة معتمة فوق الشاشة فيها ثلاثة أزرار ملونة
+/// (استلام مبلغ ↓ أخضر، سداد مبلغ ↑ أحمر، دين جديد + بلون الهوية) مع عناوينها،
+/// وزر إغلاق X في مكان الزر نفسه. في الاستلام والسداد لا يُسأل عن نوع العملية:
+/// الشخص ← المبلغ ← حفظ.
+class _SpeedDial extends ConsumerWidget {
   const _SpeedDial();
 
   @override
-  ConsumerState<_SpeedDial> createState() => _SpeedDialState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    return FloatingActionButton(
+      heroTag: 'debts-speed-dial',
+      backgroundColor: c.brand,
+      foregroundColor: Colors.white,
+      tooltip: l10n.newDebt,
+      onPressed: () => _open(context, ref),
+      child: const Icon(Icons.add_rounded),
+    );
+  }
+
+  Future<void> _open(BuildContext context, WidgetRef ref) async {
+    final box = context.findRenderObject()! as RenderBox;
+    final origin = box.localToGlobal(Offset.zero);
+    final screen = MediaQuery.sizeOf(context);
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    // المسافة من حافة الشاشة (البداية) ومن أسفلها حتى الزر.
+    final start = rtl ? screen.width - origin.dx - box.size.width : origin.dx;
+    final bottom = screen.height - origin.dy - box.size.height;
+    final l10n = context.l10n;
+
+    final choice = await showGeneralDialog<DebtDirection?>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: l10n.closeLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (ctx, _, _) =>
+          _SpeedDialMenu(start: start, bottom: bottom, size: box.size.width),
+      transitionBuilder: (ctx, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.04),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: child,
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    switch (choice) {
+      case DebtDirection.owedToMe || DebtDirection.iOwe:
+        await startSettle(context, ref, choice!);
+      case null:
+        break;
+    }
+  }
 }
 
-class _SpeedDialState extends ConsumerState<_SpeedDial> {
-  bool _open = false;
+/// القائمة المفتوحة: تُعيد اتجاه الاستلام/السداد، أو تفتح «دين جديد» مباشرة.
+class _SpeedDialMenu extends StatelessWidget {
+  const _SpeedDialMenu({
+    required this.start,
+    required this.bottom,
+    required this.size,
+  });
 
-  void _run(Future<void> Function() action) {
-    setState(() => _open = false);
-    action();
-  }
+  final double start;
+  final double bottom;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -347,67 +371,98 @@ class _SpeedDialState extends ConsumerState<_SpeedDial> {
       required Color color,
       required VoidCallback onTap,
     }) => Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: FloatingActionButton.extended(
-        heroTag: label,
-        elevation: 2,
-        backgroundColor: c.surface,
-        foregroundColor: color,
-        icon: Icon(icon),
-        label: Text(label),
-        onPressed: onTap,
+      padding: const EdgeInsets.only(bottom: 14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: size - 6,
+              height: size - 6,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        AnimatedSize(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          child: _open
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    action(
-                      label: l10n.receiveAmount,
-                      icon: Icons.call_received_rounded,
-                      color: c.income,
-                      onTap: () => _run(
-                        () => startSettle(context, ref, DebtDirection.owedToMe),
-                      ),
-                    ),
-                    action(
-                      label: l10n.payAmount,
-                      icon: Icons.call_made_rounded,
-                      color: c.expense,
-                      onTap: () => _run(
-                        () => startSettle(context, ref, DebtDirection.iOwe),
-                      ),
-                    ),
-                    action(
-                      label: l10n.newDebt,
-                      icon: Icons.add_rounded,
-                      color: c.primary,
-                      onTap: () =>
-                          _run(() => context.push(AppRoutes.newDebt())),
-                    ),
-                  ],
-                )
-              : const SizedBox.shrink(),
-        ),
-        FloatingActionButton(
-          heroTag: 'debts-speed-dial',
-          backgroundColor: c.brand,
-          foregroundColor: Colors.white,
-          tooltip: l10n.newDebt,
-          onPressed: () => setState(() => _open = !_open),
-          child: AnimatedRotation(
-            turns: _open ? 0.125 : 0,
-            duration: const Duration(milliseconds: 180),
-            child: const Icon(Icons.add_rounded),
+        PositionedDirectional(
+          start: start,
+          bottom: bottom,
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                action(
+                  label: l10n.receiveAmount,
+                  icon: Icons.arrow_downward_rounded,
+                  color: c.income,
+                  onTap: () => Navigator.pop(context, DebtDirection.owedToMe),
+                ),
+                action(
+                  label: l10n.payAmount,
+                  icon: Icons.arrow_upward_rounded,
+                  color: c.expense,
+                  onTap: () => Navigator.pop(context, DebtDirection.iOwe),
+                ),
+                action(
+                  label: l10n.newDebt,
+                  icon: Icons.add_rounded,
+                  color: c.brand,
+                  onTap: () {
+                    final router = GoRouter.of(context);
+                    Navigator.pop(context);
+                    router.push(AppRoutes.newDebt());
+                  },
+                ),
+                // زر الإغلاق في مكان زر الإجراءات نفسه.
+                SizedBox.square(
+                  dimension: size,
+                  child: FloatingActionButton(
+                    heroTag: null,
+                    elevation: 2,
+                    backgroundColor: c.surface,
+                    foregroundColor: c.textPrimary,
+                    tooltip: l10n.closeLabel,
+                    onPressed: () => Navigator.pop(context),
+                    child: const Icon(Icons.close_rounded),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -415,43 +470,77 @@ class _SpeedDialState extends ConsumerState<_SpeedDial> {
   }
 }
 
-class _TotalBox extends StatelessWidget {
-  const _TotalBox({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+/// بطاقة الملخص: مجموع لي وعليّ، وعدد الأشخاص والمتأخرين.
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.totals});
 
-  final String label;
-  final int value;
-  final Color color;
+  final DebtTotals totals;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(Radii.card),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: color, fontSize: 12.5)),
-        AmountText(
-          value,
-          color: color,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    Widget total(String label, int value, Color color) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: color, fontSize: 12.5)),
+          const SizedBox(height: 2),
+          AmountText(
+            value,
+            color: color,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
+          ),
+        ],
+      ),
+    );
+    final overdue = totals.overdueDebts > 0;
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Column(
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                total(l10n.owedToMe, totals.owedToMe, c.income),
+                VerticalDivider(width: 24, color: c.border),
+                total(l10n.iOwe, totals.iOwe, c.expense),
+              ],
+            ),
+          ),
+          Divider(height: 22, color: c.border),
+          // مؤشرات الملخص: عدد الأشخاص وعدد المتأخرات.
+          Row(
+            children: [
+              Icon(Icons.people_alt_outlined, size: 17, color: c.textSecondary),
+              const SizedBox(width: 6),
+              Text(
+                l10n.peopleCount(totals.people),
+                style: TextStyle(fontSize: 12.5, color: c.textSecondary),
+              ),
+              Text(' • ', style: TextStyle(color: c.textSecondary)),
+              Text(
+                l10n.overdueCount(totals.overdueDebts),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: overdue ? c.expense : c.textSecondary,
+                  fontWeight: overdue ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+/// صف شخص: الحرف الأول، الاسم وشارة الاستحقاق، المتبقي ومن أصل كم، ثم شريط
+/// نسبة السداد المرجّحة.
 class _PersonTile extends ConsumerWidget {
-  const _PersonTile({required this.summary, required this.direction});
+  const _PersonTile({required this.summary});
 
   final PersonSummary summary;
-  final DebtDirection? direction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -462,9 +551,6 @@ class _PersonTile extends ConsumerWidget {
     final closed = summary.isClosed;
     final due = summary.nearestDue;
     final dueInfo = due == null || closed ? null : dueLabel(l10n, due);
-    final avatarColor = summary.receivable >= summary.payable
-        ? c.income
-        : c.expense;
 
     // «لي» و«عليّ» يُعرضان منفصلين (لا مقاصة تلقائية).
     final amounts = [
@@ -473,81 +559,93 @@ class _PersonTile extends ConsumerWidget {
       if (summary.payable > 0) (summary.payable, c.expense),
     ];
 
-    return AppCard(
+    return InkWell(
       onTap: () => context.push(AppRoutes.person(summary.contact.id)),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: avatarColor.withValues(alpha: 0.12),
-                child: Text(
-                  summary.contact.name.characters.first,
-                  style: TextStyle(
-                    color: avatarColor,
-                    fontWeight: FontWeight.w700,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: c.tint(c.primary),
+                  child: Text(
+                    summary.contact.name.characters.first,
+                    style: TextStyle(
+                      color: c.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      summary.contact.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    if (archived)
-                      Pill(l10n.archivedBadge, color: c.archive)
-                    else if (closed)
-                      Pill(l10n.statusClosed, color: c.income)
-                    else if (dueInfo != null)
-                      Pill(
-                        dueInfo.$1,
-                        color: dueInfo.$2 ? c.expense : c.warning,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        summary.contact.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
                       ),
+                      const SizedBox(height: 3),
+                      if (archived)
+                        Pill(l10n.archivedBadge, color: c.archive)
+                      else if (closed)
+                        Pill(l10n.statusClosed, color: c.income)
+                      else if (dueInfo != null)
+                        Pill(
+                          dueInfo.$1,
+                          color: dueInfo.$2 ? c.expense : c.warning,
+                        )
+                      else
+                        Pill(l10n.noDueDate, color: c.textSecondary),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (final (value, color) in amounts)
+                      AmountText(
+                        value,
+                        color: closed ? c.textSecondary : color,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    Text(
+                      l10n.ofTotal(money.format(summary.total, compact: true)),
+                      style: TextStyle(fontSize: 11.5, color: c.textSecondary),
+                    ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (final (value, color) in amounts)
-                    AmountText(
-                      value,
-                      color: closed ? c.textSecondary : color,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
-                  Text(
-                    l10n.ofTotal(money.format(summary.total, compact: true)),
-                    style: TextStyle(fontSize: 11.5, color: c.textSecondary),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          AppProgressBar(
-            value: summary.progress / 100,
-            color: c.income,
-            height: 6,
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              l10n.paymentRate('${summary.progress}'),
-              style: TextStyle(fontSize: 11.5, color: c.textSecondary),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: AppProgressBar(
+                    value: summary.progress / 100,
+                    color: c.income,
+                    height: 6,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.paymentRate('${summary.progress}'),
+                  style: TextStyle(fontSize: 11.5, color: c.textSecondary),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

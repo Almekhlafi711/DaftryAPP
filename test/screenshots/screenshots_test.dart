@@ -60,6 +60,8 @@ void main() {
     ('add_tx_ar', AppRoutes.newTransaction(), true, false),
     ('transactions_ar', AppRoutes.transactions, true, false),
     ('debts_ar', AppRoutes.debts, true, false),
+    ('speed_dial_ar', AppRoutes.debts, true, false),
+    ('receive_sheet_ar', AppRoutes.person(1), true, false),
     ('person_ar', AppRoutes.person(1), true, false),
     ('statement_ar', AppRoutes.personStatement(1), true, false),
     ('new_debt_ar', AppRoutes.newDebt(), true, false),
@@ -67,6 +69,7 @@ void main() {
     ('budget_ar', AppRoutes.budget, true, false),
     ('accounts_ar', AppRoutes.accounts, true, false),
     ('settings_ar', AppRoutes.more, true, false),
+    ('settings_bottom_ar', AppRoutes.more, true, false),
     ('home_en', AppRoutes.home, false, false),
     ('home_ar_dark', AppRoutes.home, true, true),
   ];
@@ -149,6 +152,25 @@ void main() {
           .read(routerProvider)
           .go(route);
       await tester.pumpAndSettle();
+      // لقطات تفاعلية: قائمة الإجراءات السريعة ونافذة الاستلام.
+      if (name == 'speed_dial_ar') {
+        await tester.tap(find.byTooltip('دين جديد'));
+        await tester.pumpAndSettle();
+      }
+      if (name == 'receive_sheet_ar') {
+        await tester.tap(find.text('استلام مبلغ').first);
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField).first, '500');
+        await tester.pumpAndSettle();
+      }
+      // «_bottom»: نمرّر الصفحة حتى نهايتها.
+      if (name.contains('_bottom')) {
+        await tester.drag(
+          find.byType(Scrollable).first,
+          const Offset(0, -6000),
+        );
+        await tester.pumpAndSettle();
+      }
       await expectLater(
         find.byType(MaterialApp),
         matchesGoldenFile('out/$name.png'),
@@ -156,4 +178,45 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  // الإعداد الأول: شاشات الترحيب الثلاث ثم الاسم ثم العملة.
+  testWidgets('onboarding_ar', (tester) async {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+    final db = AppDatabase(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
+    addTearDown(db.close);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.runAsync(() => SettingsService(db).set('locale', 'ar'));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: const DaftryApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    Future<void> shot(String name) => expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('out/$name.png'),
+    );
+    for (var i = 1; i <= 3; i++) {
+      await shot('intro${i}_ar');
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+    }
+    await tester.enterText(find.byType(TextField).first, 'سالم محمد');
+    await tester.pumpAndSettle();
+    await shot('profile_ar');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ريال سعودي'));
+    await tester.pumpAndSettle();
+    await shot('currency_ar');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

@@ -2,7 +2,8 @@
 // الشاشة 14: «استلام مبلغ» (لي) أو «سداد مبلغ» (عليّ) — نافذة سفلية (UC-08).
 //
 // - لا يُسأل عن الدين: المبلغ يُوزَّع تلقائياً على ديون الشخص المفتوحة في
-//   نفس الاتجاه، الأقدم أولاً، مع معاينة التوزيع وسطر «المتبقي بعد الدفعة»
+//   نفس الاتجاه، الأقدم أولاً، مع معاينة التوزيع لكل دين (يُغلق ✓ / يتبقى)
+//   وسطر «المتبقي بعد الاستلام»
 //   بدل شاشة مراجعة منفصلة. ويبقى خيار صغير «اختيار دين معيّن».
 // - الزائد عن المتبقي لا يُرفض بصمت: يُعرض تسجيله ديناً معاكساً.
 // - حساب الاستلام/الدفع المقترح: حساب إقراض أقدم دين، أو الافتراضي.
@@ -24,7 +25,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/inputs.dart';
-import '../../widgets/labels.dart';
 import 'debt_actions.dart';
 
 Future<void> showPaymentSheet(
@@ -66,6 +66,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   DateTime _date = DateTime.now();
   String? _error;
   bool _saving = false;
+
+  /// الكتابة الفعلية جارية (يظهر المؤشر الدوّار) — وليس أثناء انتظار تأكيد.
+  bool _writing = false;
 
   bool get _owedToMe => widget.direction == DebtDirection.owedToMe;
 
@@ -133,6 +136,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
         return;
       }
     }
+    if (mounted) setState(() => _writing = true);
     try {
       await ref
           .read(debtServiceProvider)
@@ -159,7 +163,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       if (!warned) messenger.showSnackBar(SnackBar(content: Text(l10n.saved)));
     } on Object catch (e) {
       if (mounted) {
-        setState(() => _saving = false);
+        setState(() => _saving = _writing = false);
         showError(context, e, formatAmount: (m) => money.inline(m));
       }
     }
@@ -174,16 +178,16 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final color = _owedToMe ? c.income : c.expense;
     final name = widget.profile.contact.name;
     final minor = _minor ?? 0;
-    final allocations = DebtService.allocate([
-      for (final d in _scope) (debtId: d.id, remaining: d.remaining),
-    ], minor);
+    final allocations = {
+      for (final a in DebtService.allocate([
+        for (final d in _scope) (debtId: d.id, remaining: d.remaining),
+      ], minor))
+        a.debtId: a.amount,
+    };
     final after = (_total - minor).clamp(0, _total);
-    String labelOf(int debtId) {
-      final d = _open.firstWhere((x) => x.id == debtId);
-      return debtLabel(context, d);
-    }
-
+    final excess = minor > _total;
     final today = DateTime.now();
+    final bold = TextStyle(fontWeight: FontWeight.w700, color: c.textPrimary);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -197,28 +201,76 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              _owedToMe ? l10n.receiveFrom(name) : l10n.payTo(name),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              l10n.remainingAmount(money.inline(_total)),
-              style: TextStyle(color: color),
+            // العنوان والمتبقي الحالي.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _owedToMe ? l10n.receiveFrom(name) : l10n.payTo(name),
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        l10n.remainingAmount(money.inline(_total)),
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
             const SizedBox(height: Insets.md),
-            TextField(
-              controller: _amount,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-              decoration: InputDecoration(
-                labelText: l10n.amount,
-                errorText: _error,
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: TextButton(
+            // المبلغ مع «كامل المتبقي».
+            AppCard(
+              padding: const EdgeInsets.fromLTRB(14, 10, 10, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _amount,
+                      autofocus: true,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: _owedToMe
+                            ? l10n.amountReceivedLabel
+                            : l10n.amountPaidLabel,
+                        hintText: '0',
+                        errorText: _error,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (_) => setState(() => _error = null),
+                    ),
+                  ),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 38),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      shape: const StadiumBorder(),
+                      side: BorderSide(color: c.border),
+                      foregroundColor: c.textPrimary,
+                    ),
                     onPressed: () => setState(() {
                       _amount.text = ref
                           .read(moneyParserProvider)
@@ -227,105 +279,153 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                     }),
                     child: Text(l10n.fullRemaining),
                   ),
-                ),
-              ),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-            const SizedBox(height: 6),
-            // سطر «المتبقي بعد الدفعة» بدل شاشة مراجعة منفصلة.
-            Text(
-              minor > _total
-                  ? l10n.excessTitle
-                  : l10n.remainingAfterPayment(money.inline(after)),
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: minor > _total ? c.warning : c.textPrimary,
+                ],
               ),
             ),
-            if (allocations.length > 1)
-              Text(
-                l10n.distributedOldestFirst(
-                  allocations
-                      .map(
-                        (a) =>
-                            '${labelOf(a.debtId)} '
-                            '${money.format(a.amount, compact: true)}',
-                      )
-                      .join(' • '),
-                ),
-                style: TextStyle(fontSize: 12, color: c.textSecondary),
+            const SizedBox(height: Insets.sm),
+            // معاينة التوزيع: لكل دين كم يأخذ، وهل يُغلق أو كم يتبقى منه.
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+              decoration: BoxDecoration(
+                color: c.surfaceMuted.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(Radii.card),
+                border: Border.all(color: c.border),
               ),
-            if (_open.length > 1) ...[
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  icon: Icon(
-                    _specific
-                        ? Icons.auto_mode_rounded
-                        : Icons.checklist_rounded,
-                    size: 18,
-                  ),
-                  label: Text(
-                    _specific ? l10n.autoDistribute : l10n.chooseSpecificDebt,
-                  ),
-                  onPressed: () {
-                    setState(() => _specific = !_specific);
-                    _loadSuggestion();
-                  },
-                ),
-              ),
-              if (_specific)
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final d in _open)
-                      ChoiceChip(
-                        label: Text(
-                          '${debtLabel(context, d)} · '
-                          '${money.format(d.remaining, compact: true)}',
-                        ),
-                        selected: d.id == _debtId,
-                        labelStyle: TextStyle(
-                          color: d.id == _debtId ? Colors.white : c.textPrimary,
-                        ),
-                        onSelected: (_) {
-                          setState(() => _debtId = d.id);
-                          _loadSuggestion();
-                        },
-                      ),
-                  ],
-                ),
-            ],
-            const SizedBox(height: Insets.md),
-            AppCard(
-              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    _owedToMe ? l10n.receivedIntoAccount : l10n.paidFromAccount,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    _specific ? l10n.selectedDebtTitle : l10n.autoDistTitle,
+                    style: bold,
                   ),
                   const SizedBox(height: 6),
-                  PickerTile(
-                    icon: _account == null
-                        ? Icons.account_balance_wallet_outlined
-                        : AppIcons.account(_account!.type),
-                    title: _account?.name ?? l10n.errAccountRequired,
-                    subtitle: _owedToMe
-                        ? l10n.increasesBalanceNotIncome
-                        : l10n.decreasesBalanceNotExpense,
-                    onTap: () async {
-                      final picked = await pickAccount(
-                        context,
-                        selectedId: _account?.id,
-                      );
-                      if (picked != null) setState(() => _account = picked);
-                    },
-                  ),
+                  for (final d in _scope)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${debtLabel(context, d)} • '
+                              '${dates.day(d.debt.startDate)}',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (allocations[d.id] case final part?) ...[
+                            Text(
+                              money.format(part, compact: true),
+                              style: bold.copyWith(fontSize: 13),
+                            ),
+                            Text(
+                              ' ← ',
+                              style: TextStyle(color: c.textSecondary),
+                            ),
+                            if (part >= d.remaining)
+                              Text(
+                                '${l10n.allocCloses} ✓',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: c.income,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            else
+                              Text(
+                                l10n.allocLeaves(
+                                  money.format(
+                                    d.remaining - part,
+                                    compact: true,
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: c.textSecondary,
+                                ),
+                              ),
+                          ] else
+                            Text(
+                              money.format(d.remaining, compact: true),
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: c.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  if (_open.length > 1)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 36),
+                        ),
+                        onPressed: () {
+                          setState(() => _specific = !_specific);
+                          _loadSuggestion();
+                        },
+                        child: Text(
+                          _specific
+                              ? l10n.autoDistribute
+                              : l10n.chooseSpecificDebt,
+                          style: const TextStyle(fontSize: 12.5),
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 8),
+                  if (_specific && _open.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final d in _open)
+                            ChoiceChip(
+                              label: Text(
+                                '${debtLabel(context, d)} · '
+                                '${money.format(d.remaining, compact: true)}',
+                              ),
+                              selected: d.id == _debtId,
+                              labelStyle: TextStyle(
+                                color: d.id == _debtId
+                                    ? Colors.white
+                                    : c.textPrimary,
+                              ),
+                              onSelected: (_) {
+                                setState(() => _debtId = d.id);
+                                _loadSuggestion();
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
+            ),
+            const SizedBox(height: Insets.sm),
+            // الحساب المقترح: الاستلام يزيد الرصيد وليس دخلاً.
+            PickerTile(
+              icon: _account == null
+                  ? Icons.account_balance_wallet_outlined
+                  : AppIcons.account(_account!.type),
+              title: _account?.name ?? l10n.errAccountRequired,
+              subtitle: _owedToMe
+                  ? '${l10n.receivedIntoAccount} '
+                        '(${l10n.increasesBalanceNotIncome})'
+                  : '${l10n.paidFromAccount} '
+                        '(${l10n.decreasesBalanceNotExpense})',
+              onTap: () async {
+                final picked = await pickAccount(
+                  context,
+                  selectedId: _account?.id,
+                );
+                if (picked != null) setState(() => _account = picked);
+              },
             ),
             const SizedBox(height: Insets.sm),
             PickerTile(
@@ -342,16 +442,48 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                 if (d != null) setState(() => _date = d);
               },
             ),
-            const SizedBox(height: Insets.lg),
+            const SizedBox(height: Insets.sm),
+            // «المتبقي بعد العملية» بدل شاشة مراجعة منفصلة.
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: c.tint(excess ? c.warning : c.income),
+                borderRadius: BorderRadius.circular(Radii.chip),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      excess
+                          ? l10n.excessTitle
+                          : _owedToMe
+                          ? l10n.remainingAfterReceive
+                          : l10n.remainingAfterPay,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: excess ? c.warning : c.income,
+                      ),
+                    ),
+                  ),
+                  if (!excess)
+                    AmountText(
+                      after,
+                      color: c.income,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: Insets.md),
+            // يتعطل فور الضغط لمنع الحفظ المكرر.
             FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: color),
-              icon: _saving
+              icon: _writing
                   ? const SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.check_rounded),
-              label: Text(l10n.settleAction(widget.direction)),
+              label: Text(l10n.save),
               onPressed: _saving ? null : _save,
             ),
           ],

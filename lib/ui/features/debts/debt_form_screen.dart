@@ -1,11 +1,13 @@
 // =============================================================================
 // الشاشة 13: إضافة دين جديد / تعديله (UC-07).
-// - الاتجاه بلونين واضحين: «لي» (أخضر) و«عليّ» (أحمر).
-// - الشخص: عند الدخول من ملف شخص يكون محدداً ومقفلاً.
+// - الاتجاه: «لي (عند شخص)» أخضر و«عليّ (لشخص)» أحمر.
+// - الشخص: عند الدخول من ملف شخص يكون محدداً ومقفلاً، ورابط «جهات الاتصال»
+//   للاختيار من الجهاز. ثم المبلغ والاستحقاق جنباً إلى جنب.
 // - «مصدر الدين» بدل سؤال «هل خرج المبلغ من حساب؟» (وثيقة الديون 1.1):
 //     لي:  أقرضته من حساب | بعتُ له بالآجل | دين سابق
 //     عليّ: اقترضتُ إلى حساب | اشتريتُ بالآجل | دين سابق
-//   الإقراض يحتاج حساباً، والبيع/الشراء بالآجل يحتاج فئة دخل/مصروف.
+//   الإقراض يحتاج حساباً، والبيع/الشراء بالآجل يحتاج فئة دخل/مصروف، ويظهر
+//   كل منهما داخل الخيار نفسه عند اختياره.
 // - مع وجود دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة.
 // - زر الحفظ يتعطل فور الضغط (منع الحفظ المكرر).
 // =============================================================================
@@ -227,6 +229,29 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     }
   }
 
+  Future<void> _pickPerson() async {
+    final picked = await pickContact(context, ref);
+    if (picked != null) setState(() => _contact = picked);
+  }
+
+  Future<void> _pickCategory() async {
+    final picked = await pickCategory(
+      context,
+      kind: _source == DebtSource.creditSale
+          ? CategoryKind.income
+          : CategoryKind.expense,
+      selectedId: _category?.id,
+    );
+    if (picked == null) return;
+    setState(() {
+      if (_source == DebtSource.creditSale) {
+        _saleCategory = picked;
+      } else {
+        _purchaseCategory = picked;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -253,136 +278,234 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
         ],
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(Insets.screen),
+        child: Column(
           children: [
-            Row(
-              children: [
-                for (final d in DebtDirection.values)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: _DirectionCard(
-                        title: l10n.directionName(d),
-                        subtitle: d == DebtDirection.owedToMe
-                            ? l10n.directionOwedToMeHint
-                            : l10n.directionIOweHint,
-                        color: d == DebtDirection.owedToMe
-                            ? c.income
-                            : c.expense,
-                        selected: _direction == d,
-                        onTap: _locked ? null : () => _setDirection(d),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(Insets.screen),
+                children: [
+                  // الاتجاه: لي (عند شخص) / عليّ (لشخص).
+                  IgnorePointer(
+                    ignoring: _locked,
+                    child: SegmentedTabs<DebtDirection>(
+                      values: DebtDirection.values,
+                      selected: _direction,
+                      label: (d) => d == DebtDirection.owedToMe
+                          ? l10n.segOwedToMe
+                          : l10n.segIOwe,
+                      colorOf: (d) =>
+                          d == DebtDirection.owedToMe ? c.income : c.expense,
+                      onChanged: _setDirection,
+                    ),
+                  ),
+                  if (_locked) ...[
+                    const SizedBox(height: Insets.sm),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: c.warning,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            l10n.debtLockedHint,
+                            style: TextStyle(fontSize: 12, color: c.warning),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: Insets.md),
+                  // الشخص (يُقترح الموجود لمنع التكرار) مع رابط «جهات الاتصال».
+                  AppCard(
+                    onTap: _personLocked ? null : _pickPerson,
+                    padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _personLocked
+                              ? Icons.lock_person_outlined
+                              : Icons.person_outline_rounded,
+                          color: c.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.person,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: c.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                _contact?.name ?? l10n.choosePerson,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  color: _contact == null
+                                      ? c.textSecondary
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!_personLocked)
+                          TextButton(
+                            onPressed: () async {
+                              final picked = await pickDeviceContact(
+                                context,
+                                ref,
+                              );
+                              if (picked != null) {
+                                setState(() => _contact = picked);
+                              }
+                            },
+                            child: Text(l10n.deviceContacts),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: Insets.sm),
+                  // المبلغ بعملة التطبيق والاستحقاق جنباً إلى جنب.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          controller: _amount,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: l10n.amount,
+                            errorText: _amountError,
+                            suffixText: ref
+                                .watch(moneyFormatterProvider)
+                                .symbol,
+                          ),
+                          onChanged: (_) => setState(() => _amountError = null),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: AppCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 9,
+                          ),
+                          onTap: () async {
+                            // القاعدة 4: الاستحقاق ≥ تاريخ الدين.
+                            final d = await pickDate(
+                              context,
+                              initial:
+                                  _due ?? _start.add(const Duration(days: 30)),
+                              first: DateTime(
+                                _start.year,
+                                _start.month,
+                                _start.day,
+                              ),
+                            );
+                            setState(() => _due = d);
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.dueDateOptional,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: c.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _due == null ? '—' : dates.day(_due!),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: Insets.md),
+                  Text(
+                    l10n.sourceTitle,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: c.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // مصدر الدين يحدد القيد المحاسبي؛ الحساب أو الفئة داخل الخيار.
+                  for (final s in DebtSource.forDirection(_direction))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _SourceOption(
+                        title: l10n.debtSourceOption(s, _direction),
+                        hint: l10n.debtSourceHint(
+                          s,
+                          _direction,
+                          category: s == DebtSource.creditSale
+                              ? _saleCategory?.name
+                              : _purchaseCategory?.name,
+                        ),
+                        selected: _source == s,
+                        onTap: _locked
+                            ? null
+                            : () => setState(() => _source = s),
+                        child: _source != s
+                            ? null
+                            : s.needsAccount
+                            ? _ChoiceChipButton(
+                                icon: _account == null
+                                    ? Icons.account_balance_wallet_outlined
+                                    : AppIcons.account(_account!.type),
+                                label:
+                                    _account?.name ?? l10n.errAccountRequired,
+                                onTap: () async {
+                                  final picked = await pickAccount(
+                                    context,
+                                    selectedId: _account?.id,
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _account = picked);
+                                  }
+                                },
+                              )
+                            : s.needsCategory
+                            ? _ChoiceChipButton(
+                                icon: _category == null
+                                    ? Icons.sell_outlined
+                                    : AppIcons.category(_category!.icon),
+                                label:
+                                    _category?.name ?? l10n.errCategoryRequired,
+                                onTap: _pickCategory,
+                              )
+                            : null,
                       ),
                     ),
-                  ),
-              ],
-            ),
-            if (_locked) ...[
-              const SizedBox(height: Insets.sm),
-              Row(
-                children: [
-                  Icon(Icons.lock_outline_rounded, size: 16, color: c.warning),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      l10n.debtLockedHint,
-                      style: TextStyle(fontSize: 12, color: c.warning),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: Insets.md),
-            PickerTile(
-              icon: _personLocked
-                  ? Icons.lock_person_outlined
-                  : Icons.person_outline_rounded,
-              title: _contact?.name ?? l10n.choosePerson,
-              subtitle: _contact?.phone ?? l10n.person,
-              onTap: _personLocked
-                  ? null
-                  : () async {
-                      final picked = await pickContact(context, ref);
-                      if (picked != null) setState(() => _contact = picked);
-                    },
-            ),
-            const SizedBox(height: Insets.sm),
-            TextField(
-              controller: _amount,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-              decoration: InputDecoration(
-                labelText: l10n.amount,
-                errorText: _amountError,
-                suffixText: ref.watch(moneyFormatterProvider).symbol,
-              ),
-              onChanged: (_) => setState(() => _amountError = null),
-            ),
-            const SizedBox(height: Insets.md),
-            Text(
-              l10n.sourceTitle,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            for (final s in DebtSource.forDirection(_direction))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: _SourceOption(
-                  title: l10n.debtSourceOption(s, _direction),
-                  hint: l10n.debtSourceHint(s, _direction),
-                  selected: _source == s,
-                  onTap: _locked ? null : () => setState(() => _source = s),
-                ),
-              ),
-            if (_source.needsAccount)
-              PickerTile(
-                icon: _account == null
-                    ? Icons.account_balance_wallet_outlined
-                    : AppIcons.account(_account!.type),
-                title: _account?.name ?? l10n.errAccountRequired,
-                subtitle: _direction == DebtDirection.owedToMe
-                    ? l10n.decreasesBalanceNotExpense
-                    : l10n.increasesBalanceNotIncome,
-                onTap: () async {
-                  final picked = await pickAccount(
-                    context,
-                    selectedId: _account?.id,
-                  );
-                  if (picked != null) setState(() => _account = picked);
-                },
-              ),
-            if (_source.needsCategory)
-              PickerTile(
-                icon: _category == null
-                    ? Icons.sell_outlined
-                    : AppIcons.category(_category!.icon),
-                title: _category?.name ?? l10n.errCategoryRequired,
-                subtitle: l10n.category,
-                onTap: () async {
-                  final picked = await pickCategory(
-                    context,
-                    kind: _source == DebtSource.creditSale
-                        ? CategoryKind.income
-                        : CategoryKind.expense,
-                    selectedId: _category?.id,
-                  );
-                  if (picked == null) return;
-                  setState(() {
-                    if (_source == DebtSource.creditSale) {
-                      _saleCategory = picked;
-                    } else {
-                      _purchaseCategory = picked;
-                    }
-                  });
-                },
-              ),
-            const SizedBox(height: Insets.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: PickerTile(
+                  const SizedBox(height: Insets.xs),
+                  PickerTile(
                     icon: Icons.calendar_today_outlined,
                     title: dates.full(_start),
                     subtitle: l10n.date,
@@ -400,55 +523,46 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
                       });
                     },
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: PickerTile(
-                    icon: Icons.event_outlined,
-                    title: _due == null ? '—' : dates.full(_due!),
-                    subtitle: l10n.dueDateOptional,
-                    onTap: () async {
-                      // القاعدة 4: الاستحقاق ≥ تاريخ الدين.
-                      final d = await pickDate(
-                        context,
-                        initial: _due ?? _start.add(const Duration(days: 30)),
-                        first: DateTime(_start.year, _start.month, _start.day),
-                      );
-                      setState(() => _due = d);
-                    },
+                  const SizedBox(height: Insets.sm),
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: SwitchListTile(
+                      title: Text(l10n.remindBeforeDue),
+                      value: _remind && _due != null,
+                      onChanged: _due == null
+                          ? null
+                          : (v) => setState(() => _remind = v),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: Insets.sm),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: SwitchListTile(
-                title: Text(l10n.remindBeforeDue),
-                value: _remind && _due != null,
-                onChanged: _due == null
-                    ? null
-                    : (v) => setState(() => _remind = v),
+                  const SizedBox(height: Insets.sm),
+                  TextField(
+                    controller: _note,
+                    decoration: InputDecoration(
+                      hintText: '${l10n.note} (${l10n.optional})',
+                      prefixIcon: const Icon(Icons.notes_rounded),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: Insets.sm),
-            TextField(
-              controller: _note,
-              decoration: InputDecoration(
-                hintText: '${l10n.note} (${l10n.optional})',
-                prefixIcon: const Icon(Icons.notes_rounded),
+            // زر الحفظ ثابت أسفل الشاشة (الحفظ ذري: الدين وقيده معاً).
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Insets.screen,
+                Insets.sm,
+                Insets.screen,
+                Insets.screen,
               ),
-            ),
-            const SizedBox(height: Insets.xl),
-            FilledButton.icon(
-              icon: _saving
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_rounded),
-              label: Text(l10n.saveDebt),
-              onPressed: _saving ? null : _save,
+              child: FilledButton.icon(
+                icon: _saving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_rounded),
+                label: Text(l10n.saveDebt),
+                onPressed: _saving ? null : _save,
+              ),
             ),
           ],
         ),
@@ -457,74 +571,22 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
   }
 }
 
-class _DirectionCard extends StatelessWidget {
-  const _DirectionCard({
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final Color color;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: selected ? color.withValues(alpha: 0.1) : context.colors.surface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(Radii.button),
-      side: BorderSide(
-        color: selected ? color : context.colors.border,
-        width: selected ? 2 : 1,
-      ),
-    ),
-    child: InkWell(
-      borderRadius: BorderRadius.circular(Radii.button),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: selected ? color : context.colors.textSecondary,
-              ),
-            ),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11.5,
-                color: context.colors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-/// خيار «مصدر الدين» مع أثره المحاسبي تحته.
+/// خيار «مصدر الدين» مع أثره المحاسبي تحته، وما يلزمه (الحساب أو الفئة)
+/// داخله عند اختياره.
 class _SourceOption extends StatelessWidget {
   const _SourceOption({
     required this.title,
     required this.hint,
     required this.selected,
     required this.onTap,
+    this.child,
   });
 
   final String title;
   final String hint;
   final bool selected;
   final VoidCallback? onTap;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -532,17 +594,17 @@ class _SourceOption extends StatelessWidget {
     return Material(
       color: selected ? c.primary.withValues(alpha: 0.07) : c.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Radii.chip),
+        borderRadius: BorderRadius.circular(Radii.card),
         side: BorderSide(
           color: selected ? c.primary : c.border,
-          width: selected ? 1.5 : 1,
+          width: selected ? 1.8 : 1,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(Radii.chip),
+        borderRadius: BorderRadius.circular(Radii.card),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
               Icon(
@@ -550,24 +612,70 @@ class _SourceOption extends StatelessWidget {
                     ? Icons.radio_button_checked_rounded
                     : Icons.radio_button_unchecked_rounded,
                 color: selected ? c.primary : c.textSecondary,
-                size: 20,
+                size: 22,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     Text(
                       hint,
                       style: TextStyle(fontSize: 12, color: c.textSecondary),
                     ),
+                    if (child != null) ...[const SizedBox(height: 8), child!],
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// زر صغير بشكل قائمة منسدلة (الحساب أو الفئة) داخل خيار المصدر.
+class _ChoiceChipButton extends StatelessWidget {
+  const _ChoiceChipButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.surface,
+      shape: StadiumBorder(side: BorderSide(color: c.border)),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: c.primary),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.arrow_drop_down_rounded, color: c.textSecondary),
             ],
           ),
         ),

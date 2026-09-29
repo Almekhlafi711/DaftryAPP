@@ -66,7 +66,7 @@ void main() {
         title: 'كشف حساب',
         period: 'الفترة',
         openingBalance: 'الرصيد الافتتاحي',
-        closingBalance: 'المتبقي',
+        closingBalance: 'الرصيد الختامي = المتبقي',
         date: 'التاريخ',
         description: 'البيان',
         amount: 'المبلغ',

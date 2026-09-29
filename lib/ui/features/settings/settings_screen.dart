@@ -1,13 +1,12 @@
 // =============================================================================
-// الشاشة 17: الإعدادات / المزيد.
-// - الملف الشخصي: الاسم (يظهر في التقارير والكشوف) ورقم الجوال الاختياري.
-// - العملة للقراءة فقط مع أيقونة قفل، و«إضافة عملة جديدة» رمادية «قريباً» (FR-02).
-// - الإدارة: الحسابات، التقارير، الميزانية.
-// - عام: الحساب الافتراضي، الفئات، اللغة والمظهر.
-// - الأمان والبيانات: القفل، النسخ السحابي، التصدير المحلي، إعادة احتساب
-//   الأرصدة، وحذف جميع البيانات (الطريقة الوحيدة لتغيير العملة).
-// - في الأسفل: شعارات التواصل مع الدعم (واتساب، اتصال، إنستغرام)، ثم اسم
-//   المطوّر، ثم رقم الإصدار.
+// الشاشة 17: الإعدادات / المزيد (الشكلان 4-25 و 4-26 في الوثيقة).
+// - أعلى الصفحة: بطاقة الملف الشخصي (الاسم والهاتف وزر «تعديل»)، ثم العملة
+//   المقفلة و«إضافة عملة» الرمادية (FR-02)، ثم الحساب الافتراضي والفئات
+//   (بعددها) واللغة، ثم الإدارة، ثم القفل والنسخ السحابي الاختياري.
+// - أسفل الصفحة: البيانات (التصدير، إعادة احتساب الأرصدة، حذف جميع البيانات)،
+//   ثم «الدفع الإلكتروني» مقفلاً «قيد التطوير» (FR-35)، ثم «تواصل معنا»
+//   (واتساب، اتصال، إنستغرام)، ثم «تم التطوير من قبل محمد المخلافي» وتحته
+//   رقم الإصدار.
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -39,6 +38,12 @@ final _appVersionProvider = FutureProvider<String?>((ref) async {
   }
 });
 
+/// عدد الفئات (دخل ومصروف) لصف «الفئات».
+final _categoryCountProvider = StreamProvider.autoDispose<int>(
+  (ref) =>
+      ref.watch(categoryServiceProvider).watchAll().map((list) => list.length),
+);
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -52,6 +57,7 @@ class SettingsScreen extends ConsumerWidget {
     final accounts = ref.watch(activeAccountsProvider).value ?? const [];
     final defaultAccount = accounts.where((a) => a.isDefault).firstOrNull;
     final version = ref.watch(_appVersionProvider).value;
+    final categoryCount = ref.watch(_categoryCountProvider).value;
 
     Widget tile({
       required IconData icon,
@@ -106,35 +112,31 @@ class SettingsScreen extends ConsumerWidget {
           Insets.xxl,
         ),
         children: [
-          SectionTitle(l10n.sectionProfile),
+          // بطاقة الملف الشخصي: الاسم (إلزامي) والهاتف، قابلان للتعديل.
+          _ProfileCard(
+            name: prefs?.userName,
+            phone: prefs?.userPhone,
+            onEdit: () => showEditProfileSheet(context),
+          ),
+          const SizedBox(height: Insets.md),
           group([
             ListTile(
-              leading: IconBadge(
-                icon: Icons.person_outline_rounded,
-                color: c.primary,
-                size: 36,
-              ),
-              title: Text(
-                prefs?.userName ?? l10n.addYourName,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: prefs?.userName == null ? c.warning : null,
+              leading: Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: c.tint(c.primary),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-              subtitle: prefs?.userPhone == null
-                  ? Text(l10n.noPhone)
-                  : Text(prefs!.userPhone!, textDirection: TextDirection.ltr),
-              trailing: Icon(Icons.edit_outlined, color: c.textSecondary),
-              onTap: () => showEditProfileSheet(context),
-            ),
-          ]),
-          SectionTitle(l10n.sectionCurrency),
-          group([
-            ListTile(
-              leading: IconBadge(
-                icon: Icons.lock_outline_rounded,
-                color: c.primary,
-                size: 36,
+                child: Text(
+                  currency?.symbol(arabic) ?? '',
+                  style: TextStyle(
+                    color: c.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
               ),
               title: Text(
                 currency == null
@@ -143,9 +145,9 @@ class SettingsScreen extends ConsumerWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(l10n.appCurrencyLocked),
-              trailing: Text(
-                currency?.symbol(arabic) ?? '',
-                style: TextStyle(color: c.primary, fontWeight: FontWeight.w700),
+              trailing: Icon(
+                Icons.lock_outline_rounded,
+                color: c.textSecondary,
               ),
             ),
             // تعدد العملات مؤجل: الخيار ظاهر لكنه غير فعّال.
@@ -157,6 +159,49 @@ class SettingsScreen extends ConsumerWidget {
                 title: l10n.addCurrency,
                 trailing: Pill(l10n.comingSoon, color: c.textSecondary),
               ),
+            ),
+          ]),
+          SectionTitle(l10n.sectionGeneral),
+          group([
+            tile(
+              icon: Icons.star_outline_rounded,
+              color: c.income,
+              title: l10n.defaultAccount,
+              value: defaultAccount?.name,
+              onTap: () async {
+                final picked = await pickAccount(
+                  context,
+                  selectedId: defaultAccount?.id,
+                );
+                if (picked != null) {
+                  await ref.read(accountServiceProvider).setDefault(picked.id);
+                }
+              },
+            ),
+            tile(
+              icon: Icons.sell_outlined,
+              color: c.warning,
+              title: l10n.categoriesTitle,
+              value: categoryCount == null ? null : '$categoryCount',
+              onTap: () => context.go(AppRoutes.categories),
+            ),
+            tile(
+              icon: Icons.language_rounded,
+              color: c.transfer,
+              title: l10n.languageAndAppearance,
+              value: [
+                switch (prefs?.locale) {
+                  'ar' => l10n.languageArabic,
+                  'en' => l10n.languageEnglish,
+                  _ => l10n.followDevice,
+                },
+                switch (prefs?.themeMode) {
+                  'light' => l10n.themeLight,
+                  'dark' => l10n.themeDark,
+                  _ => l10n.followDevice,
+                },
+              ].join(' • '),
+              onTap: () => _showAppearance(context),
             ),
           ]),
           SectionTitle(l10n.sectionManage),
@@ -181,49 +226,7 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.go(AppRoutes.budget),
             ),
           ]),
-          SectionTitle(l10n.sectionGeneral),
-          group([
-            tile(
-              icon: Icons.star_outline_rounded,
-              color: c.income,
-              title: l10n.defaultAccount,
-              value: defaultAccount?.name,
-              onTap: () async {
-                final picked = await pickAccount(
-                  context,
-                  selectedId: defaultAccount?.id,
-                );
-                if (picked != null) {
-                  await ref.read(accountServiceProvider).setDefault(picked.id);
-                }
-              },
-            ),
-            tile(
-              icon: Icons.sell_outlined,
-              color: c.warning,
-              title: l10n.categoriesTitle,
-              onTap: () => context.go(AppRoutes.categories),
-            ),
-            tile(
-              icon: Icons.language_rounded,
-              color: c.transfer,
-              title: l10n.languageAndAppearance,
-              value: [
-                switch (prefs?.locale) {
-                  'ar' => l10n.languageArabic,
-                  'en' => l10n.languageEnglish,
-                  _ => l10n.followDevice,
-                },
-                switch (prefs?.themeMode) {
-                  'light' => l10n.themeLight,
-                  'dark' => l10n.themeDark,
-                  _ => l10n.followDevice,
-                },
-              ].join(' • '),
-              onTap: () => _showAppearance(context),
-            ),
-          ]),
-          SectionTitle(l10n.sectionSecurityData),
+          SectionTitle(l10n.sectionSecurity),
           group([
             tile(
               icon: Icons.fingerprint_rounded,
@@ -252,9 +255,12 @@ class SettingsScreen extends ConsumerWidget {
               ),
               onTap: () => context.go(AppRoutes.backup),
             ),
+          ]),
+          SectionTitle(l10n.sectionData),
+          group([
             tile(
-              icon: Icons.import_export_rounded,
-              color: c.primary,
+              icon: Icons.download_rounded,
+              color: c.income,
               title: l10n.localBackup,
               onTap: () => context.go(AppRoutes.backup),
             ),
@@ -279,9 +285,6 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
-          ]),
-          const SizedBox(height: Insets.lg),
-          group([
             tile(
               icon: Icons.delete_forever_outlined,
               color: c.expense,
@@ -290,25 +293,33 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => _wipe(context, ref),
             ),
           ]),
-          // التذييل: التواصل مع الدعم ← المطوّر ← رقم الإصدار.
-          const SizedBox(height: Insets.xl),
+          // FR-35: الدفع الإلكتروني ظاهر لكنه مقفل «قيد التطوير».
+          const _ElectronicPayments(),
+          // التذييل: تواصل معنا ← المطوّر ← رقم الإصدار.
           const _SupportLinks(),
-          const SizedBox(height: Insets.xl),
-          Text(
-            l10n.developedBy,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: c.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
+          const SizedBox(height: Insets.lg),
+          Text.rich(
+            TextSpan(
+              text: '${l10n.developedByPrefix} ',
+              children: [
+                TextSpan(
+                  text: l10n.developerName,
+                  style: TextStyle(
+                    color: c.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: c.textSecondary, fontSize: 13),
           ),
           if (version != null) ...[
             const SizedBox(height: 2),
             Text(
               l10n.version(version),
               textAlign: TextAlign.center,
-              style: TextStyle(color: c.textSecondary, fontSize: 12),
+              style: TextStyle(color: c.textSecondary, fontSize: 12.5),
             ),
           ],
         ],
@@ -413,10 +424,191 @@ class SettingsScreen extends ConsumerWidget {
   );
 }
 
-/// شعارات التواصل مع فريق الدعم — كل شعار يفتح تطبيقه مباشرة. الشعارات
-/// الثلاثة بنفس الشكل والحجم وبألوان لوحة التطبيق (مثل أيقونات الإعدادات).
+/// بطاقة الملف الشخصي: دائرة بأول حرف من الاسم، الاسم والهاتف، وزر «تعديل».
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.name,
+    required this.phone,
+    required this.onEdit,
+  });
+
+  final String? name;
+  final String? phone;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final hasName = name != null && name!.trim().isNotEmpty;
+    return AppCard(
+      onTap: onEdit,
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: c.brand,
+            child: hasName
+                ? Text(
+                    name!.trim().characters.first.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : const Icon(Icons.person_outline_rounded, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasName ? name! : l10n.addYourName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: hasName ? null : c.warning,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                phone == null
+                    ? Text(
+                        l10n.noPhone,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: c.textSecondary,
+                        ),
+                      )
+                    : Text(
+                        phone!,
+                        textDirection: TextDirection.ltr,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: c.textSecondary,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 38),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              shape: const StadiumBorder(),
+              side: BorderSide(color: c.border),
+            ),
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            label: Text(l10n.edit),
+            onPressed: onEdit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// FR-35: قسم الدفع الإلكتروني مقفل — لا ينفّذ أي عملية، ويعرض رسالة
+/// «قيد التطوير» عند الضغط على أي خيار.
+class _ElectronicPayments extends StatelessWidget {
+  const _ElectronicPayments();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final options = [
+      (
+        Icons.account_balance_wallet_outlined,
+        l10n.payLocalWallets,
+        l10n.payLocalWalletsHint,
+      ),
+      (Icons.credit_card_rounded, l10n.payCards, l10n.payCardsHint),
+      (Icons.payments_outlined, l10n.payOtherCards, l10n.payOtherCardsHint),
+    ];
+    void soon() => showMessage(
+      context,
+      l10n.ePaymentsSoon,
+      icon: Icons.lock_outline_rounded,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 20, 4, 8),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  l10n.ePayments,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: c.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Pill(l10n.underDevelopment, color: c.warning),
+            ],
+          ),
+        ),
+        AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            children: [
+              for (final (i, (icon, title, hint)) in options.indexed) ...[
+                if (i > 0) const Divider(indent: 64),
+                ListTile(
+                  onTap: soon,
+                  leading: IconBadge(
+                    icon: icon,
+                    color: c.textSecondary,
+                    size: 36,
+                  ),
+                  title: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: c.textSecondary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    hint,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: c.textSecondary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.lock_outline_rounded,
+                    size: 20,
+                    color: c.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// «تواصل معنا»: ثلاث أيقونات موحّدة التصميم (مربع ملوّن بأيقونة بيضاء
+/// واسم تحتها) — كل أيقونة تفتح تطبيقها مباشرة.
 class _SupportLinks extends ConsumerWidget {
   const _SupportLinks();
+
+  /// لون إنستغرام (الوردي المميز للعلامة).
+  static const _instagram = Color(0xFFC2185B);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -431,37 +623,40 @@ class _SupportLinks extends ConsumerWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.contactSupport,
-          style: TextStyle(
-            color: c.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 20, 4, 12),
+          child: Text(
+            l10n.contactSupport,
+            style: TextStyle(
+              color: c.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        const SizedBox(height: Insets.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _SupportButton(
               label: l10n.supportWhatsApp,
               icon: const FaIcon(FontAwesomeIcons.whatsapp),
-              color: c.income,
+              color: const Color(0xFF16A34A),
               onTap: () => open(SupportContacts.whatsappUri),
             ),
-            const SizedBox(width: Insets.lg),
+            const SizedBox(width: Insets.xl),
             _SupportButton(
               label: l10n.supportCall,
-              icon: const Icon(Icons.call_rounded),
-              color: c.transfer,
+              icon: const Icon(Icons.call_outlined),
+              color: AppColors.light.brand,
               onTap: () => open(SupportContacts.phoneUri),
             ),
-            const SizedBox(width: Insets.lg),
+            const SizedBox(width: Insets.xl),
             _SupportButton(
               label: l10n.supportInstagram,
               icon: const FaIcon(FontAwesomeIcons.instagram),
-              color: c.archive,
+              color: _instagram,
               onTap: () => open(SupportContacts.instagramUri),
             ),
           ],
@@ -471,7 +666,7 @@ class _SupportLinks extends ConsumerWidget {
   }
 }
 
-/// زر بشعار فقط (الاسم يظهر كتلميح ولقارئ الشاشة) بشكل IconBadge نفسه.
+/// مربع ملوّن بأيقونة بيضاء واسم تحته — الأزرار الثلاثة بالمقاس نفسه.
 class _SupportButton extends StatelessWidget {
   const _SupportButton({
     required this.label,
@@ -480,7 +675,7 @@ class _SupportButton extends StatelessWidget {
     required this.onTap,
   });
 
-  static const _size = 48.0;
+  static const _size = 60.0;
 
   final String label;
   final Widget icon;
@@ -489,24 +684,47 @@ class _SupportButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(_size * 0.3);
-    return Tooltip(
-      message: label,
-      child: Semantics(
-        button: true,
-        child: Material(
-          color: context.colors.tint(color),
-          borderRadius: radius,
-          child: InkWell(
-            borderRadius: radius,
-            onTap: onTap,
-            child: SizedBox.square(
-              dimension: _size,
-              child: IconTheme(
-                data: IconThemeData(color: color, size: 24),
-                child: Center(child: icon),
+    final radius = BorderRadius.circular(18);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: _size,
+                height: _size,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: radius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: IconTheme(
+                  data: const IconThemeData(color: Colors.white, size: 28),
+                  child: Center(child: icon),
+                ),
               ),
-            ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       ),

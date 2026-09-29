@@ -21,6 +21,7 @@
 // كل عملية داخل db.transaction واحدة: تنجح كل أجزائها معاً أو تفشل معاً.
 // =============================================================================
 
+import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
@@ -119,7 +120,7 @@ class DebtService {
       await _insertEntry(debtId, draft, currencyId);
       return debtId;
     });
-    await _syncReminder(id);
+    _syncReminderInBackground(id);
     return id;
   }
 
@@ -197,7 +198,7 @@ class DebtService {
         ),
       );
     });
-    await _syncReminder(id);
+    _syncReminderInBackground(id);
   }
 
   /// حذف دين (8.3): مسموح فقط إن لم تكن عليه دفعات (غير ملغاة) ولا مسامحة —
@@ -219,7 +220,7 @@ class DebtService {
       )..where((p) => p.debtId.equals(id))).go();
       await (db.delete(db.debts)..where((d) => d.id.equals(id))).go();
     });
-    await _reminders.cancelDebtReminder(id);
+    _inBackground(() => _reminders.cancelDebtReminder(id));
   }
 
   // ---------------------------------------------------------------------------
@@ -332,7 +333,7 @@ class DebtService {
       );
     });
     for (final a in result.allocations) {
-      await _syncReminder(a.debtId);
+      _syncReminderInBackground(a.debtId);
     }
     return result;
   }
@@ -380,7 +381,7 @@ class DebtService {
       );
     });
     for (final debtId in {for (final p in payments) p.debtId}) {
-      await _syncReminder(debtId);
+      _syncReminderInBackground(debtId);
     }
   }
 
@@ -472,7 +473,7 @@ class DebtService {
       return [for (final o in open) o.debt.id];
     });
     for (final id in debtIds) {
-      await _syncReminder(id);
+      _syncReminderInBackground(id);
     }
   }
 
@@ -1033,6 +1034,15 @@ class DebtService {
   }
 
   /// يجدول أو يلغي تذكير الدين حسب متبقّيه الحالي.
+  /// التذكير أثر جانبي بعد حفظ العملية: لا يؤخرها ولا يُفشلها. البيانات
+  /// محفوظة فعلاً، وتعذّر الإشعارات (رفض الإذن أو غياب الإضافة) لا يُظهر خطأً
+  /// للمستخدم عن عملية تمت بنجاح.
+  void _syncReminderInBackground(int debtId) =>
+      _inBackground(() => _syncReminder(debtId));
+
+  static void _inBackground(Future<void> Function() task) =>
+      unawaited(Future(task).catchError((Object _) {}));
+
   Future<void> _syncReminder(int debtId) async {
     final view = await debtView(debtId);
     if (view == null) return;

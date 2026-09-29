@@ -160,7 +160,9 @@ class DemoDataService {
         source: DebtSource.creditSale,
         amount: money(800),
         startDate: today.subtract(const Duration(days: 40)),
-        categoryId: byIcon('sales').id,
+        categoryId: categories
+            .firstWhere((c) => c.systemKey == SystemCategoryKeys.sales)
+            .id,
         note: t('بضاعة بالآجل', 'Goods on credit'),
       ),
     );

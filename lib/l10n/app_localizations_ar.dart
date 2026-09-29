@@ -118,12 +118,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navMore => 'المزيد';
 
   @override
-  String get welcomeTitle => 'مرحباً بك في دفتري';
-
-  @override
-  String get welcomeSubtitle => 'لا حساب • لا كلمة مرور • ابدأ فوراً';
-
-  @override
   String get chooseCurrency => 'اختر عملتك';
 
   @override
@@ -594,17 +588,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String remainingAmount(String amount) {
-    return 'المتبقي: $amount';
+    return 'المتبقي الحالي: $amount';
   }
 
   @override
   String get fullRemaining => 'كامل المتبقي';
 
   @override
-  String get receivedIntoAccount => 'استلمتُ المبلغ في';
+  String get receivedIntoAccount => 'استلمتُ في';
 
   @override
-  String get paidFromAccount => 'دفعتُ المبلغ من';
+  String get paidFromAccount => 'دفعتُ من';
 
   @override
   String profileOwedToMe(String name) {
@@ -618,12 +612,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String paidAmount(String amount) {
-    return 'مدفوع $amount';
+    return 'المدفوع $amount';
   }
 
   @override
   String totalDebtsAmount(String amount) {
-    return 'إجمالي الديون $amount';
+    return 'الإجمالي $amount';
   }
 
   @override
@@ -635,7 +629,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statement => 'كشف';
 
   @override
-  String get timeline => 'الخط الزمني';
+  String get timeline => 'الخط الزمني والرصيد بعد كل عملية';
+
+  @override
+  String balanceShort(String amount) {
+    return 'الرصيد $amount';
+  }
+
+  @override
+  String tlFrom(String account) {
+    return 'من $account';
+  }
+
+  @override
+  String tlInto(String account) {
+    return 'في $account';
+  }
+
+  @override
+  String tlIncomeCat(String category) {
+    return 'دخل $category';
+  }
+
+  @override
+  String tlExpenseCat(String category) {
+    return 'مصروف $category';
+  }
+
+  @override
+  String get tlNoAccount => 'بدون حساب';
+
+  @override
+  String get tlLedgerOnly => 'الدفتر فقط';
+
+  @override
+  String get tlCancelled => 'ملغاة — لا تُحتسب';
 
   @override
   String get paymentReceived => 'استلام';
@@ -647,7 +675,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editPerson => 'تعديل بيانات الشخص';
 
   @override
-  String get searchPeople => 'ابحث عن شخص';
+  String get searchPeople => 'بحث بالاسم أو الهاتف';
+
+  @override
+  String get noDueDate => 'بدون موعد';
+
+  @override
+  String get quickActions => 'الإجراءات السريعة';
+
+  @override
+  String get closeLabel => 'إغلاق';
 
   @override
   String get sourceTitle => 'مصدر الدين';
@@ -665,16 +702,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sourceCreditPurchase => 'اشتريتُ بالآجل';
 
   @override
-  String get sourceOpening => 'دين سابق (قبل استخدام التطبيق)';
+  String get sourceOpening => 'دين سابق';
 
   @override
-  String get sourceCreditSaleHint => 'يُسجَّل دخلاً بفئة — دون حركة حساب';
+  String sourceCreditSaleHint(String category) {
+    return 'يُسجَّل دخلاً ($category) — بدون حركة حساب';
+  }
 
   @override
-  String get sourceCreditPurchaseHint => 'يُسجَّل مصروفاً بفئة — دون حركة حساب';
+  String sourceCreditPurchaseHint(String category) {
+    return 'يُسجَّل مصروفاً ($category) — بدون حركة حساب';
+  }
 
   @override
-  String get sourceOpeningHint => 'في الدفتر فقط — لا دخل ولا حركة حساب';
+  String get sourceOpeningHint =>
+      'كان موجوداً قبل استخدام التطبيق — الدفتر فقط';
+
+  @override
+  String get loanOwedHint => 'ينقص رصيد الحساب — ليس مصروفاً';
+
+  @override
+  String get loanOweHint => 'يزيد رصيد الحساب — ليس دخلاً';
+
+  @override
+  String get segOwedToMe => 'لي (عند شخص)';
+
+  @override
+  String get segIOwe => 'عليّ (لشخص)';
+
+  @override
+  String get deviceContacts => 'جهات الاتصال';
 
   @override
   String get labelLoanOwed => 'سلفة نقدية';
@@ -703,22 +760,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String receiveFrom(String name) {
-    return 'استلام من $name';
+    return 'استلام مبلغ — $name';
   }
 
   @override
   String payTo(String name) {
-    return 'سداد لـ $name';
+    return 'سداد مبلغ — $name';
   }
 
   @override
-  String remainingAfterPayment(String amount) {
-    return 'المتبقي بعد الدفعة: $amount';
-  }
+  String get remainingAfterReceive => 'المتبقي بعد الاستلام';
 
   @override
-  String distributedOldestFirst(String parts) {
-    return 'يُوزَّع على الأقدم أولاً: $parts';
+  String get remainingAfterPay => 'المتبقي بعد السداد';
+
+  @override
+  String get amountReceivedLabel => 'المبلغ المستلم';
+
+  @override
+  String get amountPaidLabel => 'المبلغ المدفوع';
+
+  @override
+  String get autoDistTitle => 'التوزيع التلقائي — الأقدم أولاً';
+
+  @override
+  String get selectedDebtTitle => 'الدين المختار';
+
+  @override
+  String get allocCloses => 'يُغلق';
+
+  @override
+  String allocLeaves(String amount) {
+    return 'يتبقى $amount';
   }
 
   @override
@@ -862,12 +935,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count دين متأخر',
-      many: '$count ديناً متأخراً',
-      few: '$count ديون متأخرة',
-      two: 'دينان متأخران',
-      one: 'دين متأخر',
-      zero: 'لا ديون متأخرة',
+      other: '$count متأخر',
+      zero: 'لا متأخرات',
     );
     return '$_temp0';
   }
@@ -937,7 +1006,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get print => 'طباعة';
 
   @override
-  String get closingBalance => 'المتبقي';
+  String get closingBalance => 'الرصيد الختامي = المتبقي';
+
+  @override
+  String get colMovement => 'الحركة';
 
   @override
   String statementShareText(String name) {
@@ -1154,7 +1226,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get contactSupport => 'تواصل مع فريق الدعم';
+  String get contactSupport => 'تواصل معنا';
 
   @override
   String get supportWhatsApp => 'واتساب';
@@ -1169,7 +1241,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkOpenFailed => 'تعذّر فتح الرابط';
 
   @override
-  String get developedBy => 'تم التطوير من قبل محمد المخلافي';
+  String get developedByPrefix => 'تم التطوير من قبل';
+
+  @override
+  String get developerName => 'محمد المخلافي';
+
+  @override
+  String get sectionData => 'البيانات';
+
+  @override
+  String get sectionSecurity => 'الأمان والنسخ الاحتياطي';
+
+  @override
+  String get ePayments => 'الدفع الإلكتروني';
+
+  @override
+  String get underDevelopment => 'قيد التطوير';
+
+  @override
+  String get ePaymentsSoon => 'الدفع الإلكتروني قيد التطوير وسيتوفر قريباً';
+
+  @override
+  String get payLocalWallets => 'المحافظ المحلية';
+
+  @override
+  String get payLocalWalletsHint => 'محافظ إلكترونية محلية';
+
+  @override
+  String get payCards => 'فيزا / ماستركارد';
+
+  @override
+  String get payCardsHint => 'بطاقات ائتمان وخصم';
+
+  @override
+  String get payOtherCards => 'بطاقات دفع أخرى';
+
+  @override
+  String get payOtherCardsHint => 'مدى وغيرها';
 
   @override
   String get lockedTitle => 'دفتري مقفل';
@@ -1444,82 +1552,99 @@ class AppLocalizationsAr extends AppLocalizations {
   String get introStart => 'ابدأ الآن';
 
   @override
+  String get intro1Title => 'دفترك المالي في جيبك';
+
+  @override
   String get intro1Body =>
-      'دفتر حساباتك الشخصي وديونك في مكان واحد. يعمل بدون إنترنت وبدون تسجيل دخول، وبياناتك تبقى على جهازك.';
+      'سجّل دخلك ومصروفك وتحويلاتك بين حساباتك في ثوانٍ وتابع ميزانيتك بألوان واضحة.';
 
   @override
-  String get introOffline => 'بدون إنترنت';
+  String get intro2Title => 'ديونك منظمة… وحقك محفوظ';
 
   @override
-  String get introNoAccount => 'بدون حساب';
+  String get intro2Body =>
+      'ملف مالي لكل شخص، واستلام يُوزَّع تلقائياً على الأقدم، وكشف حساب تُرسله عبر واتساب بضغطة.';
 
   @override
-  String get introPrivate => 'خصوصية تامة';
+  String get intro3Title => 'خصوصية كاملة وبداية سهلة';
 
   @override
-  String get intro2Title => 'كل ما تحتاجه لإدارة أموالك';
+  String get intro3Body =>
+      'بدون حساب أو كلمة مرور، بياناتك على جهازك، والنسخ السحابي اختياري. ثلاث خطوات فقط وتبدأ.';
 
   @override
-  String get intro2Body => 'أدوات بسيطة وواضحة لكل يوم.';
+  String get introStepName => 'أدخل اسمك';
 
   @override
-  String get featTxTitle => 'المعاملات والحسابات';
+  String get introStepCurrency => 'اختر عملتك';
 
   @override
-  String get featTxBody => 'سجّل الدخل والمصروف والتحويل بين حساباتك';
+  String get introStepFirstTx => 'أضف أول معاملة';
 
   @override
-  String get featDebtsTitle => 'الديون والتذكير';
+  String get introSampleShop => 'سوبرماركت';
 
   @override
-  String get featDebtsBody => 'تابع ما لك وما عليك مع تذكير قبل الاستحقاق';
+  String get introSampleFood => 'طعام';
 
   @override
-  String get featBudgetTitle => 'الميزانية والتقارير';
+  String get introSamplePerson1 => 'أحمد علي';
 
   @override
-  String get featBudgetBody => 'حدود شهرية ورسوم بيانية وتصدير PDF و Excel';
+  String get introSamplePerson2 => 'خالد سعيد';
 
   @override
-  String get featStatementTitle => 'كشف حساب جاهز';
+  String get introSamplePerson3 => 'محمد حسن';
 
   @override
-  String get featStatementBody => 'أرسل كشف حساب أي شخص عبر واتساب بضغطة';
+  String get introSampleReceive => 'استلام 500';
 
   @override
-  String get intro3Title => 'خطوات مهمة للبدء';
+  String get introSampleSplit => 'وُزّع تلقائياً على الأقدم';
 
   @override
-  String get intro3Body => 'ثلاث خطوات تحمي بياناتك من البداية.';
+  String get introSampleIncome => 'دخل';
 
   @override
-  String get stepCurrencyTitle => 'اختر عملتك بعناية';
+  String get introSampleExpense => 'مصروف';
 
   @override
-  String get stepLockTitle => 'احمِ بياناتك';
+  String get introSampleBalance => 'إجمالي الأرصدة';
 
   @override
-  String get stepLockBody => 'فعّل قفل التطبيق بالبصمة أو رمز PIN من الإعدادات';
+  String get introSampleStatement => 'كشف حساب';
 
   @override
-  String get stepBackupTitle => 'خذ نسخة احتياطية';
+  String stepOf(String current, String total) {
+    return 'الخطوة $current من $total';
+  }
 
   @override
-  String get stepBackupBody =>
-      'صدّر نسخة مشفّرة أو فعّل النسخ السحابي لتنقل بياناتك بأمان';
+  String get profileTitle => 'عرّفنا بك';
 
   @override
-  String get profileTitle => 'عرّفنا بنفسك';
+  String get profileSubtitle => 'يظهر اسمك في رأس كشوف الحساب والتقارير';
 
   @override
-  String get profileSubtitle =>
-      'يظهر اسمك في التقارير وكشوف الحساب التي تشاركها.';
+  String get profileChangeLater =>
+      'يمكنك تغيير الاسم والهاتف لاحقاً من الإعدادات';
 
   @override
-  String get yourName => 'اسمك';
+  String get yourName => 'الاسم';
 
   @override
-  String get phoneOptional => 'رقم الجوال (اختياري)';
+  String get phoneOptional => 'رقم الهاتف (اختياري)';
+
+  @override
+  String get phoneHint => '05xxxxxxxx';
+
+  @override
+  String welcomeName(String name) {
+    return 'مرحباً $name';
+  }
+
+  @override
+  String get currencyStepSubtitle => 'الخطوة 2 من 2 — اختر عملة التطبيق';
 
   @override
   String get sectionProfile => 'الملف الشخصي';
@@ -1531,7 +1656,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addYourName => 'أضف اسمك';
 
   @override
-  String get noPhone => 'بدون رقم جوال';
+  String get noPhone => 'لم يُضف رقم هاتف';
 
   @override
   String greetingName(String greeting, String name) {

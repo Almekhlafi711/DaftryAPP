@@ -82,7 +82,7 @@ class _FakeLinks implements ExternalLinkService {
 }
 
 void main() {
-  testWidgets('إضافة حساب ثم أرشفته دون تحويل', (tester) async {
+  testWidgets('إضافة حساب ثم أرشفته بعد تحويل رصيده', (tester) async {
     final app = await startApp(tester);
     app.router.go(AppRoutes.accounts);
     await tester.pumpAndSettle();
@@ -109,7 +109,9 @@ void main() {
     await tester.tap(find.text('Archive').last);
     await tester.pumpAndSettle();
     expect(find.text('Archive “Al Rajhi”?'), findsOneWidget);
-    await tester.tap(find.text('Archive without transfer'));
+    // لا أرشفة دون تحويل: الرصيد يُحوَّل أولاً ثم يُؤرشف الحساب.
+    expect(find.text('Archive without transfer'), findsNothing);
+    await tester.tap(find.text('Transfer balance & archive'));
     await tester.pumpAndSettle();
 
     expect(find.text('Archived (1)'), findsOneWidget);
@@ -118,7 +120,7 @@ void main() {
         app.db.accounts,
       )..where((a) => a.name.equals('Al Rajhi'))).getSingle(),
     );
-    expect(bank!.isArchived, isTrue);
+    expect((bank!.isArchived, bank.balance), (true, 0));
 
     // رفع الأرشفة يعيده نشطاً.
     await tester.tap(find.text('Unarchive'));
@@ -197,8 +199,9 @@ void main() {
         tester.runAsync(() => SettingsService(app.db).isOnboarded());
 
     Future<void> startWipe() async {
+      // نمرّر حتى ما بعد قسم البيانات حتى لا يكون الزر تحت شريط التنقل.
       await tester.scrollUntilVisible(
-        find.text('Delete all data'),
+        find.text('Local wallets'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
@@ -247,7 +250,7 @@ void main() {
     expect(await tester.runAsync(security.hasPin), isFalse);
   });
 
-  testWidgets('التواصل مع الدعم: شعارات فقط تفتح واتساب والاتصال وإنستغرام', (
+  testWidgets('الدفع الإلكتروني مقفل «قيد التطوير» ثم «تواصل معنا» والإصدار', (
     tester,
   ) async {
     final links = _FakeLinks();
@@ -258,16 +261,32 @@ void main() {
     // قسم البيانات التجريبية أُزيل من الإعدادات.
     expect(find.byIcon(Icons.science_outlined), findsNothing);
 
+    // FR-35: الخيارات الثلاثة ظاهرة ولا تنفّذ شيئاً سوى رسالة «قيد التطوير».
     await tester.scrollUntilVisible(
-      find.text('Contact support'),
+      find.text('Visa / Mastercard'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    // الشعار وحده دون اسم ظاهر.
-    expect(find.text('WhatsApp'), findsNothing);
+    expect(find.text('In development'), findsOneWidget);
+    expect(find.text('Local wallets'), findsOneWidget);
+    expect(find.text('Other payment cards'), findsOneWidget);
+    await tester.tap(find.text('Visa / Mastercard'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Electronic payments are in development and coming soon'),
+      findsOneWidget,
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Contact us'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    // أيقونات موحّدة مع أسمائها تحتها.
     for (final label in ['WhatsApp', 'Call', 'Instagram']) {
-      await tester.tap(find.byTooltip(label));
+      await tester.tap(find.text(label));
       await tester.pumpAndSettle();
     }
     expect(links.opened, [
@@ -275,10 +294,14 @@ void main() {
       Uri.parse('tel:+967777953434'),
       Uri.parse('https://www.instagram.com/mo.div/'),
     ]);
+    expect(
+      find.text('Developed by Mohammed Al-Mekhlafi', findRichText: true),
+      findsOneWidget,
+    );
 
     // إن لم يوجد تطبيق يفتح الرابط تظهر رسالة خطأ.
     links.result = false;
-    await tester.tap(find.byTooltip('WhatsApp'));
+    await tester.tap(find.text('WhatsApp'));
     await tester.pumpAndSettle();
     expect(find.text("Couldn't open the link"), findsOneWidget);
   });

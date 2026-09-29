@@ -149,15 +149,16 @@ void main() {
       expect(await env.accounts.watchTotalBalance().first, 50000);
     });
 
-    test('الأرشفة دون تحويل تستبعد الرصيد من الإجمالي، ورفعها يعيده', () async {
+    test('لا أرشفة لحساب له رصيد دون تحويله (المال لا يختفي)', () async {
       final bank = await env.accounts.create(
         name: 'بنك',
         type: AccountType.bank,
         openingBalance: 50000,
       );
-      await env.accounts.archive(bank);
-      expect(await env.accounts.watchTotalBalance().first, 0);
-      await env.accounts.unarchive(bank);
+      await expectLater(
+        env.accounts.archive(bank),
+        throwsBusiness(BusinessError.accountHasBalance),
+      );
       expect(await env.accounts.watchTotalBalance().first, 50000);
     });
 

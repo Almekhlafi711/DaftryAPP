@@ -82,8 +82,7 @@ Future<void> _openReceiveSheet(
   expect(find.text('Receive from Ahmed Ali'), findsOneWidget);
 }
 
-Finder get _sheetSave =>
-    find.widgetWithText(FilledButton, 'Receive payment').last;
+Finder get _sheetSave => find.widgetWithText(FilledButton, 'Save').last;
 
 void main() {
   testWidgets('دين جديد ثم «استلام مبلغ» بكامل المتبقي من الملف المالي', (
@@ -222,5 +221,27 @@ void main() {
       () => DebtService(app.db).watchTotals().first,
     );
     expect(totals!.owedToMe, 0);
+  });
+
+  testWidgets('زر الإجراءات السريعة: «دين جديد» يفتح النموذج، و«إغلاق» يعود', (
+    tester,
+  ) async {
+    final app = await _start(tester);
+    app.router.go(AppRoutes.debts);
+    await tester.pumpAndSettle();
+
+    // الإغلاق دون اختيار لا يفعل شيئاً.
+    await tester.tap(find.byTooltip('New debt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Make payment'), findsNothing);
+
+    await tester.tap(find.byTooltip('New debt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New debt'));
+    await tester.pumpAndSettle();
+    expect(find.text('Save debt'), findsOneWidget);
+    expect(find.text('Where did this debt come from?'), findsOneWidget);
   });
 }

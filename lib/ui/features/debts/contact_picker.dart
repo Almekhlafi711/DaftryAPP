@@ -24,6 +24,35 @@ Future<Contact?> pickContact(BuildContext context, WidgetRef ref) =>
       builder: (_) => const _ContactPickerSheet(),
     );
 
+/// اختيار شخص من جهات اتصال الجهاز مباشرة (منتقي النظام — لا يحتاج إذناً
+/// للاسم) وإضافته إلى الأشخاص. يعيد null عند الإلغاء أو الخطأ.
+Future<Contact?> pickDeviceContact(BuildContext context, WidgetRef ref) async {
+  device.Contact? picked;
+  try {
+    await device.FlutterContacts.permissions.request(
+      device.PermissionType.read,
+    );
+    picked = await device.FlutterContacts.native.showPicker(
+      properties: {device.ContactProperty.phone},
+    );
+  } on PlatformException {
+    // بدون إذن: نكتفي بالاسم.
+    picked = await device.FlutterContacts.native.showPicker();
+  }
+  if (picked == null || !context.mounted) return null;
+  final service = ref.read(contactServiceProvider);
+  try {
+    final id = await service.create(
+      name: picked.displayName ?? '',
+      phone: picked.phones.firstOrNull?.number,
+    );
+    return await service.getById(id);
+  } on Object catch (e) {
+    if (context.mounted) showError(context, e);
+    return null;
+  }
+}
+
 class _ContactPickerSheet extends ConsumerStatefulWidget {
   const _ContactPickerSheet();
 
@@ -35,32 +64,9 @@ class _ContactPickerSheet extends ConsumerStatefulWidget {
 class _ContactPickerSheetState extends ConsumerState<_ContactPickerSheet> {
   String _query = '';
 
-  /// اختيار من جهات اتصال الجهاز (منتقي النظام — لا يحتاج إذناً للاسم).
   Future<void> _fromDevice() async {
-    device.Contact? picked;
-    try {
-      await device.FlutterContacts.permissions.request(
-        device.PermissionType.read,
-      );
-      picked = await device.FlutterContacts.native.showPicker(
-        properties: {device.ContactProperty.phone},
-      );
-    } on PlatformException {
-      // بدون إذن: نكتفي بالاسم.
-      picked = await device.FlutterContacts.native.showPicker();
-    }
-    if (picked == null || !mounted) return;
-    final service = ref.read(contactServiceProvider);
-    try {
-      final id = await service.create(
-        name: picked.displayName ?? '',
-        phone: picked.phones.firstOrNull?.number,
-      );
-      final contact = await service.getById(id);
-      if (mounted) Navigator.pop(context, contact);
-    } on Object catch (e) {
-      if (mounted) showError(context, e);
-    }
+    final contact = await pickDeviceContact(context, ref);
+    if (contact != null && mounted) Navigator.pop(context, contact);
   }
 
   Future<void> _addManually() async {

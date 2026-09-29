@@ -316,6 +316,9 @@ class _StatementPreview extends ConsumerWidget {
     final l10n = context.l10n;
     final c = context.colors;
     final dates = ref.watch(dateLabelsProvider);
+    // الترويسة تحمل اسم المستخدم: «دفتري • سالم محمد».
+    final owner = ref.watch(preferencesProvider).value?.userName;
+    final head = TextStyle(fontSize: 11.5, color: c.textSecondary);
 
     return AppCard(
       child: Column(
@@ -324,7 +327,7 @@ class _StatementPreview extends ConsumerWidget {
           Row(
             children: [
               Text(
-                l10n.appName,
+                owner == null ? l10n.appName : '${l10n.appName} • $owner',
                 style: TextStyle(color: c.primary, fontWeight: FontWeight.w800),
               ),
               const Spacer(),
@@ -339,6 +342,27 @@ class _StatementPreview extends ConsumerWidget {
             ],
           ),
           Divider(color: c.primary, thickness: 2, height: 16),
+          // عناوين الأعمدة: التاريخ، الوصف، الحركة، الرصيد الجاري.
+          if (data.sections.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  SizedBox(width: 52, child: Text(l10n.date, style: head)),
+                  Expanded(child: Text(l10n.description, style: head)),
+                  Text(l10n.colMovement, style: head),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 64,
+                    child: Text(
+                      l10n.balance,
+                      textAlign: TextAlign.end,
+                      style: head,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (data.sections.isEmpty)
             Padding(
               padding: const EdgeInsets.all(12),

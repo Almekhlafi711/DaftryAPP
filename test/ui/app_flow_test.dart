@@ -49,26 +49,22 @@ void main() {
     await pumpApp(tester);
 
     // 1) شاشات الترحيب (يمكن تخطيها).
-    expect(find.text('Welcome to Daftari'), findsOneWidget);
+    expect(find.text('Your finances in your pocket'), findsOneWidget);
     await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();
 
     // 2) الملف الشخصي: الاسم مطلوب ورقم الجوال اختياري.
     expect(find.text('Tell us about you'), findsOneWidget);
     expect(tester.widget<FilledButton>(filled('Continue')).onPressed, isNull);
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Your name *'),
-      'Mohammed',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Phone (optional)'),
-      '+967 777 953 434',
-    );
+    expect(find.text('Step 1 of 2'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).at(0), 'Mohammed');
+    await tester.enterText(find.byType(TextField).at(1), '+967 777 953 434');
     await tester.pump();
     await tester.tap(filled('Continue'));
     await tester.pumpAndSettle();
 
-    // 3) العملة: زر المتابعة معطّل حتى تُختار عملة.
+    // 3) العملة: ترحيب بالاسم، وزر المتابعة معطّل حتى تُختار عملة.
+    expect(find.text('Welcome, Mohammed'), findsOneWidget);
     expect(
       find.text('Choose your currency *', findRichText: true),
       findsOneWidget,
@@ -120,26 +116,20 @@ void main() {
 
   testWidgets('شاشات الترحيب الثلاث ثم رقم جوال غير صحيح', (tester) async {
     await pumpApp(tester);
-    expect(find.text('Welcome to Daftari'), findsOneWidget);
+    expect(find.text('Your finances in your pocket'), findsOneWidget);
     await tester.tap(filled('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Everything to manage your money'), findsOneWidget);
+    expect(find.text('Debts organized… your rights protected'), findsOneWidget);
     await tester.tap(filled('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Key steps to get started'), findsOneWidget);
-    expect(find.text('Choose your currency carefully'), findsOneWidget);
+    expect(find.text('Full privacy, easy start'), findsOneWidget);
+    expect(find.text('Add your first transaction'), findsOneWidget);
     // الصفحة الأخيرة: «ابدأ الآن» بدل «التالي».
     await tester.tap(filled('Get started'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Your name *'),
-      'Mohammed',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Phone (optional)'),
-      '12',
-    );
+    await tester.enterText(find.byType(TextField).at(0), 'Mohammed');
+    await tester.enterText(find.byType(TextField).at(1), '12');
     await tester.pump();
     await tester.tap(filled('Continue'));
     await tester.pumpAndSettle();
@@ -147,15 +137,15 @@ void main() {
     expect(find.text('Tell us about you'), findsOneWidget);
 
     // زر الرجوع يعود لشاشات الترحيب.
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to Daftari'), findsOneWidget);
+    expect(find.text('Your finances in your pocket'), findsOneWidget);
   });
 
   testWidgets('الواجهة العربية تعمل من اليمين لليسار', (tester) async {
     await pumpApp(tester, locale: 'ar');
-    expect(find.text('مرحباً بك في دفتري'), findsOneWidget);
-    final context = tester.element(find.text('مرحباً بك في دفتري'));
+    expect(find.text('دفترك المالي في جيبك'), findsOneWidget);
+    final context = tester.element(find.text('دفترك المالي في جيبك'));
     expect(Directionality.of(context), TextDirection.rtl);
   });
 }

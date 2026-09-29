@@ -63,6 +63,7 @@ void showMessage(
   BuildContext context,
   String message, {
   bool error = false,
+  IconData? icon,
   SnackBarAction? action,
   Duration duration = const Duration(seconds: 3),
 }) {
@@ -73,8 +74,12 @@ void showMessage(
       content: Row(
         children: [
           Icon(
-            error ? Icons.error_outline : Icons.check_circle_outline,
-            color: error ? context.colors.expense : context.colors.income,
+            icon ?? (error ? Icons.error_outline : Icons.check_circle_outline),
+            color: icon != null
+                ? context.colors.warning
+                : error
+                ? context.colors.expense
+                : context.colors.income,
             size: 20,
           ),
           const SizedBox(width: 8),
