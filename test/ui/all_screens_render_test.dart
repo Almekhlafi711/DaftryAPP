@@ -76,6 +76,7 @@ Future<({int contactId, int txId, int debtId})> seed(
     DebtDraft(
       contactId: contact,
       direction: DebtDirection.owedToMe,
+      source: DebtSource.loan,
       amount: 120000,
       startDate: DateTime.now().subtract(const Duration(days: 20)),
       dueDate: DateTime.now().add(const Duration(days: 5)),
@@ -84,8 +85,34 @@ Future<({int contactId, int txId, int debtId})> seed(
     ),
   );
   await debts.recordPayment(
-    debtId,
-    PaymentDraft(amount: 50000, paidAt: DateTime.now(), accountId: cash.id),
+    PaymentDraft(
+      contactId: contact,
+      direction: DebtDirection.owedToMe,
+      amount: 50000,
+      paidAt: DateTime.now(),
+      accountId: cash.id,
+    ),
+  );
+  // بيع بالآجل ودين «عليّ» حتى تظهر بطاقتا الاتجاهين والصافي كمعلومة.
+  await debts.createDebt(
+    DebtDraft(
+      contactId: contact,
+      direction: DebtDirection.owedToMe,
+      source: DebtSource.creditSale,
+      amount: 30000,
+      startDate: DateTime.now().subtract(const Duration(days: 30)),
+      categoryId: salary.id,
+      note: arabic ? 'بضاعة' : 'Goods',
+    ),
+  );
+  await debts.createDebt(
+    DebtDraft(
+      contactId: contact,
+      direction: DebtDirection.iOwe,
+      source: DebtSource.opening,
+      amount: 15000,
+      startDate: DateTime.now().subtract(const Duration(days: 10)),
+    ),
   );
   return (contactId: contact, txId: tx.id, debtId: debtId);
 }

@@ -48,7 +48,15 @@ final categoriesByKindProvider = StreamProvider.autoDispose
       (ref, kind) => ref.watch(categoryServiceProvider).watchByKind(kind),
     );
 
-/// الأشخاص النشطون (لاختيار شخص عند تسجيل دين).
+/// فئات شاشة المعاملة (دون فئتي المسامحة والإعفاء الخاصتين بالديون).
+final transactionCategoriesProvider = StreamProvider.autoDispose
+    .family<List<Category>, CategoryKind>(
+      (ref, kind) => ref
+          .watch(categoryServiceProvider)
+          .watchByKind(kind, forTransactions: true),
+    );
+
+/// الأشخاص غير المؤرشفين (لاختيار شخص عند تسجيل دين).
 final contactsProvider = StreamProvider.autoDispose<List<Contact>>(
   (ref) => ref.watch(contactServiceProvider).watchActive(),
 );

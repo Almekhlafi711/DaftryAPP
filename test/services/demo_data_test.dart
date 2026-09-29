@@ -30,14 +30,19 @@ void main() {
       // إعادة الاحتساب لا تجد أي فرق: كل رصيد مخزَّن صحيح.
       expect(await env.accounts.recalculateAll(), 0);
 
+      // كل مصادر الدين والحالات الثلاث موجودة.
       final debts = await env.db.select(env.db.debts).get();
+      expect(debts.map((d) => d.source).toSet(), DebtSource.values.toSet());
+      final views = [for (final d in debts) (await env.debts.debtView(d.id))!];
       expect(
-        debts.map((d) => d.status),
-        containsAll([DebtStatus.partial, DebtStatus.open, DebtStatus.settled]),
+        views.map((v) => v.status),
+        containsAll([DebtStatus.partial, DebtStatus.open, DebtStatus.closed]),
       );
       final totals = await env.debts.watchTotals().first;
-      expect(totals.owedToMe, 150000); // 700 + 800
-      expect(totals.iOwe, 150000);
+      expect(totals.owedToMe, 130000); // سلفة أحمد 1000 + دين صالح السابق 300
+      expect(totals.iOwe, 185000); // اقتراض خالد 1500 + شراء بالآجل 350
+      // معادلة التطابق الشاملة متحققة على البيانات التجريبية.
+      expect(await env.accounts.reconciliationGap(), 0);
     },
   );
 }

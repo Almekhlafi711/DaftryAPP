@@ -1210,6 +1210,17 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _systemKeyMeta = const VerificationMeta(
+    'systemKey',
+  );
+  @override
+  late final GeneratedColumn<String> systemKey = GeneratedColumn<String>(
+    'system_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1220,6 +1231,7 @@ class $CategoriesTable extends Categories
     color,
     isDefault,
     sortOrder,
+    systemKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1278,6 +1290,12 @@ class $CategoriesTable extends Categories
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('system_key')) {
+      context.handle(
+        _systemKeyMeta,
+        systemKey.isAcceptableOrUnknown(data['system_key']!, _systemKeyMeta),
+      );
+    }
     return context;
   }
 
@@ -1321,6 +1339,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      systemKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}system_key'],
+      ),
     );
   }
 
@@ -1350,6 +1372,10 @@ class Category extends DataClass implements Insertable<Category> {
 
   /// ترتيب العرض في شبكة الفئات.
   final int sortOrder;
+
+  /// مفتاح ثابت لفئات التطبيق التي تحتاجها الخدمات (مثل «مبيعات» للبيع
+  /// بالآجل و«مسامحة ديون»)، فتُعرف مهما غيّر المستخدم اسمها.
+  final String? systemKey;
   const Category({
     required this.id,
     required this.name,
@@ -1359,6 +1385,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.color,
     required this.isDefault,
     required this.sortOrder,
+    this.systemKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1377,6 +1404,9 @@ class Category extends DataClass implements Insertable<Category> {
     map['color'] = Variable<int>(color);
     map['is_default'] = Variable<bool>(isDefault);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || systemKey != null) {
+      map['system_key'] = Variable<String>(systemKey);
+    }
     return map;
   }
 
@@ -1392,6 +1422,9 @@ class Category extends DataClass implements Insertable<Category> {
       color: Value(color),
       isDefault: Value(isDefault),
       sortOrder: Value(sortOrder),
+      systemKey: systemKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(systemKey),
     );
   }
 
@@ -1411,6 +1444,7 @@ class Category extends DataClass implements Insertable<Category> {
       color: serializer.fromJson<int>(json['color']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      systemKey: serializer.fromJson<String?>(json['systemKey']),
     );
   }
   @override
@@ -1427,6 +1461,7 @@ class Category extends DataClass implements Insertable<Category> {
       'color': serializer.toJson<int>(color),
       'isDefault': serializer.toJson<bool>(isDefault),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'systemKey': serializer.toJson<String?>(systemKey),
     };
   }
 
@@ -1439,6 +1474,7 @@ class Category extends DataClass implements Insertable<Category> {
     int? color,
     bool? isDefault,
     int? sortOrder,
+    Value<String?> systemKey = const Value.absent(),
   }) => Category(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1448,6 +1484,7 @@ class Category extends DataClass implements Insertable<Category> {
     color: color ?? this.color,
     isDefault: isDefault ?? this.isDefault,
     sortOrder: sortOrder ?? this.sortOrder,
+    systemKey: systemKey.present ? systemKey.value : this.systemKey,
   );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
@@ -1459,6 +1496,7 @@ class Category extends DataClass implements Insertable<Category> {
       color: data.color.present ? data.color.value : this.color,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      systemKey: data.systemKey.present ? data.systemKey.value : this.systemKey,
     );
   }
 
@@ -1472,14 +1510,24 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('icon: $icon, ')
           ..write('color: $color, ')
           ..write('isDefault: $isDefault, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('systemKey: $systemKey')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, kind, parentId, icon, color, isDefault, sortOrder);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    kind,
+    parentId,
+    icon,
+    color,
+    isDefault,
+    sortOrder,
+    systemKey,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1491,7 +1539,8 @@ class Category extends DataClass implements Insertable<Category> {
           other.icon == this.icon &&
           other.color == this.color &&
           other.isDefault == this.isDefault &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.systemKey == this.systemKey);
 }
 
 class CategoriesCompanion extends UpdateCompanion<Category> {
@@ -1503,6 +1552,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<int> color;
   final Value<bool> isDefault;
   final Value<int> sortOrder;
+  final Value<String?> systemKey;
   const CategoriesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1512,6 +1562,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.color = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.systemKey = const Value.absent(),
   });
   CategoriesCompanion.insert({
     this.id = const Value.absent(),
@@ -1522,6 +1573,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     required int color,
     this.isDefault = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.systemKey = const Value.absent(),
   }) : name = Value(name),
        kind = Value(kind),
        icon = Value(icon),
@@ -1535,6 +1587,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<int>? color,
     Expression<bool>? isDefault,
     Expression<int>? sortOrder,
+    Expression<String>? systemKey,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1545,6 +1598,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (color != null) 'color': color,
       if (isDefault != null) 'is_default': isDefault,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (systemKey != null) 'system_key': systemKey,
     });
   }
 
@@ -1557,6 +1611,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<int>? color,
     Value<bool>? isDefault,
     Value<int>? sortOrder,
+    Value<String?>? systemKey,
   }) {
     return CategoriesCompanion(
       id: id ?? this.id,
@@ -1567,6 +1622,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       color: color ?? this.color,
       isDefault: isDefault ?? this.isDefault,
       sortOrder: sortOrder ?? this.sortOrder,
+      systemKey: systemKey ?? this.systemKey,
     );
   }
 
@@ -1599,6 +1655,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (systemKey.present) {
+      map['system_key'] = Variable<String>(systemKey.value);
+    }
     return map;
   }
 
@@ -1612,7 +1671,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('icon: $icon, ')
           ..write('color: $color, ')
           ..write('isDefault: $isDefault, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('systemKey: $systemKey')
           ..write(')'))
         .toString();
   }
@@ -1654,17 +1714,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _addressMeta = const VerificationMeta(
-    'address',
-  );
-  @override
-  late final GeneratedColumn<String> address = GeneratedColumn<String>(
-    'address',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -1674,20 +1723,31 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
+  static const VerificationMeta _isArchivedMeta = const VerificationMeta(
+    'isArchived',
   );
   @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+    'is_archived',
     aliasedName,
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
+      'CHECK ("is_archived" IN (0, 1))',
     ),
-    defaultValue: const Constant(true),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> archivedAt = GeneratedColumn<DateTime>(
+    'archived_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -1706,9 +1766,9 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     id,
     name,
     phone,
-    address,
     note,
-    isActive,
+    isArchived,
+    archivedAt,
     createdAt,
   ];
   @override
@@ -1740,22 +1800,22 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
       );
     }
-    if (data.containsKey('address')) {
-      context.handle(
-        _addressMeta,
-        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
-      );
-    }
     if (data.containsKey('note')) {
       context.handle(
         _noteMeta,
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
-    if (data.containsKey('is_active')) {
+    if (data.containsKey('is_archived')) {
       context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+        _isArchivedMeta,
+        isArchived.isAcceptableOrUnknown(data['is_archived']!, _isArchivedMeta),
+      );
+    }
+    if (data.containsKey('archived_at')) {
+      context.handle(
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -1785,18 +1845,18 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.string,
         data['${effectivePrefix}phone'],
       ),
-      address: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}address'],
-      ),
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
-      isActive: attachedDatabase.typeMapping.read(
+      isArchived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
+        data['${effectivePrefix}is_archived'],
       )!,
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}archived_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1814,19 +1874,20 @@ class Contact extends DataClass implements Insertable<Contact> {
   final int id;
   final String name;
   final String? phone;
-  final String? address;
   final String? note;
 
-  /// false = مخفي من القائمة (مع بقاء سجله).
-  final bool isActive;
+  /// مؤرشف: يختفي من القوائم والاختيار. لا يُؤرشف إلا ومتبقّيه صفر في
+  /// الاتجاهين، فلا يؤثر على أي إجمالي.
+  final bool isArchived;
+  final DateTime? archivedAt;
   final DateTime createdAt;
   const Contact({
     required this.id,
     required this.name,
     this.phone,
-    this.address,
     this.note,
-    required this.isActive,
+    required this.isArchived,
+    this.archivedAt,
     required this.createdAt,
   });
   @override
@@ -1837,13 +1898,13 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || phone != null) {
       map['phone'] = Variable<String>(phone);
     }
-    if (!nullToAbsent || address != null) {
-      map['address'] = Variable<String>(address);
-    }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
-    map['is_active'] = Variable<bool>(isActive);
+    map['is_archived'] = Variable<bool>(isArchived);
+    if (!nullToAbsent || archivedAt != null) {
+      map['archived_at'] = Variable<DateTime>(archivedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1855,11 +1916,11 @@ class Contact extends DataClass implements Insertable<Contact> {
       phone: phone == null && nullToAbsent
           ? const Value.absent()
           : Value(phone),
-      address: address == null && nullToAbsent
-          ? const Value.absent()
-          : Value(address),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
-      isActive: Value(isActive),
+      isArchived: Value(isArchived),
+      archivedAt: archivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(archivedAt),
       createdAt: Value(createdAt),
     );
   }
@@ -1873,9 +1934,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       phone: serializer.fromJson<String?>(json['phone']),
-      address: serializer.fromJson<String?>(json['address']),
       note: serializer.fromJson<String?>(json['note']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
+      archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1886,9 +1947,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'phone': serializer.toJson<String?>(phone),
-      'address': serializer.toJson<String?>(address),
       'note': serializer.toJson<String?>(note),
-      'isActive': serializer.toJson<bool>(isActive),
+      'isArchived': serializer.toJson<bool>(isArchived),
+      'archivedAt': serializer.toJson<DateTime?>(archivedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1897,17 +1958,17 @@ class Contact extends DataClass implements Insertable<Contact> {
     int? id,
     String? name,
     Value<String?> phone = const Value.absent(),
-    Value<String?> address = const Value.absent(),
     Value<String?> note = const Value.absent(),
-    bool? isActive,
+    bool? isArchived,
+    Value<DateTime?> archivedAt = const Value.absent(),
     DateTime? createdAt,
   }) => Contact(
     id: id ?? this.id,
     name: name ?? this.name,
     phone: phone.present ? phone.value : this.phone,
-    address: address.present ? address.value : this.address,
     note: note.present ? note.value : this.note,
-    isActive: isActive ?? this.isActive,
+    isArchived: isArchived ?? this.isArchived,
+    archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
     createdAt: createdAt ?? this.createdAt,
   );
   Contact copyWithCompanion(ContactsCompanion data) {
@@ -1915,9 +1976,13 @@ class Contact extends DataClass implements Insertable<Contact> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       phone: data.phone.present ? data.phone.value : this.phone,
-      address: data.address.present ? data.address.value : this.address,
       note: data.note.present ? data.note.value : this.note,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      isArchived: data.isArchived.present
+          ? data.isArchived.value
+          : this.isArchived,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1928,9 +1993,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('phone: $phone, ')
-          ..write('address: $address, ')
           ..write('note: $note, ')
-          ..write('isActive: $isActive, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1938,7 +2003,7 @@ class Contact extends DataClass implements Insertable<Contact> {
 
   @override
   int get hashCode =>
-      Object.hash(id, name, phone, address, note, isActive, createdAt);
+      Object.hash(id, name, phone, note, isArchived, archivedAt, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1946,9 +2011,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.id == this.id &&
           other.name == this.name &&
           other.phone == this.phone &&
-          other.address == this.address &&
           other.note == this.note &&
-          other.isActive == this.isActive &&
+          other.isArchived == this.isArchived &&
+          other.archivedAt == this.archivedAt &&
           other.createdAt == this.createdAt);
 }
 
@@ -1956,44 +2021,44 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<int> id;
   final Value<String> name;
   final Value<String?> phone;
-  final Value<String?> address;
   final Value<String?> note;
-  final Value<bool> isActive;
+  final Value<bool> isArchived;
+  final Value<DateTime?> archivedAt;
   final Value<DateTime> createdAt;
   const ContactsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.phone = const Value.absent(),
-    this.address = const Value.absent(),
     this.note = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.isArchived = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   ContactsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.phone = const Value.absent(),
-    this.address = const Value.absent(),
     this.note = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.isArchived = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Contact> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? phone,
-    Expression<String>? address,
     Expression<String>? note,
-    Expression<bool>? isActive,
+    Expression<bool>? isArchived,
+    Expression<DateTime>? archivedAt,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (phone != null) 'phone': phone,
-      if (address != null) 'address': address,
       if (note != null) 'note': note,
-      if (isActive != null) 'is_active': isActive,
+      if (isArchived != null) 'is_archived': isArchived,
+      if (archivedAt != null) 'archived_at': archivedAt,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -2002,18 +2067,18 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<int>? id,
     Value<String>? name,
     Value<String?>? phone,
-    Value<String?>? address,
     Value<String?>? note,
-    Value<bool>? isActive,
+    Value<bool>? isArchived,
+    Value<DateTime?>? archivedAt,
     Value<DateTime>? createdAt,
   }) {
     return ContactsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       phone: phone ?? this.phone,
-      address: address ?? this.address,
       note: note ?? this.note,
-      isActive: isActive ?? this.isActive,
+      isArchived: isArchived ?? this.isArchived,
+      archivedAt: archivedAt ?? this.archivedAt,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -2030,14 +2095,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (phone.present) {
       map['phone'] = Variable<String>(phone.value);
     }
-    if (address.present) {
-      map['address'] = Variable<String>(address.value);
-    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -2051,9 +2116,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('phone: $phone, ')
-          ..write('address: $address, ')
           ..write('note: $note, ')
-          ..write('isActive: $isActive, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2101,6 +2166,15 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<DebtDirection>($DebtsTable.$converterdirection);
+  @override
+  late final GeneratedColumnWithTypeConverter<DebtSource, String> source =
+      GeneratedColumn<String>(
+        'source',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DebtSource>($DebtsTable.$convertersource);
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<int> amount = GeneratedColumn<int>(
@@ -2111,14 +2185,15 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _paidAmountMeta = const VerificationMeta(
-    'paidAmount',
+  static const VerificationMeta _writtenOffMeta = const VerificationMeta(
+    'writtenOff',
   );
   @override
-  late final GeneratedColumn<int> paidAmount = GeneratedColumn<int>(
-    'paid_amount',
+  late final GeneratedColumn<int> writtenOff = GeneratedColumn<int>(
+    'written_off',
     aliasedName,
     false,
+    check: () => ComparableExpr(writtenOff).isBiggerOrEqualValue(0),
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -2173,15 +2248,6 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  @override
-  late final GeneratedColumnWithTypeConverter<DebtStatus, String> status =
-      GeneratedColumn<String>(
-        'status',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<DebtStatus>($DebtsTable.$converterstatus);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -2216,21 +2282,34 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     contactId,
     direction,
+    source,
     amount,
-    paidAmount,
+    writtenOff,
     currencyId,
     accountId,
     startDate,
     dueDate,
-    status,
     note,
     remind,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2263,10 +2342,10 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
-    if (data.containsKey('paid_amount')) {
+    if (data.containsKey('written_off')) {
       context.handle(
-        _paidAmountMeta,
-        paidAmount.isAcceptableOrUnknown(data['paid_amount']!, _paidAmountMeta),
+        _writtenOffMeta,
+        writtenOff.isAcceptableOrUnknown(data['written_off']!, _writtenOffMeta),
       );
     }
     if (data.containsKey('currency_id')) {
@@ -2315,6 +2394,12 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2338,13 +2423,19 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
           data['${effectivePrefix}direction'],
         )!,
       ),
+      source: $DebtsTable.$convertersource.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}source'],
+        )!,
+      ),
       amount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}amount'],
       )!,
-      paidAmount: attachedDatabase.typeMapping.read(
+      writtenOff: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}paid_amount'],
+        data['${effectivePrefix}written_off'],
       )!,
       currencyId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -2362,12 +2453,6 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}due_date'],
       ),
-      status: $DebtsTable.$converterstatus.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}status'],
-        )!,
-      ),
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
@@ -2380,6 +2465,10 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -2390,8 +2479,8 @@ class $DebtsTable extends Debts with TableInfo<$DebtsTable, Debt> {
 
   static JsonTypeConverter2<DebtDirection, String, String> $converterdirection =
       const EnumNameConverter<DebtDirection>(DebtDirection.values);
-  static JsonTypeConverter2<DebtStatus, String, String> $converterstatus =
-      const EnumNameConverter<DebtStatus>(DebtStatus.values);
+  static JsonTypeConverter2<DebtSource, String, String> $convertersource =
+      const EnumNameConverter<DebtSource>(DebtSource.values);
 }
 
 class Debt extends DataClass implements Insertable<Debt> {
@@ -2399,40 +2488,41 @@ class Debt extends DataClass implements Insertable<Debt> {
   final int contactId;
   final DebtDirection direction;
 
-  /// أصل الدين.
+  /// مصدر الدين (إقراض، بيع/شراء بالآجل، دين سابق) — يحدد القيد المحاسبي.
+  final DebtSource source;
+
+  /// أصل الدين (A > 0).
   final int amount;
 
-  /// مجموع ما سُدِّد (قيمة مشتقة مخزَّنة للأداء، تُحدَّث مع كل دفعة
-  /// ويمكن إعادة احتسابها). المتبقي = amount - paid_amount.
-  final int paidAmount;
+  /// W: مجموع ما سُومح به من هذا الدين (قيود المسامحة / الإعفاء).
+  final int writtenOff;
   final int currencyId;
 
-  /// الحساب الذي خرج منه أو دخل إليه المال (فارغ للبيع بالآجل).
+  /// الحساب الذي خرج منه أو دخل إليه المال — للإقراض والاقتراض فقط.
   final int? accountId;
   final DateTime startDate;
   final DateTime? dueDate;
-
-  /// تُحسب آلياً من الدفعات: open / partial / settled.
-  final DebtStatus status;
   final String? note;
 
   /// تذكير محلي قبل موعد الاستحقاق بيوم (FR-20).
   final bool remind;
   final DateTime createdAt;
+  final DateTime updatedAt;
   const Debt({
     required this.id,
     required this.contactId,
     required this.direction,
+    required this.source,
     required this.amount,
-    required this.paidAmount,
+    required this.writtenOff,
     required this.currencyId,
     this.accountId,
     required this.startDate,
     this.dueDate,
-    required this.status,
     this.note,
     required this.remind,
     required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2444,8 +2534,13 @@ class Debt extends DataClass implements Insertable<Debt> {
         $DebtsTable.$converterdirection.toSql(direction),
       );
     }
+    {
+      map['source'] = Variable<String>(
+        $DebtsTable.$convertersource.toSql(source),
+      );
+    }
     map['amount'] = Variable<int>(amount);
-    map['paid_amount'] = Variable<int>(paidAmount);
+    map['written_off'] = Variable<int>(writtenOff);
     map['currency_id'] = Variable<int>(currencyId);
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<int>(accountId);
@@ -2454,16 +2549,12 @@ class Debt extends DataClass implements Insertable<Debt> {
     if (!nullToAbsent || dueDate != null) {
       map['due_date'] = Variable<DateTime>(dueDate);
     }
-    {
-      map['status'] = Variable<String>(
-        $DebtsTable.$converterstatus.toSql(status),
-      );
-    }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
     map['remind'] = Variable<bool>(remind);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -2472,8 +2563,9 @@ class Debt extends DataClass implements Insertable<Debt> {
       id: Value(id),
       contactId: Value(contactId),
       direction: Value(direction),
+      source: Value(source),
       amount: Value(amount),
-      paidAmount: Value(paidAmount),
+      writtenOff: Value(writtenOff),
       currencyId: Value(currencyId),
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
@@ -2482,10 +2574,10 @@ class Debt extends DataClass implements Insertable<Debt> {
       dueDate: dueDate == null && nullToAbsent
           ? const Value.absent()
           : Value(dueDate),
-      status: Value(status),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       remind: Value(remind),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -2500,18 +2592,19 @@ class Debt extends DataClass implements Insertable<Debt> {
       direction: $DebtsTable.$converterdirection.fromJson(
         serializer.fromJson<String>(json['direction']),
       ),
+      source: $DebtsTable.$convertersource.fromJson(
+        serializer.fromJson<String>(json['source']),
+      ),
       amount: serializer.fromJson<int>(json['amount']),
-      paidAmount: serializer.fromJson<int>(json['paidAmount']),
+      writtenOff: serializer.fromJson<int>(json['writtenOff']),
       currencyId: serializer.fromJson<int>(json['currencyId']),
       accountId: serializer.fromJson<int?>(json['accountId']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
-      status: $DebtsTable.$converterstatus.fromJson(
-        serializer.fromJson<String>(json['status']),
-      ),
       note: serializer.fromJson<String?>(json['note']),
       remind: serializer.fromJson<bool>(json['remind']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -2523,18 +2616,19 @@ class Debt extends DataClass implements Insertable<Debt> {
       'direction': serializer.toJson<String>(
         $DebtsTable.$converterdirection.toJson(direction),
       ),
+      'source': serializer.toJson<String>(
+        $DebtsTable.$convertersource.toJson(source),
+      ),
       'amount': serializer.toJson<int>(amount),
-      'paidAmount': serializer.toJson<int>(paidAmount),
+      'writtenOff': serializer.toJson<int>(writtenOff),
       'currencyId': serializer.toJson<int>(currencyId),
       'accountId': serializer.toJson<int?>(accountId),
       'startDate': serializer.toJson<DateTime>(startDate),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
-      'status': serializer.toJson<String>(
-        $DebtsTable.$converterstatus.toJson(status),
-      ),
       'note': serializer.toJson<String?>(note),
       'remind': serializer.toJson<bool>(remind),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -2542,50 +2636,53 @@ class Debt extends DataClass implements Insertable<Debt> {
     int? id,
     int? contactId,
     DebtDirection? direction,
+    DebtSource? source,
     int? amount,
-    int? paidAmount,
+    int? writtenOff,
     int? currencyId,
     Value<int?> accountId = const Value.absent(),
     DateTime? startDate,
     Value<DateTime?> dueDate = const Value.absent(),
-    DebtStatus? status,
     Value<String?> note = const Value.absent(),
     bool? remind,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) => Debt(
     id: id ?? this.id,
     contactId: contactId ?? this.contactId,
     direction: direction ?? this.direction,
+    source: source ?? this.source,
     amount: amount ?? this.amount,
-    paidAmount: paidAmount ?? this.paidAmount,
+    writtenOff: writtenOff ?? this.writtenOff,
     currencyId: currencyId ?? this.currencyId,
     accountId: accountId.present ? accountId.value : this.accountId,
     startDate: startDate ?? this.startDate,
     dueDate: dueDate.present ? dueDate.value : this.dueDate,
-    status: status ?? this.status,
     note: note.present ? note.value : this.note,
     remind: remind ?? this.remind,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   Debt copyWithCompanion(DebtsCompanion data) {
     return Debt(
       id: data.id.present ? data.id.value : this.id,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       direction: data.direction.present ? data.direction.value : this.direction,
+      source: data.source.present ? data.source.value : this.source,
       amount: data.amount.present ? data.amount.value : this.amount,
-      paidAmount: data.paidAmount.present
-          ? data.paidAmount.value
-          : this.paidAmount,
+      writtenOff: data.writtenOff.present
+          ? data.writtenOff.value
+          : this.writtenOff,
       currencyId: data.currencyId.present
           ? data.currencyId.value
           : this.currencyId,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
-      status: data.status.present ? data.status.value : this.status,
       note: data.note.present ? data.note.value : this.note,
       remind: data.remind.present ? data.remind.value : this.remind,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -2595,16 +2692,17 @@ class Debt extends DataClass implements Insertable<Debt> {
           ..write('id: $id, ')
           ..write('contactId: $contactId, ')
           ..write('direction: $direction, ')
+          ..write('source: $source, ')
           ..write('amount: $amount, ')
-          ..write('paidAmount: $paidAmount, ')
+          ..write('writtenOff: $writtenOff, ')
           ..write('currencyId: $currencyId, ')
           ..write('accountId: $accountId, ')
           ..write('startDate: $startDate, ')
           ..write('dueDate: $dueDate, ')
-          ..write('status: $status, ')
           ..write('note: $note, ')
           ..write('remind: $remind, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2614,16 +2712,17 @@ class Debt extends DataClass implements Insertable<Debt> {
     id,
     contactId,
     direction,
+    source,
     amount,
-    paidAmount,
+    writtenOff,
     currencyId,
     accountId,
     startDate,
     dueDate,
-    status,
     note,
     remind,
     createdAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2632,96 +2731,102 @@ class Debt extends DataClass implements Insertable<Debt> {
           other.id == this.id &&
           other.contactId == this.contactId &&
           other.direction == this.direction &&
+          other.source == this.source &&
           other.amount == this.amount &&
-          other.paidAmount == this.paidAmount &&
+          other.writtenOff == this.writtenOff &&
           other.currencyId == this.currencyId &&
           other.accountId == this.accountId &&
           other.startDate == this.startDate &&
           other.dueDate == this.dueDate &&
-          other.status == this.status &&
           other.note == this.note &&
           other.remind == this.remind &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class DebtsCompanion extends UpdateCompanion<Debt> {
   final Value<int> id;
   final Value<int> contactId;
   final Value<DebtDirection> direction;
+  final Value<DebtSource> source;
   final Value<int> amount;
-  final Value<int> paidAmount;
+  final Value<int> writtenOff;
   final Value<int> currencyId;
   final Value<int?> accountId;
   final Value<DateTime> startDate;
   final Value<DateTime?> dueDate;
-  final Value<DebtStatus> status;
   final Value<String?> note;
   final Value<bool> remind;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   const DebtsCompanion({
     this.id = const Value.absent(),
     this.contactId = const Value.absent(),
     this.direction = const Value.absent(),
+    this.source = const Value.absent(),
     this.amount = const Value.absent(),
-    this.paidAmount = const Value.absent(),
+    this.writtenOff = const Value.absent(),
     this.currencyId = const Value.absent(),
     this.accountId = const Value.absent(),
     this.startDate = const Value.absent(),
     this.dueDate = const Value.absent(),
-    this.status = const Value.absent(),
     this.note = const Value.absent(),
     this.remind = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   DebtsCompanion.insert({
     this.id = const Value.absent(),
     required int contactId,
     required DebtDirection direction,
+    required DebtSource source,
     required int amount,
-    this.paidAmount = const Value.absent(),
+    this.writtenOff = const Value.absent(),
     required int currencyId,
     this.accountId = const Value.absent(),
     required DateTime startDate,
     this.dueDate = const Value.absent(),
-    required DebtStatus status,
     this.note = const Value.absent(),
     this.remind = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : contactId = Value(contactId),
        direction = Value(direction),
+       source = Value(source),
        amount = Value(amount),
        currencyId = Value(currencyId),
-       startDate = Value(startDate),
-       status = Value(status);
+       startDate = Value(startDate);
   static Insertable<Debt> custom({
     Expression<int>? id,
     Expression<int>? contactId,
     Expression<String>? direction,
+    Expression<String>? source,
     Expression<int>? amount,
-    Expression<int>? paidAmount,
+    Expression<int>? writtenOff,
     Expression<int>? currencyId,
     Expression<int>? accountId,
     Expression<DateTime>? startDate,
     Expression<DateTime>? dueDate,
-    Expression<String>? status,
     Expression<String>? note,
     Expression<bool>? remind,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (contactId != null) 'contact_id': contactId,
       if (direction != null) 'direction': direction,
+      if (source != null) 'source': source,
       if (amount != null) 'amount': amount,
-      if (paidAmount != null) 'paid_amount': paidAmount,
+      if (writtenOff != null) 'written_off': writtenOff,
       if (currencyId != null) 'currency_id': currencyId,
       if (accountId != null) 'account_id': accountId,
       if (startDate != null) 'start_date': startDate,
       if (dueDate != null) 'due_date': dueDate,
-      if (status != null) 'status': status,
       if (note != null) 'note': note,
       if (remind != null) 'remind': remind,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -2729,31 +2834,33 @@ class DebtsCompanion extends UpdateCompanion<Debt> {
     Value<int>? id,
     Value<int>? contactId,
     Value<DebtDirection>? direction,
+    Value<DebtSource>? source,
     Value<int>? amount,
-    Value<int>? paidAmount,
+    Value<int>? writtenOff,
     Value<int>? currencyId,
     Value<int?>? accountId,
     Value<DateTime>? startDate,
     Value<DateTime?>? dueDate,
-    Value<DebtStatus>? status,
     Value<String?>? note,
     Value<bool>? remind,
     Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
   }) {
     return DebtsCompanion(
       id: id ?? this.id,
       contactId: contactId ?? this.contactId,
       direction: direction ?? this.direction,
+      source: source ?? this.source,
       amount: amount ?? this.amount,
-      paidAmount: paidAmount ?? this.paidAmount,
+      writtenOff: writtenOff ?? this.writtenOff,
       currencyId: currencyId ?? this.currencyId,
       accountId: accountId ?? this.accountId,
       startDate: startDate ?? this.startDate,
       dueDate: dueDate ?? this.dueDate,
-      status: status ?? this.status,
       note: note ?? this.note,
       remind: remind ?? this.remind,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -2771,11 +2878,16 @@ class DebtsCompanion extends UpdateCompanion<Debt> {
         $DebtsTable.$converterdirection.toSql(direction.value),
       );
     }
+    if (source.present) {
+      map['source'] = Variable<String>(
+        $DebtsTable.$convertersource.toSql(source.value),
+      );
+    }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
     }
-    if (paidAmount.present) {
-      map['paid_amount'] = Variable<int>(paidAmount.value);
+    if (writtenOff.present) {
+      map['written_off'] = Variable<int>(writtenOff.value);
     }
     if (currencyId.present) {
       map['currency_id'] = Variable<int>(currencyId.value);
@@ -2789,11 +2901,6 @@ class DebtsCompanion extends UpdateCompanion<Debt> {
     if (dueDate.present) {
       map['due_date'] = Variable<DateTime>(dueDate.value);
     }
-    if (status.present) {
-      map['status'] = Variable<String>(
-        $DebtsTable.$converterstatus.toSql(status.value),
-      );
-    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
@@ -2802,6 +2909,9 @@ class DebtsCompanion extends UpdateCompanion<Debt> {
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     return map;
   }
@@ -2812,16 +2922,17 @@ class DebtsCompanion extends UpdateCompanion<Debt> {
           ..write('id: $id, ')
           ..write('contactId: $contactId, ')
           ..write('direction: $direction, ')
+          ..write('source: $source, ')
           ..write('amount: $amount, ')
-          ..write('paidAmount: $paidAmount, ')
+          ..write('writtenOff: $writtenOff, ')
           ..write('currencyId: $currencyId, ')
           ..write('accountId: $accountId, ')
           ..write('startDate: $startDate, ')
           ..write('dueDate: $dueDate, ')
-          ..write('status: $status, ')
           ..write('note: $note, ')
           ..write('remind: $remind, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2900,6 +3011,43 @@ class $DebtPaymentsTable extends DebtPayments
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _isCancelledMeta = const VerificationMeta(
+    'isCancelled',
+  );
+  @override
+  late final GeneratedColumn<bool> isCancelled = GeneratedColumn<bool>(
+    'is_cancelled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_cancelled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2908,6 +3056,9 @@ class $DebtPaymentsTable extends DebtPayments
     paidAt,
     accountId,
     note,
+    isCancelled,
+    cancelledAt,
+    operationId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2960,6 +3111,33 @@ class $DebtPaymentsTable extends DebtPayments
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('is_cancelled')) {
+      context.handle(
+        _isCancelledMeta,
+        isCancelled.isAcceptableOrUnknown(
+          data['is_cancelled']!,
+          _isCancelledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2993,6 +3171,18 @@ class $DebtPaymentsTable extends DebtPayments
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
+      isCancelled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_cancelled'],
+      )!,
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cancelled_at'],
+      ),
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      ),
     );
   }
 
@@ -3008,9 +3198,14 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
   final int amount;
   final DateTime paidAt;
 
-  /// حساب الاستلام أو الدفع (اختياري).
+  /// حساب الاستلام أو الدفع. (null فقط لدفعات قديمة سُجِّلت في الدفتر.)
   final int? accountId;
   final String? note;
+  final bool isCancelled;
+  final DateTime? cancelledAt;
+
+  /// معرّف العملية (UUID) المشترك بين دفعات التوزيع الواحدة.
+  final String? operationId;
   const DebtPayment({
     required this.id,
     required this.debtId,
@@ -3018,6 +3213,9 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
     required this.paidAt,
     this.accountId,
     this.note,
+    required this.isCancelled,
+    this.cancelledAt,
+    this.operationId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3032,6 +3230,13 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    map['is_cancelled'] = Variable<bool>(isCancelled);
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
+    if (!nullToAbsent || operationId != null) {
+      map['operation_id'] = Variable<String>(operationId);
+    }
     return map;
   }
 
@@ -3045,6 +3250,13 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
           ? const Value.absent()
           : Value(accountId),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      isCancelled: Value(isCancelled),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
+      operationId: operationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(operationId),
     );
   }
 
@@ -3060,6 +3272,9 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
       paidAt: serializer.fromJson<DateTime>(json['paidAt']),
       accountId: serializer.fromJson<int?>(json['accountId']),
       note: serializer.fromJson<String?>(json['note']),
+      isCancelled: serializer.fromJson<bool>(json['isCancelled']),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
+      operationId: serializer.fromJson<String?>(json['operationId']),
     );
   }
   @override
@@ -3072,6 +3287,9 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
       'paidAt': serializer.toJson<DateTime>(paidAt),
       'accountId': serializer.toJson<int?>(accountId),
       'note': serializer.toJson<String?>(note),
+      'isCancelled': serializer.toJson<bool>(isCancelled),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
+      'operationId': serializer.toJson<String?>(operationId),
     };
   }
 
@@ -3082,6 +3300,9 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
     DateTime? paidAt,
     Value<int?> accountId = const Value.absent(),
     Value<String?> note = const Value.absent(),
+    bool? isCancelled,
+    Value<DateTime?> cancelledAt = const Value.absent(),
+    Value<String?> operationId = const Value.absent(),
   }) => DebtPayment(
     id: id ?? this.id,
     debtId: debtId ?? this.debtId,
@@ -3089,6 +3310,9 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
     paidAt: paidAt ?? this.paidAt,
     accountId: accountId.present ? accountId.value : this.accountId,
     note: note.present ? note.value : this.note,
+    isCancelled: isCancelled ?? this.isCancelled,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
+    operationId: operationId.present ? operationId.value : this.operationId,
   );
   DebtPayment copyWithCompanion(DebtPaymentsCompanion data) {
     return DebtPayment(
@@ -3098,6 +3322,15 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
       paidAt: data.paidAt.present ? data.paidAt.value : this.paidAt,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       note: data.note.present ? data.note.value : this.note,
+      isCancelled: data.isCancelled.present
+          ? data.isCancelled.value
+          : this.isCancelled,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
     );
   }
 
@@ -3109,13 +3342,26 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
           ..write('amount: $amount, ')
           ..write('paidAt: $paidAt, ')
           ..write('accountId: $accountId, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isCancelled: $isCancelled, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('operationId: $operationId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, debtId, amount, paidAt, accountId, note);
+  int get hashCode => Object.hash(
+    id,
+    debtId,
+    amount,
+    paidAt,
+    accountId,
+    note,
+    isCancelled,
+    cancelledAt,
+    operationId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3125,7 +3371,10 @@ class DebtPayment extends DataClass implements Insertable<DebtPayment> {
           other.amount == this.amount &&
           other.paidAt == this.paidAt &&
           other.accountId == this.accountId &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.isCancelled == this.isCancelled &&
+          other.cancelledAt == this.cancelledAt &&
+          other.operationId == this.operationId);
 }
 
 class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
@@ -3135,6 +3384,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
   final Value<DateTime> paidAt;
   final Value<int?> accountId;
   final Value<String?> note;
+  final Value<bool> isCancelled;
+  final Value<DateTime?> cancelledAt;
+  final Value<String?> operationId;
   const DebtPaymentsCompanion({
     this.id = const Value.absent(),
     this.debtId = const Value.absent(),
@@ -3142,6 +3394,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
     this.paidAt = const Value.absent(),
     this.accountId = const Value.absent(),
     this.note = const Value.absent(),
+    this.isCancelled = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.operationId = const Value.absent(),
   });
   DebtPaymentsCompanion.insert({
     this.id = const Value.absent(),
@@ -3150,6 +3405,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
     required DateTime paidAt,
     this.accountId = const Value.absent(),
     this.note = const Value.absent(),
+    this.isCancelled = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.operationId = const Value.absent(),
   }) : debtId = Value(debtId),
        amount = Value(amount),
        paidAt = Value(paidAt);
@@ -3160,6 +3418,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
     Expression<DateTime>? paidAt,
     Expression<int>? accountId,
     Expression<String>? note,
+    Expression<bool>? isCancelled,
+    Expression<DateTime>? cancelledAt,
+    Expression<String>? operationId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3168,6 +3429,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
       if (paidAt != null) 'paid_at': paidAt,
       if (accountId != null) 'account_id': accountId,
       if (note != null) 'note': note,
+      if (isCancelled != null) 'is_cancelled': isCancelled,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
+      if (operationId != null) 'operation_id': operationId,
     });
   }
 
@@ -3178,6 +3442,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
     Value<DateTime>? paidAt,
     Value<int?>? accountId,
     Value<String?>? note,
+    Value<bool>? isCancelled,
+    Value<DateTime?>? cancelledAt,
+    Value<String?>? operationId,
   }) {
     return DebtPaymentsCompanion(
       id: id ?? this.id,
@@ -3186,6 +3453,9 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
       paidAt: paidAt ?? this.paidAt,
       accountId: accountId ?? this.accountId,
       note: note ?? this.note,
+      isCancelled: isCancelled ?? this.isCancelled,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      operationId: operationId ?? this.operationId,
     );
   }
 
@@ -3210,6 +3480,15 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (isCancelled.present) {
+      map['is_cancelled'] = Variable<bool>(isCancelled.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
     return map;
   }
 
@@ -3221,7 +3500,10 @@ class DebtPaymentsCompanion extends UpdateCompanion<DebtPayment> {
           ..write('amount: $amount, ')
           ..write('paidAt: $paidAt, ')
           ..write('accountId: $accountId, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isCancelled: $isCancelled, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('operationId: $operationId')
           ..write(')'))
         .toString();
   }
@@ -3289,9 +3571,10 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<int> accountId = GeneratedColumn<int>(
     'account_id',
     aliasedName,
-    false,
+    true,
+    check: () => accountId.isNotNull() | debtId.isNotNull(),
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES accounts (id)',
     ),
@@ -3456,8 +3739,6 @@ class $TransactionsTable extends Transactions
         _accountIdMeta,
         accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_accountIdMeta);
     }
     if (data.containsKey('to_account_id')) {
       context.handle(
@@ -3554,7 +3835,7 @@ class $TransactionsTable extends Transactions
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}account_id'],
-      )!,
+      ),
       toAccountId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}to_account_id'],
@@ -3612,8 +3893,9 @@ class MoneyTransaction extends DataClass
   final int amount;
   final int currencyId;
 
-  /// الحساب (المصدر في حالة التحويل).
-  final int accountId;
+  /// الحساب (المصدر في حالة التحويل). فارغ فقط لقيود الديون التي لا تحرّك
+  /// مالاً (البيع/الشراء بالآجل والمسامحة) — ويجب حينها أن تكون مرتبطة بدين.
+  final int? accountId;
 
   /// الحساب الوجهة — للتحويل فقط.
   final int? toAccountId;
@@ -3621,10 +3903,10 @@ class MoneyTransaction extends DataClass
   /// الفئة — للدخل والمصروف فقط.
   final int? categoryId;
 
-  /// الدين المرتبط — لحركة الدين الناتجة عن إنشاء الدين.
+  /// الدين المرتبط — لقيد إنشاء الدين أو مسامحته، ولأول دين في عملية سداد.
   final int? debtId;
 
-  /// الدفعة المرتبطة — لحركة الدين الناتجة عن دفعة سداد.
+  /// الدفعة المرتبطة — لحركة عملية سداد (أول دفعة من دفعات العملية).
   final int? debtPaymentId;
   final DateTime date;
   final String? note;
@@ -3638,7 +3920,7 @@ class MoneyTransaction extends DataClass
     required this.type,
     required this.amount,
     required this.currencyId,
-    required this.accountId,
+    this.accountId,
     this.toAccountId,
     this.categoryId,
     this.debtId,
@@ -3660,7 +3942,9 @@ class MoneyTransaction extends DataClass
     }
     map['amount'] = Variable<int>(amount);
     map['currency_id'] = Variable<int>(currencyId);
-    map['account_id'] = Variable<int>(accountId);
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<int>(accountId);
+    }
     if (!nullToAbsent || toAccountId != null) {
       map['to_account_id'] = Variable<int>(toAccountId);
     }
@@ -3691,7 +3975,9 @@ class MoneyTransaction extends DataClass
       type: Value(type),
       amount: Value(amount),
       currencyId: Value(currencyId),
-      accountId: Value(accountId),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
       toAccountId: toAccountId == null && nullToAbsent
           ? const Value.absent()
           : Value(toAccountId),
@@ -3726,7 +4012,7 @@ class MoneyTransaction extends DataClass
       ),
       amount: serializer.fromJson<int>(json['amount']),
       currencyId: serializer.fromJson<int>(json['currencyId']),
-      accountId: serializer.fromJson<int>(json['accountId']),
+      accountId: serializer.fromJson<int?>(json['accountId']),
       toAccountId: serializer.fromJson<int?>(json['toAccountId']),
       categoryId: serializer.fromJson<int?>(json['categoryId']),
       debtId: serializer.fromJson<int?>(json['debtId']),
@@ -3748,7 +4034,7 @@ class MoneyTransaction extends DataClass
       ),
       'amount': serializer.toJson<int>(amount),
       'currencyId': serializer.toJson<int>(currencyId),
-      'accountId': serializer.toJson<int>(accountId),
+      'accountId': serializer.toJson<int?>(accountId),
       'toAccountId': serializer.toJson<int?>(toAccountId),
       'categoryId': serializer.toJson<int?>(categoryId),
       'debtId': serializer.toJson<int?>(debtId),
@@ -3766,7 +4052,7 @@ class MoneyTransaction extends DataClass
     TxType? type,
     int? amount,
     int? currencyId,
-    int? accountId,
+    Value<int?> accountId = const Value.absent(),
     Value<int?> toAccountId = const Value.absent(),
     Value<int?> categoryId = const Value.absent(),
     Value<int?> debtId = const Value.absent(),
@@ -3781,7 +4067,7 @@ class MoneyTransaction extends DataClass
     type: type ?? this.type,
     amount: amount ?? this.amount,
     currencyId: currencyId ?? this.currencyId,
-    accountId: accountId ?? this.accountId,
+    accountId: accountId.present ? accountId.value : this.accountId,
     toAccountId: toAccountId.present ? toAccountId.value : this.toAccountId,
     categoryId: categoryId.present ? categoryId.value : this.categoryId,
     debtId: debtId.present ? debtId.value : this.debtId,
@@ -3886,7 +4172,7 @@ class TransactionsCompanion extends UpdateCompanion<MoneyTransaction> {
   final Value<TxType> type;
   final Value<int> amount;
   final Value<int> currencyId;
-  final Value<int> accountId;
+  final Value<int?> accountId;
   final Value<int?> toAccountId;
   final Value<int?> categoryId;
   final Value<int?> debtId;
@@ -3917,7 +4203,7 @@ class TransactionsCompanion extends UpdateCompanion<MoneyTransaction> {
     required TxType type,
     required int amount,
     required int currencyId,
-    required int accountId,
+    this.accountId = const Value.absent(),
     this.toAccountId = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.debtId = const Value.absent(),
@@ -3930,7 +4216,6 @@ class TransactionsCompanion extends UpdateCompanion<MoneyTransaction> {
   }) : type = Value(type),
        amount = Value(amount),
        currencyId = Value(currencyId),
-       accountId = Value(accountId),
        date = Value(date);
   static Insertable<MoneyTransaction> custom({
     Expression<int>? id,
@@ -3971,7 +4256,7 @@ class TransactionsCompanion extends UpdateCompanion<MoneyTransaction> {
     Value<TxType>? type,
     Value<int>? amount,
     Value<int>? currencyId,
-    Value<int>? accountId,
+    Value<int?>? accountId,
     Value<int?>? toAccountId,
     Value<int?>? categoryId,
     Value<int?>? debtId,
@@ -5028,6 +5313,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_categories_kind',
     'CREATE INDEX idx_categories_kind ON categories (kind, sort_order)',
   );
+  late final Index idxCategoriesSystemKey = Index(
+    'idx_categories_system_key',
+    'CREATE UNIQUE INDEX idx_categories_system_key ON categories (system_key)',
+  );
   late final Index idxTxDate = Index(
     'idx_tx_date',
     'CREATE INDEX idx_tx_date ON transactions (date)',
@@ -5056,13 +5345,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_debts_contact',
     'CREATE INDEX idx_debts_contact ON debts (contact_id)',
   );
-  late final Index idxDebtsStatusDue = Index(
-    'idx_debts_status_due',
-    'CREATE INDEX idx_debts_status_due ON debts (status, due_date)',
+  late final Index idxDebtsDue = Index(
+    'idx_debts_due',
+    'CREATE INDEX idx_debts_due ON debts (due_date)',
   );
   late final Index idxPaymentsDebt = Index(
     'idx_payments_debt',
     'CREATE INDEX idx_payments_debt ON debt_payments (debt_id, paid_at)',
+  );
+  late final Index idxPaymentsOperation = Index(
+    'idx_payments_operation',
+    'CREATE INDEX idx_payments_operation ON debt_payments (operation_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5081,6 +5374,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     backupLogs,
     idxAccountsSingleDefault,
     idxCategoriesKind,
+    idxCategoriesSystemKey,
     idxTxDate,
     idxTxAccountDate,
     idxTxToAccount,
@@ -5088,8 +5382,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxTxDebt,
     idxTxDebtPayment,
     idxDebtsContact,
-    idxDebtsStatusDue,
+    idxDebtsDue,
     idxPaymentsDebt,
+    idxPaymentsOperation,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

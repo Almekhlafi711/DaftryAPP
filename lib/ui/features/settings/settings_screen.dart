@@ -1,17 +1,20 @@
 // =============================================================================
 // الشاشة 17: الإعدادات / المزيد.
+// - الملف الشخصي: الاسم (يظهر في التقارير والكشوف) ورقم الجوال الاختياري.
 // - العملة للقراءة فقط مع أيقونة قفل، و«إضافة عملة جديدة» رمادية «قريباً» (FR-02).
 // - الإدارة: الحسابات، التقارير، الميزانية.
 // - عام: الحساب الافتراضي، الفئات، اللغة والمظهر.
 // - الأمان والبيانات: القفل، النسخ السحابي، التصدير المحلي، إعادة احتساب
 //   الأرصدة، وحذف جميع البيانات (الطريقة الوحيدة لتغيير العملة).
-// - التواصل مع فريق الدعم: شعارات واتساب والاتصال وإنستغرام.
+// - في الأسفل: شعارات التواصل مع الدعم (واتساب، اتصال، إنستغرام)، ثم اسم
+//   المطوّر، ثم رقم الإصدار.
 // =============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/constants/support.dart';
 import '../../../services/providers.dart';
@@ -24,7 +27,17 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/inputs.dart';
+import '../profile/profile_form.dart';
 import '../security/app_lock_gate.dart';
+
+/// رقم الإصدار من ملف البناء نفسه (version في pubspec.yaml) فلا يُحدَّث يدوياً.
+final _appVersionProvider = FutureProvider<String?>((ref) async {
+  try {
+    return (await PackageInfo.fromPlatform()).version;
+  } on Exception {
+    return null;
+  }
+});
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -38,6 +51,7 @@ class SettingsScreen extends ConsumerWidget {
     final arabic = ref.watch(isArabicProvider);
     final accounts = ref.watch(activeAccountsProvider).value ?? const [];
     final defaultAccount = accounts.where((a) => a.isDefault).firstOrNull;
+    final version = ref.watch(_appVersionProvider).value;
 
     Widget tile({
       required IconData icon,
@@ -92,6 +106,28 @@ class SettingsScreen extends ConsumerWidget {
           Insets.xxl,
         ),
         children: [
+          SectionTitle(l10n.sectionProfile),
+          group([
+            ListTile(
+              leading: IconBadge(
+                icon: Icons.person_outline_rounded,
+                color: c.primary,
+                size: 36,
+              ),
+              title: Text(
+                prefs?.userName ?? l10n.addYourName,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: prefs?.userName == null ? c.warning : null,
+                ),
+              ),
+              subtitle: prefs?.userPhone == null
+                  ? Text(l10n.noPhone)
+                  : Text(prefs!.userPhone!, textDirection: TextDirection.ltr),
+              trailing: Icon(Icons.edit_outlined, color: c.textSecondary),
+              onTap: () => showEditProfileSheet(context),
+            ),
+          ]),
           SectionTitle(l10n.sectionCurrency),
           group([
             ListTile(
@@ -227,17 +263,23 @@ class SettingsScreen extends ConsumerWidget {
               color: c.textSecondary,
               title: l10n.recalculateBalances,
               onTap: () async {
-                final fixed = await ref
-                    .read(accountServiceProvider)
-                    .recalculateAll();
+                final accounts = ref.read(accountServiceProvider);
+                final money = ref.read(moneyFormatterProvider);
+                final fixed = await accounts.recalculateAll();
+                // فحص تلقائي بمعادلة التطابق الشاملة بعد إعادة الاحتساب.
+                final gap = await accounts.reconciliationGap();
                 if (context.mounted) {
-                  showMessage(context, l10n.recalculateDone('$fixed'));
+                  showMessage(
+                    context,
+                    '${l10n.recalculateDone('$fixed')}\n'
+                    '${gap == 0 ? l10n.reconcileOk : l10n.reconcileGap(money.inline(gap))}',
+                    error: gap != 0,
+                    duration: const Duration(seconds: 5),
+                  );
                 }
               },
             ),
           ]),
-          SectionTitle(l10n.contactSupport),
-          const _SupportLinks(),
           const SizedBox(height: Insets.lg),
           group([
             tile(
@@ -248,13 +290,27 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => _wipe(context, ref),
             ),
           ]),
-          const SizedBox(height: Insets.lg),
-          Center(
-            child: Text(
-              l10n.version('0.1.0'),
-              style: TextStyle(color: c.textSecondary, fontSize: 12),
+          // التذييل: التواصل مع الدعم ← المطوّر ← رقم الإصدار.
+          const SizedBox(height: Insets.xl),
+          const _SupportLinks(),
+          const SizedBox(height: Insets.xl),
+          Text(
+            l10n.developedBy,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: c.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
             ),
           ),
+          if (version != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.version(version),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: c.textSecondary, fontSize: 12),
+            ),
+          ],
         ],
       ),
     );
@@ -357,13 +413,15 @@ class SettingsScreen extends ConsumerWidget {
   );
 }
 
-/// شعارات التواصل مع فريق الدعم — كل شعار يفتح تطبيقه مباشرة.
+/// شعارات التواصل مع فريق الدعم — كل شعار يفتح تطبيقه مباشرة. الشعارات
+/// الثلاثة بنفس الشكل والحجم وبألوان لوحة التطبيق (مثل أيقونات الإعدادات).
 class _SupportLinks extends ConsumerWidget {
   const _SupportLinks();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final c = context.colors;
 
     Future<void> open(Uri uri) async {
       final ok = await ref.read(externalLinkServiceProvider).open(uri);
@@ -372,84 +430,86 @@ class _SupportLinks extends ConsumerWidget {
       }
     }
 
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: Insets.lg),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _BrandButton(
-            label: l10n.supportWhatsApp,
-            icon: const FaIcon(FontAwesomeIcons.whatsapp),
-            color: const Color(0xFF25D366),
-            onTap: () => open(SupportContacts.whatsappUri),
+    return Column(
+      children: [
+        Text(
+          l10n.contactSupport,
+          style: TextStyle(
+            color: c.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
-          _BrandButton(
-            label: l10n.supportCall,
-            icon: const Icon(Icons.call_rounded),
-            color: context.colors.primary,
-            onTap: () => open(SupportContacts.phoneUri),
-          ),
-          _BrandButton(
-            label: l10n.supportInstagram,
-            icon: const FaIcon(FontAwesomeIcons.instagram),
-            gradient: const LinearGradient(
-              begin: Alignment.bottomLeft,
-              end: Alignment.topRight,
-              colors: [
-                Color(0xFFFEDA75),
-                Color(0xFFFA7E1E),
-                Color(0xFFD62976),
-                Color(0xFF962FBF),
-                Color(0xFF4F5BD5),
-              ],
+        ),
+        const SizedBox(height: Insets.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _SupportButton(
+              label: l10n.supportWhatsApp,
+              icon: const FaIcon(FontAwesomeIcons.whatsapp),
+              color: c.income,
+              onTap: () => open(SupportContacts.whatsappUri),
             ),
-            onTap: () => open(SupportContacts.instagramUri),
-          ),
-        ],
-      ),
+            const SizedBox(width: Insets.lg),
+            _SupportButton(
+              label: l10n.supportCall,
+              icon: const Icon(Icons.call_rounded),
+              color: c.transfer,
+              onTap: () => open(SupportContacts.phoneUri),
+            ),
+            const SizedBox(width: Insets.lg),
+            _SupportButton(
+              label: l10n.supportInstagram,
+              icon: const FaIcon(FontAwesomeIcons.instagram),
+              color: c.archive,
+              onTap: () => open(SupportContacts.instagramUri),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-/// زر دائري بشعار فقط (الاسم يظهر كتلميح ولقارئ الشاشة).
-class _BrandButton extends StatelessWidget {
-  const _BrandButton({
+/// زر بشعار فقط (الاسم يظهر كتلميح ولقارئ الشاشة) بشكل IconBadge نفسه.
+class _SupportButton extends StatelessWidget {
+  const _SupportButton({
     required this.label,
     required this.icon,
+    required this.color,
     required this.onTap,
-    this.color,
-    this.gradient,
   });
+
+  static const _size = 48.0;
 
   final String label;
   final Widget icon;
+  final Color color;
   final VoidCallback onTap;
-  final Color? color;
-  final Gradient? gradient;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: label,
-    child: Material(
-      type: MaterialType.transparency,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: Ink(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          gradient: gradient,
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: IconTheme(
-            data: const IconThemeData(color: Colors.white, size: 28),
-            child: Center(child: icon),
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(_size * 0.3);
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        child: Material(
+          color: context.colors.tint(color),
+          borderRadius: radius,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onTap,
+            child: SizedBox.square(
+              dimension: _size,
+              child: IconTheme(
+                data: IconThemeData(color: color, size: 24),
+                child: Center(child: icon),
+              ),
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

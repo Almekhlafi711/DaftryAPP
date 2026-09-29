@@ -101,7 +101,7 @@ void main() {
                     type: TxType.expense,
                     amount: 15000 + (m * 7 + i * 13) % 9 * 12000,
                     currencyId: 1,
-                    accountId: cash.id,
+                    accountId: Value(cash.id),
                     categoryId: Value(cats[i].id),
                     date: DateTime(
                       DateTime.now().year,
@@ -118,7 +118,7 @@ void main() {
                   type: TxType.income,
                   amount: 1200000,
                   currencyId: 1,
-                  accountId: cash.id,
+                  accountId: Value(cash.id),
                   categoryId: Value(
                     (await (db.select(db.categories)
                               ..where(

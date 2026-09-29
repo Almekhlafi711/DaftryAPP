@@ -160,6 +160,7 @@ void main() {
       await SettingsService(db)
           .completeOnboarding(currencyByCode('SAR')!, arabic: true);
       final contact = await ContactService(db).create(name: 'أحمد علي');
+      final cash = (await AccountService(db).getDefault())!.id;
       final debts = DebtService(db);
       final start = DateTime.now().subtract(const Duration(days: 60));
       for (var i = 0; i < 50; i++) {
@@ -167,16 +168,20 @@ void main() {
           DebtDraft(
             contactId: contact,
             direction: DebtDirection.owedToMe,
+            source: DebtSource.opening,
             amount: 10000 + i * 100,
             startDate: start.add(Duration(days: i)),
             note: 'فاتورة $i',
           ),
         );
         await debts.recordPayment(
-          id,
           PaymentDraft(
+            contactId: contact,
+            direction: DebtDirection.owedToMe,
+            debtId: id,
             amount: 5000,
             paidAt: start.add(Duration(days: i, hours: 5)),
+            accountId: cash,
           ),
         );
       }
@@ -184,13 +189,13 @@ void main() {
       final watch = Stopwatch()..start();
       final data = await StatementService(db)
           .build(contact, DateRange.lastDays(90));
-      expect(data.lines, hasLength(100));
+      expect(data.section(DebtDirection.owedToMe)!.lines, hasLength(100));
       final pdf = await StatementPdf(
         fonts: await PdfFonts.load(),
         money: MoneyFormatter(decimals: 2, symbol: 'ر.س'),
         locale: 'ar',
         rtl: true,
-        labels: const StatementLabels(
+        labels: StatementLabels(
           appName: 'دفتري',
           title: 'كشف حساب',
           period: 'الفترة',
@@ -200,9 +205,8 @@ void main() {
           description: 'البيان',
           amount: 'المبلغ',
           balance: 'الرصيد',
-          newDebt: 'دين جديد',
-          paymentReceived: 'دفعة مستلمة',
-          paymentMade: 'دفعة مدفوعة',
+          describe: (direction, line) => line.kind.name,
+          sectionTitle: (direction) => direction.name,
           owedToMeHint: 'المستحق على أحمد',
           iOweHint: 'المستحق لأحمد',
           noMovements: 'لا توجد حركات',

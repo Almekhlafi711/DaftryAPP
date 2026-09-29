@@ -5,9 +5,10 @@
 // قواعد العمل المطبقة (الوثيقة 3.12.2):
 // - لا يُحذف أي حساب؛ الأرشفة هي البديل الوحيد (ومحمية أيضاً بـ Trigger).
 // - لا يمكن أرشفة آخر حساب نشط، ولا الحساب الافتراضي قبل اختيار بديل.
-// - عند أرشفة حساب له رصيد يمكن تحويل رصيده أولاً؛ وإن لم يُحوَّل
-//   لا يدخل رصيده في الإجمالي.
+// - لا يُؤرشف الحساب إلا ورصيده صفر: إن كان له رصيد يُحوَّل أولاً إلى حساب
+//   آخر (المال لا يختفي بالأرشفة — وثيقة الديون 1.2).
 // - تصحيح الرصيد يتم بمعاملة «تسوية» وليس بالتعديل المباشر (3.12.3).
+// - «إعادة احتساب الأرصدة» تفحص أيضاً معادلة التطابق الشاملة (القسم 11).
 // =============================================================================
 
 import 'package:drift/drift.dart';
@@ -174,7 +175,7 @@ class AccountService {
 
   /// أرشفة حساب (UC-01b).
   ///
-  /// - [transferToId]: إن حُدِّد يُحوَّل رصيد الحساب إليه أولاً بمعاملة تحويل.
+  /// - [transferToId]: مطلوب إن كان للحساب رصيد؛ يُحوَّل إليه الرصيد أولاً.
   /// - [newDefaultId]: مطلوب إذا كان الحساب هو الافتراضي.
   Future<void> archive(int id, {int? transferToId, int? newDefaultId}) =>
       db.transaction(() async {
@@ -191,6 +192,9 @@ class AccountService {
           await _setDefaultUnchecked(newDefaultId);
         }
 
+        if (account.balance != 0 && transferToId == null) {
+          throw const BusinessException(BusinessError.accountHasBalance);
+        }
         if (transferToId != null && account.balance != 0) {
           if (transferToId == id) {
             throw const BusinessException(BusinessError.sameAccountTransfer);
@@ -203,7 +207,7 @@ class AccountService {
               type: TxType.transfer,
               amount: account.balance.abs(),
               currencyId: account.currencyId,
-              accountId: positive ? id : transferToId,
+              accountId: Value(positive ? id : transferToId),
               toAccountId: Value(positive ? transferToId : id),
               date: DateTime.now(),
             ),
@@ -239,7 +243,7 @@ class AccountService {
             type: TxType.adjustment,
             amount: diff,
             currencyId: account.currencyId,
-            accountId: id,
+            accountId: Value(id),
             date: DateTime.now(),
             note: Value(note),
           ),
@@ -259,22 +263,15 @@ class AccountService {
       updates: {db.accounts},
       updateKind: UpdateKind.update,
     );
-    // وكذلك المبالغ المسددة وحالة كل دين.
+    // المُسامَح من كل دين = مجموع قيود المسامحة/الإعفاء عليه. (المدفوع
+    // والمتبقي والحالة لا تُخزَّن أصلاً، فلا تحتاج تصحيحاً.)
     await db.customUpdate(
       '''
-          UPDATE debts SET
-            paid_amount = COALESCE((SELECT SUM(p.amount) FROM debt_payments p
-                                    WHERE p.debt_id = debts.id), 0)
-          ''',
-      updates: {db.debts},
-      updateKind: UpdateKind.update,
-    );
-    await db.customUpdate(
-      '''
-          UPDATE debts SET status = CASE
-            WHEN paid_amount = 0 THEN '${DebtStatus.open.name}'
-            WHEN paid_amount >= amount THEN '${DebtStatus.settled.name}'
-            ELSE '${DebtStatus.partial.name}' END
+          UPDATE debts SET written_off = COALESCE((
+            SELECT SUM(t.amount) FROM transactions t
+            WHERE t.debt_id = debts.id
+              AND t.type IN ('${TxType.writeOff.name}', '${TxType.debtForgiven.name}')
+          ), 0)
           ''',
       updates: {db.debts},
       updateKind: UpdateKind.update,
@@ -282,6 +279,57 @@ class AccountService {
     final after = await db.select(db.accounts).get();
     return after.where((a) => before[a.id] != a.balance).length;
   });
+
+  /// معادلة التطابق الشاملة (القسم 11) لكل البيانات منذ البداية:
+  ///
+  ///   Δ(أرصدة الحسابات) + Δ(لي) − Δ(عليّ) = الدخل − المصروف + صافي التسويات
+  ///
+  /// حيث Δ(الأرصدة) = الأرصدة − الأرصدة الافتتاحية، ويُستبعد ما هو خارج
+  /// الدفتر أصلاً كما تُستبعد الأرصدة الافتتاحية: الديون السابقة (قبل استخدام
+  /// التطبيق) والدفعات القديمة المسجلة «في الدفتر فقط» (الإصدار 1).
+  ///
+  /// تعيد الفرق: صفر يعني أن البيانات متسقة، وغير ذلك يعني وجود خطأ.
+  Future<int> reconciliationGap() async {
+    final r = AppDatabase.remainingSql('d');
+    const owed = DebtDirection.owedToMe;
+    final row = await db
+        .customSelect(
+          '''
+          SELECT
+            (SELECT COALESCE(SUM(balance - opening_balance), 0) FROM accounts)
+              AS accounts_delta,
+            (SELECT COALESCE(SUM(CASE WHEN d.direction = '${owed.name}'
+                                      THEN $r ELSE -$r END), 0)
+               FROM debts d) AS debts_net,
+            (SELECT COALESCE(SUM(CASE WHEN d.direction = '${owed.name}'
+                                      THEN d.amount ELSE -d.amount END), 0)
+               FROM debts d WHERE d.source = '${DebtSource.opening.name}')
+              AS opening_debts,
+            (SELECT COALESCE(SUM(CASE WHEN d.direction = '${owed.name}'
+                                      THEN -p.amount ELSE p.amount END), 0)
+               FROM debt_payments p JOIN debts d ON d.id = p.debt_id
+              WHERE p.is_cancelled = 0 AND p.account_id IS NULL)
+              AS book_only_payments,
+            (SELECT COALESCE(SUM(CASE
+                WHEN type IN (${_names(TxType.incomeNames)}) THEN amount
+                WHEN type IN (${_names(TxType.expenseNames)}) THEN -amount
+                WHEN type = '${TxType.adjustment.name}' THEN amount
+                ELSE 0 END), 0)
+               FROM transactions) AS income_statement
+          ''',
+          readsFrom: {db.accounts, db.debts, db.debtPayments, db.transactions},
+        )
+        .getSingle();
+    final left =
+        row.read<int>('accounts_delta') +
+        row.read<int>('debts_net') -
+        row.read<int>('opening_debts') -
+        row.read<int>('book_only_payments');
+    return left - row.read<int>('income_statement');
+  }
+
+  static String _names(List<String> names) =>
+      names.map((n) => "'$n'").join(', ');
 
   Future<void> _ensureUniqueName(String name, {int? exceptId}) async {
     final query = db.select(db.accounts)

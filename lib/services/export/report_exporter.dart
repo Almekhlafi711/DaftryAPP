@@ -13,6 +13,7 @@ import '../../core/money/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/budget_report_models.dart';
 import '../../domain/models/transaction_models.dart';
+import 'document_owner.dart';
 import 'pdf_fonts.dart';
 
 /// نصوص التقرير بلغة المستخدم.
@@ -72,12 +73,16 @@ class ReportExporter {
     required this.money,
     required this.locale,
     required this.rtl,
+    this.owner,
   });
 
   final ReportLabels labels;
   final MoneyFormatter money;
   final String locale;
   final bool rtl;
+
+  /// صاحب الدفتر (اسمه ورقمه) في ترويسة التقرير.
+  final DocumentOwner? owner;
 
   /// أرقام التواريخ تتبع إعداد الأرقام (intl يكتب العربية بالأرقام الهندية افتراضياً).
   String _date(DateFormat format, DateTime d) {
@@ -174,13 +179,29 @@ class ReportExporter {
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
-              pw.Text(
-                labels.appName,
-                style: pw.TextStyle(
-                  fontSize: 16,
-                  color: _primary,
-                  fontWeight: pw.FontWeight.bold,
-                ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    labels.appName,
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      color: _primary,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  if (owner != null)
+                    pw.Text(
+                      owner!.label,
+                      style: const pw.TextStyle(fontSize: 10, color: _muted),
+                    ),
+                  if (owner?.phone != null)
+                    pw.Text(
+                      owner!.phone!,
+                      style: const pw.TextStyle(fontSize: 10, color: _muted),
+                      textDirection: pw.TextDirection.ltr,
+                    ),
+                ],
               ),
             ],
           ),
@@ -274,6 +295,10 @@ class ReportExporter {
     double v(int minor) => money.toDouble(minor);
     TextCellValue t(String s) => TextCellValue(s);
 
+    final who = owner;
+    if (who != null) {
+      summary.appendRow([t(who.label), if (who.phone != null) t(who.phone!)]);
+    }
     summary
       ..appendRow([t(labels.period), t(_range(report))])
       ..appendRow([t(labels.income), DoubleCellValue(v(report.income))])
@@ -323,7 +348,8 @@ class ReportExporter {
         t(_date(dateFmt, tx.tx.date)),
         t(labels.typeName(tx.type)),
         t(tx.category?.name ?? tx.contactName ?? tx.toAccountName ?? ''),
-        t(tx.accountName),
+        // قيود الديون بلا حساب (البيع/الشراء بالآجل، المسامحة) باسم الشخص.
+        t(tx.accountName ?? tx.contactName ?? ''),
         DoubleCellValue(
           v(tx.signedAmount == 0 ? tx.tx.amount : tx.signedAmount),
         ),

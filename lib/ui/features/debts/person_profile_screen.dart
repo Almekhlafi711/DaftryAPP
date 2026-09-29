@@ -1,8 +1,12 @@
 // =============================================================================
 // الشاشة 11: الملف المالي للشخص (FR-18).
-// صفحة واحدة لكل علاقة مالية: المتبقي والمدفوع وإجمالي الديون والاستحقاق،
-// ثم ثلاثة إجراءات (تسجيل دفعة، دين جديد، كشف)، ثم خط زمني لكل الحركات.
-// تعديل بيانات الشخص في شاشة مستقلة (أيقونة الشخص)، وقائمة (⋮) لخيارات إضافية.
+//
+// - بطاقة مستقلة لكل اتجاه (لي / عليّ): المتبقي، شريط السداد مع «نسبة السداد»
+//   نصاً (والمُسامَح منفصلاً)، الحالة، الاستحقاق، وزر حسب الاتجاه: «استلام
+//   مبلغ» لديون «لي» و«سداد مبلغ» لديون «عليّ»، مع «مسامحة بالمتبقي».
+// - الصافي كمعلومة فقط عند وجود الاتجاهين (لا مقاصة تلقائية).
+// - الخط الزمني مع «الرصيد بعد العملية» لكل سطر، والدفعات الملغاة مشطوبة.
+// - القائمة (⋮): كشف الحساب، الأرشفة (بشرط المتبقي صفر)، الحذف (بلا حركات).
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -20,6 +24,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/labels.dart';
+import 'debt_actions.dart';
 import 'payment_sheet.dart';
 
 class PersonProfileScreen extends ConsumerWidget {
@@ -37,6 +42,7 @@ class PersonProfileScreen extends ConsumerWidget {
       value: profile,
       builder: (p) {
         if (p == null) return Scaffold(appBar: AppBar());
+        final archived = p.contact.isArchived;
         return Scaffold(
           appBar: AppBar(
             centerTitle: true,
@@ -58,22 +64,30 @@ class PersonProfileScreen extends ConsumerWidget {
                 onPressed: () => context.push(AppRoutes.editPerson(contactId)),
               ),
               PopupMenuButton<String>(
-                onSelected: (v) async {
-                  if (v == 'statement') {
-                    context.push(AppRoutes.personStatement(contactId));
-                  } else if (v == 'hide') {
-                    await ref
-                        .read(contactServiceProvider)
-                        .setActive(contactId, active: false);
-                    if (context.mounted) context.pop();
-                  }
-                },
+                onSelected: (v) => _onMenu(context, ref, p, v),
                 itemBuilder: (_) => [
                   PopupMenuItem(
                     value: 'statement',
                     child: Text(l10n.statement),
                   ),
-                  PopupMenuItem(value: 'hide', child: Text(l10n.hidePerson)),
+                  if (archived)
+                    PopupMenuItem(
+                      value: 'unarchive',
+                      child: Text(l10n.unarchive),
+                    )
+                  else if (p.canArchive)
+                    PopupMenuItem(
+                      value: 'archive',
+                      child: Text(l10n.archivePerson),
+                    ),
+                  if (p.canDelete)
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        l10n.deletePerson,
+                        style: TextStyle(color: c.expense),
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -81,38 +95,46 @@ class PersonProfileScreen extends ConsumerWidget {
           body: ListView(
             padding: const EdgeInsets.all(Insets.screen),
             children: [
-              _SummaryCard(profile: p),
-              const SizedBox(height: Insets.md),
+              if (archived)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Insets.sm),
+                  child: Pill(l10n.personArchivedBanner, color: c.archive),
+                ),
+              if (p.debts.isEmpty)
+                EmptyState(
+                  icon: Icons.people_outline_rounded,
+                  message: l10n.noDebts,
+                ),
+              for (final d in DebtDirection.values)
+                if (p.summary(d) case final summary?)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Insets.sm),
+                    child: _DirectionCard(
+                      profile: p,
+                      summary: summary,
+                      canAct: !archived,
+                    ),
+                  ),
+              if (p.hasBothDirections) _NetInfo(profile: p),
+              const SizedBox(height: Insets.sm),
               Row(
                 children: [
                   Expanded(
-                    flex: 3,
-                    child: FilledButton.icon(
-                      style: _compact,
-                      icon: const Icon(Icons.add_rounded),
-                      label: _OneLine(l10n.recordPayment),
-                      onPressed: p.openDebts.isEmpty
-                          ? null
-                          : () => showPaymentSheet(context, profile: p),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: OutlinedButton(
-                      style: _compact,
-                      onPressed: () =>
-                          context.push(AppRoutes.newDebt(contactId: contactId)),
-                      child: _OneLine(l10n.newDebt),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
                     child: OutlinedButton.icon(
-                      style: _compact,
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text(l10n.newDebt),
+                      onPressed: archived
+                          ? null
+                          : () => context.push(
+                              AppRoutes.newDebt(contactId: contactId),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
                       icon: const Icon(Icons.description_outlined, size: 18),
-                      label: _OneLine(l10n.statement),
+                      label: Text(l10n.statement),
                       onPressed: () =>
                           context.push(AppRoutes.personStatement(contactId)),
                     ),
@@ -142,28 +164,61 @@ class PersonProfileScreen extends ConsumerWidget {
       },
     );
   }
+
+  Future<void> _onMenu(
+    BuildContext context,
+    WidgetRef ref,
+    PersonProfile p,
+    String action,
+  ) async {
+    final l10n = context.l10n;
+    final contacts = ref.read(contactServiceProvider);
+    try {
+      switch (action) {
+        case 'statement':
+          await context.push(AppRoutes.personStatement(contactId));
+        case 'archive':
+          if (await confirmAction(
+            context,
+            title: l10n.archivePerson,
+            message: l10n.archivePersonBody,
+            confirmLabel: l10n.archive,
+            destructive: false,
+            icon: Icons.inventory_2_outlined,
+          )) {
+            await contacts.archive(contactId);
+            if (context.mounted) context.pop();
+          }
+        case 'unarchive':
+          await contacts.unarchive(contactId);
+        case 'delete':
+          if (await confirmAction(
+            context,
+            title: l10n.deletePerson,
+            message: l10n.deletePersonBody,
+            confirmLabel: l10n.delete,
+          )) {
+            await contacts.delete(contactId);
+            if (context.mounted) context.pop();
+          }
+      }
+    } on Object catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
 }
 
-/// أزرار الإجراءات الثلاثة بحشوة أصغر حتى تتسع نصوصها في سطر واحد.
-final _compact = ButtonStyle(
-  padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 10)),
-);
-
-/// نص زر بسطر واحد يتقلص عند ضيق المساحة بدل الانقسام على سطرين.
-class _OneLine extends StatelessWidget {
-  const _OneLine(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) =>
-      FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1));
-}
-
-class _SummaryCard extends ConsumerWidget {
-  const _SummaryCard({required this.profile});
+/// بطاقة اتجاه واحد (لي أو عليّ) — منفصلة عن الاتجاه الآخر.
+class _DirectionCard extends ConsumerWidget {
+  const _DirectionCard({
+    required this.profile,
+    required this.summary,
+    required this.canAct,
+  });
 
   final PersonProfile profile;
+  final DirectionSummary summary;
+  final bool canAct;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,15 +226,17 @@ class _SummaryCard extends ConsumerWidget {
     final c = context.colors;
     final money = ref.watch(moneyFormatterProvider);
     final dates = ref.watch(dateLabelsProvider);
-    final net = profile.net;
-    final color = net >= 0 ? c.income : c.expense;
-    final status = profile.status;
+    final direction = summary.direction;
+    final owedToMe = direction == DebtDirection.owedToMe;
+    final color = owedToMe ? c.income : c.expense;
+    final status = summary.status;
     final statusColor = switch (status) {
-      DebtStatus.settled => c.income,
+      DebtStatus.closed => c.income,
       DebtStatus.partial => c.warning,
       DebtStatus.open => c.expense,
     };
     final name = profile.contact.name.split(' ').first;
+    final open = summary.remaining > 0;
 
     return AppCard(
       child: Column(
@@ -189,53 +246,140 @@ class _SummaryCard extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  net == 0
-                      ? l10n.profileSettled
-                      : net > 0
-                      ? l10n.profileOwedToMe(name)
-                      : l10n.profileIOwe(name),
+                  l10n.directionTitle(direction, name),
                   style: TextStyle(color: c.textSecondary),
                 ),
               ),
+              if (summary.overdueDebts > 0) ...[
+                Pill(l10n.statusOverdue, color: c.expense),
+                const SizedBox(width: 6),
+              ],
               Pill(l10n.debtStatusName(status), color: statusColor),
             ],
           ),
           const SizedBox(height: 6),
           AmountText(
-            net.abs(),
-            color: color,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+            summary.remaining,
+            color: open ? color : c.textSecondary,
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
-          AppProgressBar(
-            value: profile.totalDebts == 0
-                ? 0
-                : profile.totalPaid / profile.totalDebts,
-            color: c.income,
+          AppProgressBar(value: summary.progress / 100, color: c.income),
+          const SizedBox(height: 6),
+          // مصطلح «نسبة السداد» نصاً تحت الشريط، والمسامحة منفصلة.
+          Text(
+            [
+              l10n.paymentRate('${summary.progress}'),
+              if (summary.writtenOff > 0)
+                l10n.writtenOffRate('${summary.writtenOffPercent}'),
+            ].join(' • '),
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 12,
             runSpacing: 4,
             children: [
               Text(
-                l10n.paidAmount(
-                  money.inline(profile.totalPaid, withSymbol: false),
-                ),
+                l10n.paidAmount(money.inline(summary.paid, withSymbol: false)),
                 style: TextStyle(fontSize: 12.5, color: c.textSecondary),
               ),
               Text(
                 l10n.totalDebtsAmount(
-                  money.inline(profile.totalDebts, withSymbol: false),
+                  money.inline(summary.total, withSymbol: false),
                 ),
                 style: TextStyle(fontSize: 12.5, color: c.textSecondary),
               ),
-              if (profile.nearestDue != null)
+              if (summary.nearestDue != null)
                 Text(
-                  l10n.dueOn(dates.day(profile.nearestDue!)),
+                  l10n.dueOn(dates.day(summary.nearestDue!)),
                   style: TextStyle(fontSize: 12.5, color: c.textSecondary),
                 ),
             ],
+          ),
+          if (open && canAct) ...[
+            const SizedBox(height: Insets.md),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: color),
+                    icon: Icon(
+                      owedToMe
+                          ? Icons.call_received_rounded
+                          : Icons.call_made_rounded,
+                      size: 18,
+                    ),
+                    label: Text(l10n.settleAction(direction)),
+                    onPressed: () => showPaymentSheet(
+                      context,
+                      profile: profile,
+                      direction: direction,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => confirmWriteOff(
+                    context,
+                    ref,
+                    profile: profile,
+                    direction: direction,
+                  ),
+                  child: Text(
+                    owedToMe ? l10n.forgiveRemaining : l10n.forgivenRemaining,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// الصافي كمعلومة فقط — لا يُخصم أحد الاتجاهين من الآخر.
+class _NetInfo extends ConsumerWidget {
+  const _NetInfo({required this.profile});
+
+  final PersonProfile profile;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final money = ref.watch(moneyFormatterProvider);
+    final net = profile.net;
+    final name = profile.contact.name.split(' ').first;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: c.surfaceMuted,
+        borderRadius: BorderRadius.circular(Radii.chip),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, size: 18, color: c.textSecondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  net == 0
+                      ? l10n.netEven
+                      : net > 0
+                      ? l10n.netForYou(money.inline(net))
+                      : l10n.netForThem(name, money.inline(-net)),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  l10n.netInfoHint,
+                  style: TextStyle(fontSize: 12, color: c.textSecondary),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -259,38 +403,49 @@ class _TimelineRow extends ConsumerWidget {
     final l10n = context.l10n;
     final c = context.colors;
     final dates = ref.watch(dateLabelsProvider);
-    final isPayment = entry.kind == TimelineKind.payment;
-    // الدفعات بالأخضر والديون بالأحمر الداكن (لون وحدة الديون).
-    final dotColor = isPayment ? c.income : const Color(0xFFBE123C);
+    final money = ref.watch(moneyFormatterProvider);
+    final owedToMe = entry.direction == DebtDirection.owedToMe;
+    final dotColor = switch (entry.kind) {
+      TimelineKind.debt => owedToMe ? c.income : c.expense,
+      TimelineKind.payment => c.transfer,
+      TimelineKind.writeOff => c.archive,
+    };
 
-    final title = isPayment
-        ? (entry.direction == DebtDirection.owedToMe
-              ? l10n.paymentReceived
-              : l10n.paymentMade)
-        : (entry.note != null
-              ? l10n.debtWithNote(entry.note!)
-              : l10n.newDebtEntry);
-    // هل دخل المال إلى حسابي؟ (دفعة مستلمة على دين «لي» أو دين «عليّ» اقترضته)
-    final moneyIn = isPayment == (entry.direction == DebtDirection.owedToMe);
-    final accountText = entry.accountName == null
-        ? l10n.withoutAccount
-        : moneyIn
-        ? l10n.inAccount(entry.accountName!)
-        : l10n.fromAccountName(entry.accountName!);
+    final debt = profile.debt(entry.debtId);
+    final title = switch (entry.kind) {
+      TimelineKind.debt => [
+        l10n.debtSourceLabel(entry.source!, entry.direction),
+        if (entry.note != null) entry.note!,
+      ].join(' — '),
+      TimelineKind.payment =>
+        '${l10n.paymentName(entry.direction)} '
+            '${money.inline(entry.amount, withSymbol: false)}',
+      TimelineKind.writeOff => l10n.writeOffName(entry.direction),
+    };
+    final detail = entry.kind == TimelineKind.debt
+        ? (entry.accountName ?? entry.categoryName)
+        : entry.kind == TimelineKind.payment
+        ? entry.accountName
+        : entry.categoryName;
+    final strike = entry.cancelled
+        ? const TextStyle(decoration: TextDecoration.lineThrough)
+        : const TextStyle();
 
     return InkWell(
-      onTap: () => _showActions(context, ref),
+      onTap: () => _showActions(context, ref, debt),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // النقطة والخط الرأسي
             SizedBox(
               width: 20,
               child: Column(
                 children: [
                   const SizedBox(height: 12),
-                  CircleAvatar(radius: 6, backgroundColor: dotColor),
+                  CircleAvatar(
+                    radius: 6,
+                    backgroundColor: entry.cancelled ? c.border : dotColor,
+                  ),
                   if (!isLast)
                     Expanded(child: Container(width: 2, color: c.border)),
                 ],
@@ -303,14 +458,36 @@ class _TimelineRow extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: strike.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (entry.cancelled) ...[
+                          const SizedBox(width: 6),
+                          Pill(l10n.cancelledBadge, color: c.textSecondary),
+                        ],
+                      ],
                     ),
                     Text(
-                      '${dates.day(entry.date)} • $accountText',
+                      [
+                        dates.day(entry.date),
+                        l10n.directionName(entry.direction),
+                        ?detail,
+                      ].join(' • '),
                       style: TextStyle(fontSize: 12, color: c.textSecondary),
                     ),
+                    // «الرصيد بعد العملية» في اتجاه السطر.
+                    if (entry.balanceAfter != null)
+                      Text(
+                        l10n.balanceAfter(
+                          money.inline(entry.balanceAfter!, withSymbol: false),
+                        ),
+                        style: TextStyle(fontSize: 12, color: c.textSecondary),
+                      ),
                   ],
                 ),
               ),
@@ -318,11 +495,11 @@ class _TimelineRow extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: AmountText(
-                entry.signedEffect,
+                entry.effect,
                 showSign: true,
                 withSymbol: false,
-                color: isPayment ? c.income : dotColor,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                color: entry.cancelled ? c.textSecondary : dotColor,
+                style: strike.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
           ],
@@ -331,45 +508,87 @@ class _TimelineRow extends ConsumerWidget {
     );
   }
 
-  /// خيارات العنصر: للدين (دفعة، تعديل، حذف) وللدفعة (حذف).
-  Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+  /// خيارات السطر: للدين (استلام/سداد، مسامحة، تعديل، حذف)، ولعملية السداد
+  /// (تفصيل التوزيع وإلغاء العملية).
+  Future<void> _showActions(
+    BuildContext context,
+    WidgetRef ref,
+    DebtView? debt,
+  ) async {
     final l10n = context.l10n;
     final c = context.colors;
-    final debt = profile.debts.where((d) => d.id == entry.debtId).firstOrNull;
+    final money = ref.read(moneyFormatterProvider);
+    final canAct = !profile.contact.isArchived;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (entry.kind == TimelineKind.debt) ...[
-              if (debt != null && debt.status != DebtStatus.settled)
+            if (entry.kind == TimelineKind.debt && debt != null) ...[
+              if (debt.isOpen && canAct) ...[
                 ListTile(
                   leading: const Icon(Icons.payments_outlined),
-                  title: Text(l10n.recordPayment),
+                  title: Text(l10n.settleAction(debt.direction)),
                   onTap: () => Navigator.pop(ctx, 'pay'),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.handshake_outlined),
+                  title: Text(
+                    debt.direction == DebtDirection.owedToMe
+                        ? l10n.forgiveRemaining
+                        : l10n.forgivenRemaining,
+                  ),
+                  onTap: () => Navigator.pop(ctx, 'forgive'),
+                ),
+              ],
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: Text(l10n.editDebt),
                 onTap: () => Navigator.pop(ctx, 'edit'),
               ),
-              ListTile(
-                leading: Icon(Icons.delete_outline_rounded, color: c.expense),
-                title: Text(
-                  l10n.deleteDebt,
-                  style: TextStyle(color: c.expense),
+              if (!debt.hasMovements)
+                ListTile(
+                  leading: Icon(Icons.delete_outline_rounded, color: c.expense),
+                  title: Text(
+                    l10n.deleteDebt,
+                    style: TextStyle(color: c.expense),
+                  ),
+                  onTap: () => Navigator.pop(ctx, 'delete'),
                 ),
-                onTap: () => Navigator.pop(ctx, 'delete'),
+            ],
+            if (entry.kind == TimelineKind.payment) ...[
+              ListTile(
+                title: Text(
+                  l10n.distribution,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ] else
-              ListTile(
-                leading: Icon(Icons.delete_outline_rounded, color: c.expense),
-                title: Text(
-                  l10n.deletePayment,
-                  style: TextStyle(color: c.expense),
+              for (final a in entry.allocations)
+                if (profile.debt(a.debtId) case final d?)
+                  ListTile(
+                    dense: true,
+                    title: Text(debtLabel(ctx, d)),
+                    trailing: Text(money.inline(a.amount)),
+                  ),
+              if (!entry.cancelled)
+                ListTile(
+                  leading: Icon(Icons.block_rounded, color: c.expense),
+                  title: Text(
+                    l10n.cancelOperation,
+                    style: TextStyle(color: c.expense),
+                  ),
+                  onTap: () => Navigator.pop(ctx, 'cancel'),
                 ),
-                onTap: () => Navigator.pop(ctx, 'deletePayment'),
+            ],
+            if (entry.kind == TimelineKind.writeOff)
+              ListTile(
+                leading: const Icon(Icons.handshake_outlined),
+                title: Text(l10n.writeOffName(entry.direction)),
+                subtitle: entry.categoryName == null
+                    ? null
+                    : Text(entry.categoryName!),
+                trailing: Text(money.inline(entry.amount)),
               ),
           ],
         ),
@@ -383,7 +602,16 @@ class _TimelineRow extends ConsumerWidget {
           await showPaymentSheet(
             context,
             profile: profile,
-            debtId: entry.debtId,
+            direction: debt!.direction,
+            debtId: debt.id,
+          );
+        case 'forgive':
+          await confirmWriteOff(
+            context,
+            ref,
+            profile: profile,
+            direction: debt!.direction,
+            debtId: debt.id,
           );
         case 'edit':
           await context.push(AppRoutes.editDebt(entry.debtId));
@@ -396,14 +624,15 @@ class _TimelineRow extends ConsumerWidget {
           )) {
             await service.deleteDebt(entry.debtId);
           }
-        case 'deletePayment':
+        case 'cancel':
           if (await confirmAction(
             context,
-            title: l10n.deletePayment,
-            message: l10n.deletePaymentBody,
-            confirmLabel: l10n.delete,
+            title: l10n.cancelOperation,
+            message: l10n.cancelOperationBody,
+            confirmLabel: l10n.cancelOperation,
+            icon: Icons.block_rounded,
           )) {
-            await service.deletePayment(entry.paymentId!);
+            await service.cancelOperation(entry.operationId!);
           }
       }
     } on Object catch (e) {

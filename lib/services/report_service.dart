@@ -3,7 +3,10 @@
 //
 // ⚡ الأداء: كل التجميعات (SUM / GROUP BY) تتم داخل SQLite مستفيدة من
 // الفهارس، ولا نجلب آلاف المعاملات إلى Dart لجمعها.
-// حركات الديون والتسويات والتحويلات مستبعدة من كل الأرقام هنا.
+//
+// يُحتسب (وثيقة الديون 5.5): الدخل والمصروف العاديان، البيع والشراء بالآجل،
+// والمسامحة والإعفاء. لا يُحتسب: التحويلات، وحركات الديون النقدية (إقراض،
+// اقتراض، استلام، سداد)، والتسويات (تُعرض في سطر مستقل «فروقات تسوية»).
 // =============================================================================
 
 import 'package:drift/drift.dart';
@@ -17,6 +20,9 @@ class ReportService {
   ReportService(this.db);
 
   final AppDatabase db;
+
+  static final _income = TxType.incomeNames.map((n) => "'$n'").join(', ');
+  static final _expense = TxType.expenseNames.map((n) => "'$n'").join(', ');
 
   /// تقرير كامل لفترة — تفاعلي.
   Stream<PeriodReport> watchReport(DateRange range, {int months = 6}) =>
@@ -32,6 +38,7 @@ class ReportService {
       range: range,
       income: income.fold(0, (s, c) => s + c.total),
       expense: expense.fold(0, (s, c) => s + c.total),
+      adjustments: await adjustmentsTotal(range),
       months: await monthlyTotals(
         DateRange.lastMonths(
           months,
@@ -43,6 +50,23 @@ class ReportService {
     );
   }
 
+  /// «فروقات تسوية»: صافي معاملات التسوية في الفترة (موجب أو سالب).
+  Future<int> adjustmentsTotal(DateRange range) async {
+    final row = await db
+        .customSelect(
+          'SELECT COALESCE(SUM(amount), 0) AS total FROM transactions '
+          'WHERE type = ?1 AND date >= ?2 AND date < ?3',
+          variables: [
+            Variable.withString(TxType.adjustment.name),
+            Variable.withDateTime(range.start),
+            Variable.withDateTime(range.end),
+          ],
+          readsFrom: {db.transactions},
+        )
+        .getSingle();
+    return row.read<int>('total');
+  }
+
   /// مجموع الدخل والمصروف لكل شهر في النطاق — استعلام واحد مجمّع بالشهر.
   /// الأشهر الخالية تظهر بقيمة صفر حتى يبقى المخطط متصلاً.
   Future<List<MonthTotals>> monthlyTotals(DateRange range) async {
@@ -50,11 +74,11 @@ class ReportService {
         .customSelect(
           '''
       SELECT strftime('%Y-%m', date, 'unixepoch', 'localtime') AS ym,
-        COALESCE(SUM(CASE WHEN type = '${TxType.income.name}' THEN amount END), 0) AS income,
-        COALESCE(SUM(CASE WHEN type = '${TxType.expense.name}' THEN amount END), 0) AS expense
+        COALESCE(SUM(CASE WHEN type IN ($_income) THEN amount END), 0) AS income,
+        COALESCE(SUM(CASE WHEN type IN ($_expense) THEN amount END), 0) AS expense
       FROM transactions
       WHERE date >= ?1 AND date < ?2
-        AND type IN ('${TxType.income.name}', '${TxType.expense.name}')
+        AND type IN ($_income, $_expense)
       GROUP BY ym
       ''',
           variables: [
@@ -90,14 +114,16 @@ class ReportService {
   ) async {
     final t = db.transactions;
     final sum = t.amount.sum();
-    final type = kind == CategoryKind.income ? TxType.income : TxType.expense;
+    final types = kind == CategoryKind.income
+        ? TxType.incomeNames
+        : TxType.expenseNames;
     final rows =
         await (db.select(db.categories).join([
                 innerJoin(t, t.categoryId.equalsExp(db.categories.id)),
               ])
               ..addColumns([sum])
               ..where(
-                t.type.equals(type.name) &
+                t.type.isIn(types) &
                     t.date.isBiggerOrEqualValue(range.start) &
                     t.date.isSmallerThanValue(range.end),
               )

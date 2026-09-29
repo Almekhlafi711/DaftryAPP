@@ -587,16 +587,18 @@ class _ArchiveSheetState extends ConsumerState<_ArchiveSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                // المال لا يختفي بالأرشفة: يُحوَّل الرصيد أولاً.
+                Text(
+                  l10n.archiveNeedsZero,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: c.textSecondary, fontSize: 12.5),
+                ),
+                const SizedBox(height: 12),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: c.archive),
                   onPressed: () => _archive(transfer: true),
                   child: Text(l10n.transferAndArchive),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => _archive(transfer: false),
-                  child: Text(l10n.archiveWithoutTransfer),
                 ),
               ] else ...[
                 const SizedBox(height: 16),

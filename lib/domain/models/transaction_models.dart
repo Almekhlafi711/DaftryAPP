@@ -43,29 +43,42 @@ class TransactionView {
     this.contactName,
     this.contactId,
     this.debtDirection,
+    this.debtSource,
   });
 
   final MoneyTransaction tx;
-  final String accountName;
+
+  /// null لقيود الديون التي لا تحرّك حساباً (البيع/الشراء بالآجل، المسامحة).
+  final String? accountName;
 
   /// يظهر بجانب اسم الحساب شارة «مؤرشف».
   final bool accountArchived;
   final String? toAccountName;
   final Category? category;
 
-  /// اسم الشخص — لحركات الديون فقط.
+  /// اسم الشخص — لقيود الديون فقط.
   final String? contactName;
   final int? contactId;
   final DebtDirection? debtDirection;
+  final DebtSource? debtSource;
 
   int get id => tx.id;
   TxType get type => tx.type;
   bool get isDebtMovement => tx.type.isDebtMovement;
 
-  /// الأثر الموقَّع على «إجمالي» الأرصدة (التحويل صفر لأنه بين حساباتي).
+  /// قيد من وحدة الديون (يُفتح منه ملف الشخص بدل التعديل).
+  bool get isDebtLinked =>
+      tx.type.isDebtEntry || tx.debtId != null || tx.debtPaymentId != null;
+
+  /// بيع أو شراء بالآجل (دخل/مصروف بلا حساب).
+  bool get isCredit =>
+      (tx.type == TxType.income || tx.type == TxType.expense) &&
+      tx.debtId != null;
+
+  /// الأثر الموقَّع للعرض: الدخل والإعفاء +، المصروف والمسامحة −.
   int get signedAmount => switch (tx.type) {
-    TxType.income || TxType.debtIn => tx.amount,
-    TxType.expense || TxType.debtOut => -tx.amount,
+    TxType.income || TxType.debtIn || TxType.debtForgiven => tx.amount,
+    TxType.expense || TxType.debtOut || TxType.writeOff => -tx.amount,
     TxType.adjustment => tx.amount,
     TxType.transfer => 0,
   };

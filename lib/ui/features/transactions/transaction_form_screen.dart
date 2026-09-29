@@ -19,6 +19,7 @@ import '../../../data/database/app_database.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/transaction_models.dart';
 import '../../../services/providers.dart';
+import '../../../services/transaction_service.dart';
 import '../../router/routes.dart';
 import '../../state/app_state.dart';
 import '../../state/data_providers.dart';
@@ -83,9 +84,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         .read(transactionServiceProvider)
         .getById(widget.transactionId!);
     if (tx == null || !mounted) return;
-    if (tx.type.isDebtMovement) {
-      // حماية: حركات الديون تُعدَّل من ملف الشخص.
-      final debt = await ref.read(debtServiceProvider).getDebt(tx.debtId!);
+    if (TransactionService.isDebtLinked(tx)) {
+      // حماية: قيود الديون تُعدَّل من ملف الشخص.
+      final debt = tx.debtId == null
+          ? null
+          : await ref.read(debtServiceProvider).getDebt(tx.debtId!);
       if (!mounted) return;
       context.pop();
       if (debt != null) context.push(AppRoutes.person(debt.contactId));
@@ -350,7 +353,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ? CategoryKind.income
         : CategoryKind.expense;
     final categories =
-        ref.watch(categoriesByKindProvider(kind)).value ?? const <Category>[];
+        ref.watch(transactionCategoriesProvider(kind)).value ??
+        const <Category>[];
     final visibleCats = _showAllCategories || categories.length <= 8
         ? categories
         : categories.take(7).toList();

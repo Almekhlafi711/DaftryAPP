@@ -12,8 +12,9 @@ class SeedCategory {
     this.nameEn,
     this.kind,
     this.icon,
-    this.color,
-  );
+    this.color, {
+    this.systemKey,
+  });
 
   final String nameAr;
   final String nameEn;
@@ -22,7 +23,46 @@ class SeedCategory {
 
   /// اللون بصيغة ARGB.
   final int color;
+
+  /// مفتاح ثابت مختلف عن الأيقونة (إن لزم).
+  final String? systemKey;
+
+  /// المفتاح الثابت للفئة (system_key) — الأيقونة إن لم يُحدَّد غيرها.
+  String get key => systemKey ?? icon;
 }
+
+/// مفاتيح فئات يحتاجها التطبيق نفسه (تُنشأ عند الحاجة إن حُذفت).
+abstract final class SystemCategoryKeys {
+  /// «مبيعات»: الفئة المقترحة للبيع بالآجل.
+  static const sales = 'sales';
+
+  /// «تسوق»: الفئة المقترحة للشراء بالآجل.
+  static const shopping = 'shopping';
+
+  /// «مسامحة ديون»: مصروف عند مسامحة دين لي.
+  static const debtWriteOff = 'debt_write_off';
+
+  /// «إعفاء دين»: دخل عند إعفائي من دين عليّ.
+  static const debtForgiven = 'debt_forgiven';
+}
+
+/// فئتا المسامحة والإعفاء (تُنشآن عند أول استخدام بلغة الواجهة).
+const kWriteOffCategory = SeedCategory(
+  'مسامحة ديون',
+  'Debt write-off',
+  CategoryKind.expense,
+  'forgive',
+  0xFFBE123C,
+  systemKey: SystemCategoryKeys.debtWriteOff,
+);
+const kForgivenCategory = SeedCategory(
+  'إعفاء دين',
+  'Debt relief',
+  CategoryKind.income,
+  'relief',
+  0xFF0D9488,
+  systemKey: SystemCategoryKeys.debtForgiven,
+);
 
 const List<SeedCategory> kDefaultCategories = [
   // --- فئات المصروف ---
@@ -58,7 +98,14 @@ const List<SeedCategory> kDefaultCategories = [
     0xFF0891B2,
   ),
   SeedCategory('سكن', 'Housing', CategoryKind.expense, 'housing', 0xFF65A30D),
-  SeedCategory('أخرى', 'Other', CategoryKind.expense, 'other', 0xFF64748B),
+  SeedCategory(
+    'أخرى',
+    'Other',
+    CategoryKind.expense,
+    'other',
+    0xFF64748B,
+    systemKey: 'other_expense',
+  ),
   // --- فئات الدخل ---
   SeedCategory('راتب', 'Salary', CategoryKind.income, 'salary', 0xFF15803D),
   SeedCategory('مبيعات', 'Sales', CategoryKind.income, 'sales', 0xFF0F766E),
@@ -70,5 +117,12 @@ const List<SeedCategory> kDefaultCategories = [
     0xFF2563EB,
   ),
   SeedCategory('هدية', 'Gift', CategoryKind.income, 'gift', 0xFFDB2777),
-  SeedCategory('أخرى', 'Other', CategoryKind.income, 'other', 0xFF64748B),
+  SeedCategory(
+    'أخرى',
+    'Other',
+    CategoryKind.income,
+    'other',
+    0xFF64748B,
+    systemKey: 'other_income',
+  ),
 ];

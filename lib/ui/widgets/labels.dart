@@ -26,16 +26,63 @@ extension EnumLabels on AppLocalizations {
     TxType.adjustment => typeAdjustment,
     TxType.debtOut => typeDebtOut,
     TxType.debtIn => typeDebtIn,
+    TxType.writeOff => writeOffEntry,
+    TxType.debtForgiven => forgivenEntry,
   };
 
   String debtStatusName(DebtStatus s) => switch (s) {
     DebtStatus.open => statusOpen,
     DebtStatus.partial => statusPartial,
-    DebtStatus.settled => statusSettled,
+    DebtStatus.closed => statusClosed,
   };
 
   String directionName(DebtDirection d) =>
       d == DebtDirection.owedToMe ? tabOwedToMe : tabIOwe;
+
+  /// خيار مصدر الدين في نموذج الدين الجديد.
+  String debtSourceOption(DebtSource s, DebtDirection d) => switch (s) {
+    DebtSource.loan =>
+      d == DebtDirection.owedToMe ? sourceLoanOwed : sourceLoanOwe,
+    DebtSource.creditSale => sourceCreditSale,
+    DebtSource.creditPurchase => sourceCreditPurchase,
+    DebtSource.opening => sourceOpening,
+  };
+
+  /// أثر مصدر الدين (تحت الخيار).
+  String debtSourceHint(DebtSource s, DebtDirection d) => switch (s) {
+    DebtSource.loan =>
+      d == DebtDirection.owedToMe
+          ? decreasesBalanceNotExpense
+          : increasesBalanceNotIncome,
+    DebtSource.creditSale => sourceCreditSaleHint,
+    DebtSource.creditPurchase => sourceCreditPurchaseHint,
+    DebtSource.opening => sourceOpeningHint,
+  };
+
+  /// وصف قصير للدين في الخط الزمني وكشف الحساب (مثل «بيع بالآجل»).
+  String debtSourceLabel(DebtSource s, DebtDirection d) => switch (s) {
+    DebtSource.loan =>
+      d == DebtDirection.owedToMe ? labelLoanOwed : labelLoanOwe,
+    DebtSource.creditSale => labelCreditSale,
+    DebtSource.creditPurchase => labelCreditPurchase,
+    DebtSource.opening => labelOpening,
+  };
+
+  /// زر الاستلام (لي) أو السداد (عليّ).
+  String settleAction(DebtDirection d) =>
+      d == DebtDirection.owedToMe ? receiveAmount : payAmount;
+
+  /// اسم عملية الدفع في الخط الزمني وكشف الحساب.
+  String paymentName(DebtDirection d) =>
+      d == DebtDirection.owedToMe ? paymentReceived : paymentMade;
+
+  /// اسم قيد المسامحة (لي) أو الإعفاء (عليّ).
+  String writeOffName(DebtDirection d) =>
+      d == DebtDirection.owedToMe ? writeOffEntry : forgivenEntry;
+
+  /// عنوان بطاقة/قسم الاتجاه لشخص.
+  String directionTitle(DebtDirection d, String name) =>
+      d == DebtDirection.owedToMe ? profileOwedToMe(name) : profileIOwe(name);
 }
 
 extension TxTypeVisuals on TxType {
@@ -46,6 +93,8 @@ extension TxTypeVisuals on TxType {
     TxType.transfer => c.transfer,
     TxType.adjustment => c.textSecondary,
     TxType.debtIn || TxType.debtOut => c.warning,
+    TxType.writeOff => c.expense,
+    TxType.debtForgiven => c.income,
   };
 
   IconData get icon => switch (this) {
@@ -54,6 +103,8 @@ extension TxTypeVisuals on TxType {
     TxType.transfer => AppIcons.transfer,
     TxType.adjustment => AppIcons.adjustment,
     TxType.debtIn || TxType.debtOut => AppIcons.debt,
+    TxType.writeOff => Icons.handshake_outlined,
+    TxType.debtForgiven => Icons.money_off_rounded,
   };
 }
 

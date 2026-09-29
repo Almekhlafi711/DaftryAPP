@@ -23,7 +23,6 @@
   "category": "الفئة",
   "name": "الاسم",
   "phone": "رقم الجوال",
-  "address": "العنوان",
   "comingSoon": "قريباً",
   "archivedBadge": "مؤرشف",
   "defaultBadge": "افتراضي",
@@ -242,7 +241,6 @@
   },
   "transferBalanceTo": "تحويل الرصيد إلى",
   "transferAndArchive": "تحويل الرصيد ثم الأرشفة",
-  "archiveWithoutTransfer": "أرشفة دون تحويل",
   "newDefaultAccount": "الحساب الافتراضي البديل",
   "recalculateBalances": "إعادة احتساب الأرصدة",
   "recalculateDone": "تمت المراجعة — صُحح {count} حساب",
@@ -275,7 +273,8 @@
     }
   },
   "dueToday": "يستحق اليوم",
-  "statusSettled": "مسدَّد",
+  "statusClosed": "مغلق",
+  "statusOverdue": "متأخر",
   "statusPartial": "مسدَّد جزئياً",
   "statusOpen": "مفتوح",
   "ofTotal": "من {amount}",
@@ -294,25 +293,13 @@
   "fromContacts": "من جهات الاتصال",
   "addPerson": "إضافة شخص",
   "dueDateOptional": "الاستحقاق (اختياري)",
-  "moneyLeftAccount": "هل خرج المبلغ من حساب؟",
-  "moneyEnteredAccount": "هل دخل المبلغ إلى حساب؟",
-  "bookOnlyHint": "أطفئه عند البيع أو الشراء بالآجل (دفتر فقط)",
   "decreasesBalanceNotExpense": "ينقص الرصيد — ليس مصروفاً",
   "increasesBalanceNotIncome": "يزيد الرصيد — ليس دخلاً",
   "remindBeforeDue": "ذكّرني قبل الموعد بيوم",
   "saveDebt": "حفظ الدين",
   "editDebt": "تعديل الدين",
   "deleteDebt": "حذف الدين",
-  "deleteDebtBody": "ستُحذف كل دفعاته وحركاته وتعود الأرصدة كما كانت.",
-  "recordPayment": "تسجيل دفعة",
-  "paymentFor": "تسجيل دفعة — {name}",
-  "@paymentFor": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "deleteDebtBody": "يُحذف الدين مع قيده فيعود الحساب أو الدخل أو المصروف كما كان. (للديون المسجلة خطأً فقط.)",
   "remainingAmount": "المتبقي: {amount}",
   "@remainingAmount": {
     "placeholders": {
@@ -321,13 +308,9 @@
       }
     }
   },
-  "paymentAmount": "مبلغ الدفعة",
   "fullRemaining": "كامل المتبقي",
-  "receivedIntoAccount": "استلمت المبلغ في حساب",
-  "paidFromAccount": "دفعت المبلغ من حساب",
-  "suggestedCreationAccount": "مقترح: حساب إنشاء الدين",
-  "savePayment": "حفظ الدفعة",
-  "whichDebt": "الدين",
+  "receivedIntoAccount": "استلمتُ المبلغ في",
+  "paidFromAccount": "دفعتُ المبلغ من",
   "profileOwedToMe": "المتبقي لي عند {name}",
   "@profileOwedToMe": {
     "placeholders": {
@@ -344,7 +327,6 @@
       }
     }
   },
-  "profileSettled": "لا يوجد متبقٍ — الحساب مسدَّد",
   "paidAmount": "مدفوع {amount}",
   "@paidAmount": {
     "placeholders": {
@@ -371,39 +353,210 @@
   },
   "statement": "كشف",
   "timeline": "الخط الزمني",
-  "paymentReceived": "دفعة مستلمة",
-  "paymentMade": "دفعة مدفوعة",
-  "newDebtEntry": "دين جديد",
-  "debtWithNote": "دين: {note}",
-  "@debtWithNote": {
-    "placeholders": {
-      "note": {
-        "type": "String"
-      }
-    }
-  },
-  "inAccount": "في {account}",
-  "@inAccount": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "fromAccountName": "من {account}",
-  "@fromAccountName": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
-  "withoutAccount": "بدون حساب",
+  "paymentReceived": "استلام",
+  "paymentMade": "سداد",
   "editPerson": "تعديل بيانات الشخص",
-  "hidePerson": "إخفاء من القائمة",
-  "deletePayment": "حذف الدفعة",
-  "deletePaymentBody": "ستُعكس حركتها على الرصيد ويُعاد حساب حالة الدين.",
   "searchPeople": "ابحث عن شخص",
+  "sourceTitle": "مصدر الدين",
+  "sourceLoanOwed": "أقرضته من حساب",
+  "sourceLoanOwe": "اقترضتُ إلى حساب",
+  "sourceCreditSale": "بعتُ له بالآجل",
+  "sourceCreditPurchase": "اشتريتُ بالآجل",
+  "sourceOpening": "دين سابق (قبل استخدام التطبيق)",
+  "sourceCreditSaleHint": "يُسجَّل دخلاً بفئة — دون حركة حساب",
+  "sourceCreditPurchaseHint": "يُسجَّل مصروفاً بفئة — دون حركة حساب",
+  "sourceOpeningHint": "في الدفتر فقط — لا دخل ولا حركة حساب",
+  "labelLoanOwed": "سلفة نقدية",
+  "labelLoanOwe": "اقتراض",
+  "labelCreditSale": "بيع بالآجل",
+  "labelCreditPurchase": "شراء بالآجل",
+  "labelOpening": "دين سابق",
+  "debtLockedHint": "عليه دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة",
+  "receiveAmount": "استلام مبلغ",
+  "payAmount": "سداد مبلغ",
+  "receiveFrom": "استلام من {name}",
+  "@receiveFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "payTo": "سداد لـ {name}",
+  "@payTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "remainingAfterPayment": "المتبقي بعد الدفعة: {amount}",
+  "@remainingAfterPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "distributedOldestFirst": "يُوزَّع على الأقدم أولاً: {parts}",
+  "@distributedOldestFirst": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseSpecificDebt": "اختيار دين معيّن",
+  "autoDistribute": "توزيع تلقائي",
+  "excessTitle": "مبلغ زائد عن المتبقي",
+  "excessOwedToMe": "الزائد {amount} — هل تسجّله ديناً عليك لـ {name}؟",
+  "@excessOwedToMe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "excessIOwe": "الزائد {amount} — هل تسجّله ديناً لك على {name}؟",
+  "@excessIOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recordExcess": "تسجيل الزائد",
+  "editAmount": "تعديل المبلغ",
+  "excessNote": "زيادة عن المستحق",
+  "noOneOwesYou": "لا توجد ديون مفتوحة لك عند أحد",
+  "youOweNoOne": "لا توجد ديون مفتوحة عليك",
+  "distribution": "تفصيل التوزيع",
+  "cancelOperation": "إلغاء العملية",
+  "cancelOperationBody": "تُلغى كل دفعات العملية معاً ويُعكس أثرها على الحساب، وتبقى ظاهرة مشطوبة في الخط الزمني.",
+  "cancelledBadge": "ملغاة",
+  "negativeCashWarning": "تنبيه: رصيد «{account}» أصبح سالباً",
+  "@negativeCashWarning": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "forgiveRemaining": "مسامحة بالمتبقي",
+  "forgivenRemaining": "إعفاء من المتبقي",
+  "forgiveBodyOwedToMe": "يُغلق الدين ويُسجَّل المتبقي {amount} مصروفاً بفئة «مسامحة ديون». لا تتحرك أرصدة الحسابات.",
+  "@forgiveBodyOwedToMe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forgiveBodyIOwe": "يُغلق الدين ويُسجَّل المتبقي {amount} دخلاً بفئة «إعفاء دين». لا تتحرك أرصدة الحسابات.",
+  "@forgiveBodyIOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "writeOffEntry": "مسامحة",
+  "forgivenEntry": "إعفاء من الدين",
+  "paymentRate": "نسبة السداد {percent}%",
+  "@paymentRate": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "writtenOffRate": "مُسامَح {percent}%",
+  "@writtenOffRate": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "netForYou": "الصافي لصالحك {amount}",
+  "@netForYou": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "netForThem": "الصافي لصالح {name} {amount}",
+  "@netForThem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "netEven": "الصافي متعادل",
+  "netInfoHint": "معلومة فقط — لا يُخصم أحدهما من الآخر",
+  "balanceAfter": "الرصيد بعد العملية: {amount}",
+  "@balanceAfter": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "archivePerson": "أرشفة الشخص",
+  "archivePersonBody": "يختفي من القوائم والاختيار مع بقاء سجله كاملاً، ويمكن رفع أرشفته لاحقاً.",
+  "deletePerson": "حذف الشخص",
+  "deletePersonBody": "لا توجد له أي حركة، وسيُحذف نهائياً.",
+  "personArchivedBanner": "هذا الشخص مؤرشف",
+  "peopleCount": "{count, plural, =0{لا أحد} =1{شخص واحد} =2{شخصان} few{{count} أشخاص} many{{count} شخصاً} other{{count} شخص}}",
+  "@peopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overdueCount": "{count, plural, =0{لا ديون متأخرة} =1{دين متأخر} =2{دينان متأخران} few{{count} ديون متأخرة} many{{count} ديناً متأخراً} other{{count} دين متأخر}}",
+  "@overdueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterDebts": "فلترة الديون",
+  "statusFilter": "الحالة",
+  "sortNearestDue": "الأقرب استحقاقاً",
+  "sortLastActivity": "آخر حركة",
+  "duplicatePerson": "«{name}» موجود، هل تقصده؟",
+  "@duplicatePerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "useExisting": "نعم، هو",
+  "reconcileOk": "معادلة التطابق الشاملة متحققة ✓",
+  "reconcileGap": "تنبيه: فرق {amount} في معادلة التطابق — راجع البيانات",
+  "@reconcileGap": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveNeedsZero": "لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً",
   "statementTitle": "كشف حساب — {name}",
   "@statementTitle": {
     "placeholders": {
@@ -542,6 +695,7 @@
   "supportCall": "اتصال",
   "supportInstagram": "إنستغرام",
   "linkOpenFailed": "تعذّر فتح الرابط",
+  "developedBy": "تم التطوير من قبل محمد المخلافي",
   "lockedTitle": "دفتري مقفل",
   "enterPin": "أدخل رمز PIN",
   "wrongPin": "رمز غير صحيح",
@@ -549,6 +703,8 @@
   "unlockReason": "افتح دفتري",
   "verifyIdentity": "تأكيد هويتك",
   "deleteAllDataReason": "تأكيد حذف جميع البيانات",
+  "disableLockReason": "تأكيد إيقاف قفل التطبيق",
+  "changePinReason": "تأكيد تغيير رمز PIN",
   "createPin": "أنشئ رمز PIN من 4 أرقام",
   "confirmPin": "أعد إدخال الرمز للتأكيد",
   "pinMismatch": "الرمزان غير متطابقين",
@@ -592,6 +748,18 @@
   "noCloudBackups": "لا توجد نسخ في السحابة",
   "errInvalidAmount": "أدخل مبلغاً أكبر من صفر",
   "errEmptyName": "الاسم مطلوب",
+  "errInvalidPhone": "رقم الجوال غير صحيح",
+  "errContactArchived": "الشخص مؤرشف — ارفع أرشفته أولاً",
+  "errInvalidDebtSource": "مصدر الدين لا يناسب اتجاهه",
+  "errAccountRequired": "اختر الحساب",
+  "errDateInFuture": "التاريخ لا يكون بعد اليوم",
+  "errDueBeforeStart": "تاريخ الاستحقاق قبل تاريخ الدين",
+  "errPaymentBeforeDebt": "التاريخ يسبق تاريخ الدين — غيّره أو اختر ديناً معيّناً",
+  "errDebtHasMovements": "على الدين دفعات أو مسامحة — ألغِ الدفعات أولاً",
+  "errPaymentAlreadyCancelled": "العملية ملغاة مسبقاً",
+  "errAccountHasBalance": "لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً",
+  "errPersonHasBalance": "لا يُؤرشف الشخص إلا ومتبقّيه صفر في الاتجاهين",
+  "errPersonHasMovements": "للشخص حركات مسجلة — يمكن أرشفته فقط",
   "errDuplicateAccountName": "يوجد حساب بنفس الاسم",
   "errAccountArchived": "الحساب مؤرشف — ارفع أرشفته أولاً",
   "errCannotArchiveLast": "لا يمكن أرشفة آخر حساب نشط",
@@ -599,7 +767,7 @@
   "errSameAccountTransfer": "اختر حسابين مختلفين للتحويل",
   "errCategoryKindMismatch": "الفئة لا تناسب نوع المعاملة",
   "errCategoryRequired": "اختر فئة",
-  "errDebtMovementReadOnly": "حركات الديون تُعدَّل من ملف الشخص",
+  "errDebtMovementReadOnly": "قيود الديون تُعدَّل من ملف الشخص",
   "errCannotMoveArchived": "لا يمكن نقل معاملة من حساب مؤرشف أو إليه",
   "errPaymentExceeds": "المبلغ أكبر من المتبقي ({amount})",
   "@errPaymentExceeds": {
@@ -609,8 +777,8 @@
       }
     }
   },
-  "errDebtSettled": "هذا الدين مسدَّد بالكامل",
-  "errDebtAmountBelowPaid": "لا يمكن أن يقل المبلغ عن المسدَّد ({amount})",
+  "errDebtSettled": "لا توجد ديون مفتوحة لهذه العملية",
+  "errDebtAmountBelowPaid": "الأصل لا يقل عن المدفوع والمُسامَح ({amount})",
   "@errDebtAmountBelowPaid": {
     "placeholders": {
       "amount": {
@@ -646,6 +814,57 @@
       "amount": {
         "type": "String"
       },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "introSkip": "تخطي",
+  "introNext": "التالي",
+  "introStart": "ابدأ الآن",
+  "intro1Body": "دفتر حساباتك الشخصي وديونك في مكان واحد. يعمل بدون إنترنت وبدون تسجيل دخول، وبياناتك تبقى على جهازك.",
+  "introOffline": "بدون إنترنت",
+  "introNoAccount": "بدون حساب",
+  "introPrivate": "خصوصية تامة",
+  "intro2Title": "كل ما تحتاجه لإدارة أموالك",
+  "intro2Body": "أدوات بسيطة وواضحة لكل يوم.",
+  "featTxTitle": "المعاملات والحسابات",
+  "featTxBody": "سجّل الدخل والمصروف والتحويل بين حساباتك",
+  "featDebtsTitle": "الديون والتذكير",
+  "featDebtsBody": "تابع ما لك وما عليك مع تذكير قبل الاستحقاق",
+  "featBudgetTitle": "الميزانية والتقارير",
+  "featBudgetBody": "حدود شهرية ورسوم بيانية وتصدير PDF و Excel",
+  "featStatementTitle": "كشف حساب جاهز",
+  "featStatementBody": "أرسل كشف حساب أي شخص عبر واتساب بضغطة",
+  "intro3Title": "خطوات مهمة للبدء",
+  "intro3Body": "ثلاث خطوات تحمي بياناتك من البداية.",
+  "stepCurrencyTitle": "اختر عملتك بعناية",
+  "stepLockTitle": "احمِ بياناتك",
+  "stepLockBody": "فعّل قفل التطبيق بالبصمة أو رمز PIN من الإعدادات",
+  "stepBackupTitle": "خذ نسخة احتياطية",
+  "stepBackupBody": "صدّر نسخة مشفّرة أو فعّل النسخ السحابي لتنقل بياناتك بأمان",
+  "profileTitle": "عرّفنا بنفسك",
+  "profileSubtitle": "يظهر اسمك في التقارير وكشوف الحساب التي تشاركها.",
+  "yourName": "اسمك",
+  "phoneOptional": "رقم الجوال (اختياري)",
+  "sectionProfile": "الملف الشخصي",
+  "editProfile": "تعديل الملف الشخصي",
+  "addYourName": "أضف اسمك",
+  "noPhone": "بدون رقم جوال",
+  "greetingName": "{greeting}، {name}",
+  "@greetingName": {
+    "placeholders": {
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "issuedBy": "صادر من: {name}",
+  "@issuedBy": {
+    "placeholders": {
       "name": {
         "type": "String"
       }

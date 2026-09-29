@@ -38,7 +38,7 @@ class TransactionService {
           type: draft.type,
           amount: draft.amount,
           currencyId: await _ledger.baseCurrencyId(),
-          accountId: draft.accountId,
+          accountId: Value(draft.accountId),
           toAccountId: Value(
             draft.type == TxType.transfer ? draft.toAccountId : null,
           ),
@@ -72,8 +72,8 @@ class TransactionService {
     final old = await _require(id);
 
     await db.transaction(() async {
-      // حركات الديون تُعدَّل من ملف الشخص وليس من سجل المعاملات.
-      if (old.type.isDebtMovement) {
+      // قيود الديون تُعدَّل من ملف الشخص وليس من سجل المعاملات.
+      if (isDebtLinked(old)) {
         throw const BusinessException(BusinessError.debtMovementReadOnly);
       }
 
@@ -92,7 +92,7 @@ class TransactionService {
       // قاعدة الأرشفة: معاملة على حساب مؤرشف يُعدَّل مبلغها وتاريخها
       // وملاحظتها فقط، ولا تُنقل إلى حساب آخر أو إليه.
       final oldAccounts = {
-        old.accountId,
+        old.accountId!,
         if (old.toAccountId != null) old.toAccountId!,
       };
       final newAccounts = {
@@ -160,7 +160,7 @@ class TransactionService {
   /// [restore] إذا ضغط المستخدم «تراجع».
   Future<MoneyTransaction> delete(int id) => db.transaction(() async {
     final tx = await _require(id);
-    if (tx.type.isDebtMovement) {
+    if (isDebtLinked(tx)) {
       throw const BusinessException(BusinessError.debtMovementReadOnly);
     }
     await _ledger.remove(tx);
@@ -172,6 +172,11 @@ class TransactionService {
     await db.into(db.transactions).insert(tx);
     await _ledger.applyTx(tx);
   });
+
+  /// قيد أنشأته وحدة الديون (حركة دين، بيع/شراء بالآجل، مسامحة): يُعدَّل من
+  /// ملف الشخص فقط حتى لا يتناقض مع الدين.
+  static bool isDebtLinked(MoneyTransaction tx) =>
+      tx.type.isDebtEntry || tx.debtId != null || tx.debtPaymentId != null;
 
   // ---------------------------------------------------------------------------
   // القراءة
@@ -209,7 +214,8 @@ class TransactionService {
     final t = db.transactions;
     final toAcc = db.alias(db.accounts, 'to_acc');
     final query = db.select(t).join([
-      innerJoin(db.accounts, db.accounts.id.equalsExp(t.accountId)),
+      // قيود الديون التي لا تحرّك مالاً ليس لها حساب.
+      leftOuterJoin(db.accounts, db.accounts.id.equalsExp(t.accountId)),
       leftOuterJoin(toAcc, toAcc.id.equalsExp(t.toAccountId)),
       leftOuterJoin(db.categories, db.categories.id.equalsExp(t.categoryId)),
       leftOuterJoin(db.debts, db.debts.id.equalsExp(t.debtId)),
@@ -228,7 +234,12 @@ class TransactionService {
       );
     }
     // الأنواع: إن اختار المستخدم أنواعاً نعرضها + حركات الديون إن كانت مفعّلة.
-    final types = <String>{for (final type in f.types) type.name};
+    // «دخل» يشمل الإعفاء من دين، و«مصروف» يشمل مسامحة دين.
+    final types = <String>{
+      for (final type in f.types) type.name,
+      if (f.types.contains(TxType.income)) TxType.debtForgiven.name,
+      if (f.types.contains(TxType.expense)) TxType.writeOff.name,
+    };
     if (types.isNotEmpty) {
       if (f.showDebtMovements) {
         types.addAll([TxType.debtIn.name, TxType.debtOut.name]);
@@ -248,6 +259,7 @@ class TransactionService {
           db.categories.name.like(like) |
           db.accounts.name.like(like) |
           db.contacts.name.like(like);
+      // (الحقول الفارغة في الربط الخارجي لا تطابق، فلا تُستبعد القيود بلا حساب.)
       // إن كان النص رقماً نبحث بالمبلغ أيضاً (245 تطابق 245.00).
       final number = double.tryParse(q.replaceAll(',', ''));
       if (number != null) {
@@ -281,22 +293,24 @@ class TransactionService {
     query.limit(limit);
 
     return query.map((row) {
-      final account = row.readTable(db.accounts);
+      final account = row.readTableOrNull(db.accounts);
       final debt = row.readTableOrNull(db.debts);
       return TransactionView(
         tx: row.readTable(t),
-        accountName: account.name,
-        accountArchived: account.isArchived,
+        accountName: account?.name,
+        accountArchived: account?.isArchived ?? false,
         toAccountName: row.readTableOrNull(toAcc)?.name,
         category: row.readTableOrNull(db.categories),
         contactName: row.readTableOrNull(db.contacts)?.name,
         contactId: debt?.contactId,
         debtDirection: debt?.direction,
+        debtSource: debt?.source,
       );
     });
   }
 
-  /// دخل ومصروف فترة (حركات الديون والتسوية والتحويل مستبعدة).
+  /// دخل ومصروف فترة: يشملان البيع/الشراء بالآجل والمسامحة والإعفاء،
+  /// وتُستبعد حركات الديون النقدية والتسوية والتحويل.
   Stream<PeriodTotals> watchTotals(DateRange range) =>
       _totalsQuery(range).watchSingle();
 
@@ -307,8 +321,8 @@ class TransactionService {
       .customSelect(
         '''
         SELECT
-          COALESCE(SUM(CASE WHEN type = '${TxType.income.name}' THEN amount END), 0) AS income,
-          COALESCE(SUM(CASE WHEN type = '${TxType.expense.name}' THEN amount END), 0) AS expense
+          COALESCE(SUM(CASE WHEN type IN (${_quoted(TxType.incomeNames)}) THEN amount END), 0) AS income,
+          COALESCE(SUM(CASE WHEN type IN (${_quoted(TxType.expenseNames)}) THEN amount END), 0) AS expense
         FROM transactions
         WHERE date >= ?1 AND date < ?2
         ''',
@@ -420,6 +434,9 @@ class TransactionService {
     if (tx == null) throw const BusinessException(BusinessError.notFound);
     return tx;
   }
+
+  static String _quoted(List<String> names) =>
+      names.map((n) => "'$n'").join(', ');
 
   static bool _sameSet(Set<int> a, Set<int> b) =>
       a.length == b.length && a.containsAll(b);

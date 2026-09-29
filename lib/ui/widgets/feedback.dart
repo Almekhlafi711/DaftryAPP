@@ -23,6 +23,7 @@ String errorMessage(
   return switch (error.error) {
     BusinessError.invalidAmount => l10n.errInvalidAmount,
     BusinessError.emptyName => l10n.errEmptyName,
+    BusinessError.invalidPhone => l10n.errInvalidPhone,
     BusinessError.duplicateAccountName => l10n.errDuplicateAccountName,
     BusinessError.accountArchived => l10n.errAccountArchived,
     BusinessError.cannotArchiveLastAccount => l10n.errCannotArchiveLast,
@@ -43,6 +44,17 @@ String errorMessage(
     BusinessError.backupInvalidFile => l10n.errBackupInvalid,
     BusinessError.noConnection => l10n.errNoConnection,
     BusinessError.cloudNotAuthorized => l10n.errCloudNotAuthorized,
+    BusinessError.contactArchived => l10n.errContactArchived,
+    BusinessError.invalidDebtSource => l10n.errInvalidDebtSource,
+    BusinessError.accountRequired => l10n.errAccountRequired,
+    BusinessError.dateInFuture => l10n.errDateInFuture,
+    BusinessError.dueBeforeStart => l10n.errDueBeforeStart,
+    BusinessError.paymentBeforeDebt => l10n.errPaymentBeforeDebt,
+    BusinessError.debtHasMovements => l10n.errDebtHasMovements,
+    BusinessError.paymentAlreadyCancelled => l10n.errPaymentAlreadyCancelled,
+    BusinessError.accountHasBalance => l10n.errAccountHasBalance,
+    BusinessError.personHasBalance => l10n.errPersonHasBalance,
+    BusinessError.personHasMovements => l10n.errPersonHasMovements,
   };
 }
 

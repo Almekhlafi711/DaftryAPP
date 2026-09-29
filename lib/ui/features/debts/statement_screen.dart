@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/date_range.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/budget_report_models.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/export/pdf_fonts.dart';
 import '../../../services/export/statement_pdf.dart';
 import '../../../services/providers.dart';
@@ -22,6 +23,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
+import '../../widgets/labels.dart';
+import '../profile/profile_form.dart';
 
 enum _Period { last30, month, last3Months, custom }
 
@@ -75,11 +78,13 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
   Future<Uint8List> _buildPdf(StatementData data) async {
     final l10n = context.l10n;
     final locale = ref.read(localeProvider).languageCode;
+    final owner = documentOwner(context, ref);
     final pdf = StatementPdf(
       fonts: await PdfFonts.load(),
       money: ref.read(moneyFormatterProvider),
       locale: locale,
       rtl: locale == 'ar',
+      owner: owner,
       labels: StatementLabels(
         appName: l10n.appName,
         title: l10n.statement,
@@ -90,9 +95,8 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
         description: l10n.description,
         amount: l10n.amount,
         balance: l10n.balance,
-        newDebt: l10n.newDebtEntry,
-        paymentReceived: l10n.paymentReceived,
-        paymentMade: l10n.paymentMade,
+        describe: (direction, line) => _describe(l10n, direction, line),
+        sectionTitle: (d) => l10n.directionTitle(d, data.contact.name),
         owedToMeHint: l10n.dueFromPerson(data.contact.name),
         iOweHint: l10n.dueToPerson(data.contact.name),
         noMovements: l10n.noMovementsInPeriod,
@@ -289,7 +293,19 @@ class _OutputCard extends StatelessWidget {
   }
 }
 
-/// معاينة الكشف داخل التطبيق (نفس محتوى الملف المُصدَّر).
+/// وصف سطر الكشف: نوع الدين (مثل «بيع بالآجل»)، أو الاستلام/السداد، أو
+/// المسامحة/الإعفاء.
+String _describe(
+  AppLocalizations l10n,
+  DebtDirection direction,
+  StatementLine line,
+) => switch (line.kind) {
+  StatementLineKind.debt => l10n.debtSourceLabel(line.source!, direction),
+  StatementLineKind.payment => l10n.paymentName(direction),
+  StatementLineKind.writeOff => l10n.writeOffName(direction),
+};
+
+/// معاينة الكشف داخل التطبيق (نفس محتوى الملف المُصدَّر): قسم لكل اتجاه.
 class _StatementPreview extends ConsumerWidget {
   const _StatementPreview({required this.data});
 
@@ -300,7 +316,6 @@ class _StatementPreview extends ConsumerWidget {
     final l10n = context.l10n;
     final c = context.colors;
     final dates = ref.watch(dateLabelsProvider);
-    final closing = data.closingBalance;
 
     return AppCard(
       child: Column(
@@ -324,44 +339,7 @@ class _StatementPreview extends ConsumerWidget {
             ],
           ),
           Divider(color: c.primary, thickness: 2, height: 16),
-          _line(context, l10n.openingBalance, data.openingBalance, bold: true),
-          for (final line in data.lines)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 52,
-                    child: Text(
-                      dates.day(line.date),
-                      style: TextStyle(fontSize: 11.5, color: c.textSecondary),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      line.isPayment
-                          ? (line.direction == DebtDirection.owedToMe
-                                ? l10n.paymentReceived
-                                : l10n.paymentMade)
-                          : (line.note ?? l10n.newDebtEntry),
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                  AmountText(
-                    line.effect,
-                    showSign: true,
-                    withSymbol: false,
-                    color: line.isPayment ? c.income : c.expense,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (data.lines.isEmpty)
+          if (data.sections.isEmpty)
             Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
@@ -370,14 +348,91 @@ class _StatementPreview extends ConsumerWidget {
                 style: TextStyle(color: c.textSecondary),
               ),
             ),
-          const Divider(),
-          _line(
-            context,
-            l10n.closingBalance,
-            closing.abs(),
-            bold: true,
-            color: closing >= 0 ? c.income : c.expense,
-          ),
+          for (final section in data.sections) ...[
+            if (data.sections.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 2),
+                child: Text(
+                  l10n.directionTitle(section.direction, data.contact.name),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: section.direction == DebtDirection.owedToMe
+                        ? c.income
+                        : c.expense,
+                  ),
+                ),
+              ),
+            _line(context, l10n.openingBalance, section.opening, bold: true),
+            for (final line in section.lines)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 52,
+                      child: Text(
+                        dates.day(line.date),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: c.textSecondary,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        [
+                          _describe(l10n, section.direction, line),
+                          if (line.note != null) line.note!,
+                        ].join(' — '),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    AmountText(
+                      line.movement,
+                      showSign: true,
+                      withSymbol: false,
+                      color: line.kind == StatementLineKind.debt
+                          ? c.expense
+                          : c.income,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // عمود الرصيد الجاري.
+                    SizedBox(
+                      width: 64,
+                      child: AmountText(
+                        line.balance,
+                        withSymbol: false,
+                        style: TextStyle(fontSize: 12, color: c.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (section.lines.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  l10n.noMovementsInPeriod,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: c.textSecondary, fontSize: 12.5),
+                ),
+              ),
+            const Divider(),
+            _line(
+              context,
+              l10n.closingBalance,
+              section.closing,
+              bold: true,
+              color: section.direction == DebtDirection.owedToMe
+                  ? c.income
+                  : c.expense,
+            ),
+          ],
         ],
       ),
     );

@@ -88,12 +88,20 @@ class PeriodReport {
     required this.months,
     required this.expenseByCategory,
     required this.incomeByCategory,
+    this.adjustments = 0,
   });
 
   final DateRange range;
+
+  /// الدخل: العادي + البيع بالآجل + الإعفاء من الديون.
   final int income;
+
+  /// المصروف: العادي + الشراء بالآجل + مسامحة الديون.
   final int expense;
   int get net => income - expense;
+
+  /// «فروقات تسوية»: صافي التسويات في الفترة (سطر مستقل خارج الدخل والمصروف).
+  final int adjustments;
 
   /// آخر 6 أشهر للمقارنة.
   final List<MonthTotals> months;
@@ -101,53 +109,74 @@ class PeriodReport {
   final List<CategoryTotal> incomeByCategory;
 }
 
-/// سطر في كشف الحساب.
+/// نوع سطر في كشف الحساب.
+enum StatementLineKind { debt, payment, writeOff }
+
+/// سطر في كشف الحساب (7.2): الحركة موقَّعة على رصيد اتجاهها.
 class StatementLine {
   const StatementLine({
     required this.date,
-    required this.isPayment,
-    required this.direction,
+    required this.kind,
     required this.amount,
-    required this.effect,
-    required this.runningBalance,
+    required this.balance,
+    this.source,
     this.note,
   });
 
   final DateTime date;
-  final bool isPayment;
-  final DebtDirection direction;
+  final StatementLineKind kind;
+
+  /// المبلغ (موجب دائماً).
   final int amount;
 
-  /// الأثر الموقَّع على الصافي (موجب = لي).
-  final int effect;
+  /// الرصيد بعد هذا السطر.
+  final int balance;
 
-  /// الرصيد بعد هذه الحركة.
-  final int runningBalance;
+  /// مصدر الدين — لسطور الديون.
+  final DebtSource? source;
   final String? note;
+
+  /// الحركة: الدين +، الاستلام/السداد والمسامحة −.
+  int get movement => kind == StatementLineKind.debt ? amount : -amount;
+}
+
+/// كشف اتجاه واحد (لي أو عليّ) لفترة من S إلى E.
+class StatementSection {
+  const StatementSection({
+    required this.direction,
+    required this.opening,
+    required this.lines,
+  });
+
+  final DebtDirection direction;
+
+  /// Opening = ΣA قبل S − Σالدفعات قبل S − Σالمسامحة قبل S.
+  final int opening;
+  final List<StatementLine> lines;
+
+  /// Closing = Opening + ديون الفترة − دفعاتها − مسامحتها.
+  int get closing => lines.isEmpty ? opening : lines.last.balance;
+
+  int _sum(StatementLineKind k) =>
+      lines.where((l) => l.kind == k).fold(0, (s, l) => s + l.amount);
+  int get newDebts => _sum(StatementLineKind.debt);
+  int get payments => _sum(StatementLineKind.payment);
+  int get writeOffs => _sum(StatementLineKind.writeOff);
 }
 
 /// بيانات كشف حساب شخص لفترة (يُولَّد عند الطلب ولا يُخزَّن — قاعدة 3.12.4).
+/// لكل اتجاه قسم مستقل: «لي» و«عليّ» لا يُخصم أحدهما من الآخر.
 class StatementData {
   const StatementData({
     required this.contact,
     required this.range,
-    required this.openingBalance,
-    required this.lines,
+    required this.sections,
   });
 
   final Contact contact;
   final DateRange range;
+  final List<StatementSection> sections;
 
-  /// الرصيد الافتتاحي: صافي العلاقة قبل بداية الفترة.
-  final int openingBalance;
-  final List<StatementLine> lines;
-
-  /// المتبقي في نهاية الفترة.
-  int get closingBalance =>
-      lines.isEmpty ? openingBalance : lines.last.runningBalance;
-
-  int get totalDebts =>
-      lines.where((l) => !l.isPayment).fold(0, (s, l) => s + l.amount);
-  int get totalPayments =>
-      lines.where((l) => l.isPayment).fold(0, (s, l) => s + l.amount);
+  StatementSection? section(DebtDirection d) =>
+      sections.where((s) => s.direction == d).firstOrNull;
 }

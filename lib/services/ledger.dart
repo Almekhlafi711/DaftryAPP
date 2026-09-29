@@ -24,7 +24,7 @@ class Ledger {
     await applyEffect(
       type: row.type.value,
       amount: row.amount.value,
-      accountId: row.accountId.value,
+      accountId: row.accountId.present ? row.accountId.value : null,
       toAccountId: row.toAccountId.present ? row.toAccountId.value : null,
     );
     return id;
@@ -45,14 +45,16 @@ class Ledger {
     sign: sign,
   );
 
-  /// أثر كل نوع معاملة على الرصيد (انظر توثيق TxType).
+  /// أثر كل نوع معاملة على الرصيد (انظر توثيق TxType). القيود بلا حساب
+  /// (البيع/الشراء بالآجل، المسامحة والإعفاء) لا تحرّك أي رصيد.
   Future<void> applyEffect({
     required TxType type,
     required int amount,
-    required int accountId,
+    required int? accountId,
     int? toAccountId,
     int sign = 1,
   }) async {
+    if (accountId == null) return;
     switch (type) {
       case TxType.income:
       case TxType.debtIn:
@@ -64,6 +66,9 @@ class Ledger {
       case TxType.transfer:
         await _addToBalance(accountId, -amount * sign);
         await _addToBalance(toAccountId!, amount * sign);
+      case TxType.writeOff:
+      case TxType.debtForgiven:
+        break;
     }
   }
 

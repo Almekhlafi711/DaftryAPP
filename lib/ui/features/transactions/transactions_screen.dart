@@ -244,12 +244,12 @@ class _SwipeableTransaction extends ConsumerWidget {
     final l10n = context.l10n;
     final tile = TransactionTile(
       item: item,
-      onTap: () => item.isDebtMovement
+      onTap: () => item.isDebtLinked && item.contactId != null
           ? context.push(AppRoutes.person(item.contactId!))
           : context.push(AppRoutes.editTransaction(item.id)),
     );
     // حركات الديون تُعدَّل من ملف الشخص فقط.
-    if (item.isDebtMovement) return tile;
+    if (item.isDebtLinked) return tile;
 
     Widget background(
       Color color,
@@ -316,7 +316,7 @@ Future<bool> deleteTransactionWithUndo(
     message: l10n.deleteTransactionBody(
       item.tx.note ?? item.category?.name ?? l10n.txTypeName(item.type),
       money.inline(item.tx.amount),
-      item.accountName,
+      item.accountName ?? '',
     ),
     confirmLabel: l10n.delete,
   );

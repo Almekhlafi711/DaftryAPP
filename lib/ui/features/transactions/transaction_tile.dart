@@ -2,6 +2,7 @@
 // عنصر معاملة في القوائم (الرئيسية وسجل المعاملات).
 // «حركات الديون» تظهر بشكل مميز: أيقونة الشخص وشارة «حركة دين» ولون محايد،
 // لأنها تحرّك الرصيد لكنها ليست دخلاً ولا مصروفاً.
+// البيع/الشراء بالآجل والمسامحة دخل/مصروف بلا حساب: يظهر اسم الشخص بدل الحساب.
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -26,10 +27,9 @@ class TransactionTile extends StatelessWidget {
     final type = item.type;
 
     final (IconData icon, Color color) = switch (type) {
-      TxType.income || TxType.expense when item.category != null => (
-        AppIcons.category(item.category!.icon),
-        Color(item.category!.color),
-      ),
+      TxType.income || TxType.expense || TxType.writeOff || TxType.debtForgiven
+          when item.category != null =>
+        (AppIcons.category(item.category!.icon), Color(item.category!.color)),
       _ => (type.icon, type.color(c)),
     };
 
@@ -37,6 +37,8 @@ class TransactionTile extends StatelessWidget {
       TxType.transfer => l10n.typeTransfer,
       TxType.adjustment => l10n.typeAdjustment,
       TxType.debtIn || TxType.debtOut => item.contactName ?? l10n.debtMovement,
+      TxType.writeOff || TxType.debtForgiven =>
+        '${l10n.txTypeName(type)} — ${item.contactName ?? ''}',
       _ =>
         item.tx.note?.isNotEmpty == true
             ? item.tx.note!
@@ -50,20 +52,29 @@ class TransactionTile extends StatelessWidget {
           item.tx.note?.isNotEmpty == true &&
           item.category != null)
         item.category!.name,
+      if (item.isCredit)
+        l10n.debtSourceLabel(
+          item.debtSource ?? DebtSource.creditSale,
+          item.debtDirection ?? DebtDirection.owedToMe,
+        ),
+      if (item.isCredit && item.contactName != null) item.contactName!,
+      if ((type == TxType.writeOff || type == TxType.debtForgiven) &&
+          item.category != null)
+        item.category!.name,
       if (type == TxType.transfer)
         '${item.accountName} $arrow ${item.toAccountName ?? ''}'
-      else
-        item.accountName,
+      else if (item.accountName != null)
+        item.accountName!,
     ];
 
     // الإشارة واللون: الدخل أخضر +، المصروف أحمر −، الديون والتحويل محايدة.
     final amountColor = switch (type) {
-      TxType.income => c.income,
-      TxType.expense => c.expense,
+      TxType.income || TxType.debtForgiven => c.income,
+      TxType.expense || TxType.writeOff => c.expense,
       _ => c.textPrimary,
     };
     final signed = switch (type) {
-      TxType.expense || TxType.debtOut => -item.tx.amount,
+      TxType.expense || TxType.debtOut || TxType.writeOff => -item.tx.amount,
       TxType.transfer => item.tx.amount,
       _ => item.tx.amount,
     };
@@ -121,7 +132,10 @@ class TransactionTile extends StatelessWidget {
             const SizedBox(width: 8),
             AmountText(
               signed,
-              showSign: type == TxType.income || type == TxType.debtIn,
+              showSign:
+                  type == TxType.income ||
+                  type == TxType.debtIn ||
+                  type == TxType.debtForgiven,
               withSymbol: false,
               color: amountColor,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),

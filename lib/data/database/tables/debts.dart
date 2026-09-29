@@ -10,32 +10,37 @@ import 'contacts.dart';
 import 'currencies.dart';
 
 /// جدول الديون باتجاهين (لي / عليّ).
+///
+/// المدفوع والمتبقي والحالة لا تُخزَّن: تُحسب دائماً من الدفعات غير الملغاة
+/// والمسامحة (R = amount − Paid − written_off)، فلا يمكن أن تتناقض مع السجل.
 @DataClassName('Debt')
 @TableIndex(name: 'idx_debts_contact', columns: {#contactId})
-@TableIndex(name: 'idx_debts_status_due', columns: {#status, #dueDate})
+@TableIndex(name: 'idx_debts_due', columns: {#dueDate})
 class Debts extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get contactId => integer().references(Contacts, #id)();
   TextColumn get direction => textEnum<DebtDirection>()();
 
-  /// أصل الدين.
+  /// مصدر الدين (إقراض، بيع/شراء بالآجل، دين سابق) — يحدد القيد المحاسبي.
+  TextColumn get source => textEnum<DebtSource>()();
+
+  /// أصل الدين (A > 0).
   IntColumn get amount => integer().check(amount.isBiggerThanValue(0))();
 
-  /// مجموع ما سُدِّد (قيمة مشتقة مخزَّنة للأداء، تُحدَّث مع كل دفعة
-  /// ويمكن إعادة احتسابها). المتبقي = amount - paid_amount.
-  IntColumn get paidAmount => integer().withDefault(const Constant(0))();
+  /// W: مجموع ما سُومح به من هذا الدين (قيود المسامحة / الإعفاء).
+  IntColumn get writtenOff => integer()
+      .withDefault(const Constant(0))
+      .check(writtenOff.isBiggerOrEqualValue(0))();
   IntColumn get currencyId => integer().references(Currencies, #id)();
 
-  /// الحساب الذي خرج منه أو دخل إليه المال (فارغ للبيع بالآجل).
+  /// الحساب الذي خرج منه أو دخل إليه المال — للإقراض والاقتراض فقط.
   IntColumn get accountId => integer().nullable().references(Accounts, #id)();
   DateTimeColumn get startDate => dateTime()();
   DateTimeColumn get dueDate => dateTime().nullable()();
-
-  /// تُحسب آلياً من الدفعات: open / partial / settled.
-  TextColumn get status => textEnum<DebtStatus>()();
   TextColumn get note => text().nullable()();
 
   /// تذكير محلي قبل موعد الاستحقاق بيوم (FR-20).
   BoolColumn get remind => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }

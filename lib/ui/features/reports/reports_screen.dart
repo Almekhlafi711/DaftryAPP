@@ -27,6 +27,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/labels.dart';
+import '../profile/profile_form.dart';
 
 enum _View { monthly, yearly }
 
@@ -68,6 +69,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       money: ref.read(moneyFormatterProvider),
       locale: locale,
       rtl: locale == 'ar',
+      owner: documentOwner(context, ref),
       labels: ReportLabels(
         appName: l10n.appName,
         title: l10n.reportTitle,

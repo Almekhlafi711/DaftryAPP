@@ -1,10 +1,13 @@
 // =============================================================================
 // الشاشة 13: إضافة دين جديد / تعديله (UC-07).
 // - الاتجاه بلونين واضحين: «لي» (أخضر) و«عليّ» (أحمر).
-// - الشخص والمبلغ والتاريخ والاستحقاق.
-// - السؤال المحوري «هل خرج/دخل المبلغ من حساب؟»: إن فُعّل يُختار الحساب
-//   ويتحرك رصيده دون احتسابه مصروفاً/دخلاً، وإن أُطفئ (بيع بالآجل)
-//   يُسجَّل الدين في الدفتر فقط.
+// - الشخص: عند الدخول من ملف شخص يكون محدداً ومقفلاً.
+// - «مصدر الدين» بدل سؤال «هل خرج المبلغ من حساب؟» (وثيقة الديون 1.1):
+//     لي:  أقرضته من حساب | بعتُ له بالآجل | دين سابق
+//     عليّ: اقترضتُ إلى حساب | اشتريتُ بالآجل | دين سابق
+//   الإقراض يحتاج حساباً، والبيع/الشراء بالآجل يحتاج فئة دخل/مصروف.
+// - مع وجود دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة.
+// - زر الحفظ يتعطل فور الضغط (منع الحفظ المكرر).
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -12,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/database/app_database.dart';
+import '../../../data/seed/default_categories.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/debt_models.dart';
 import '../../../services/providers.dart';
@@ -24,11 +28,12 @@ import '../../widgets/feedback.dart';
 import '../../widgets/inputs.dart';
 import '../../widgets/labels.dart';
 import 'contact_picker.dart';
+import 'debt_actions.dart';
 
 class DebtFormScreen extends ConsumerStatefulWidget {
   const DebtFormScreen({super.key, this.contactId, this.debtId});
 
-  /// شخص محدد مسبقاً (عند الفتح من ملف الشخص).
+  /// شخص محدد ومقفل (عند الفتح من ملف الشخص).
   final int? contactId;
 
   /// إن وُجد فالشاشة في وضع التعديل.
@@ -40,19 +45,32 @@ class DebtFormScreen extends ConsumerStatefulWidget {
 
 class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
   DebtDirection _direction = DebtDirection.owedToMe;
+  DebtSource _source = DebtSource.loan;
   Contact? _contact;
   final _amount = TextEditingController();
   final _note = TextEditingController();
   DateTime _start = DateTime.now();
   DateTime? _due;
-  bool _useAccount = true;
   Account? _account;
+  Category? _saleCategory;
+  Category? _purchaseCategory;
   bool _remind = false;
   bool _saving = false;
   String? _amountError;
-  Debt? _original;
+  DebtView? _original;
 
   bool get _isEdit => widget.debtId != null;
+
+  /// عليه دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة.
+  bool get _locked => _original?.hasMovements ?? false;
+
+  bool get _personLocked => widget.contactId != null || _locked;
+
+  Category? get _category => _source == DebtSource.creditSale
+      ? _saleCategory
+      : _source == DebtSource.creditPurchase
+      ? _purchaseCategory
+      : null;
 
   @override
   void initState() {
@@ -62,33 +80,56 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
 
   Future<void> _init() async {
     final contacts = ref.read(contactServiceProvider);
+    final categories = ref.read(categoryServiceProvider);
+    final accounts = ref.read(accountServiceProvider);
+    // الفئات المقترحة: «مبيعات» للبيع بالآجل و«تسوق» للشراء بالآجل.
+    final sale = await categories.bySystemKey(SystemCategoryKeys.sales);
+    final purchase = await categories.bySystemKey(SystemCategoryKeys.shopping);
+    if (!mounted) return;
+    setState(() {
+      _saleCategory = sale;
+      _purchaseCategory = purchase;
+    });
+
     if (_isEdit) {
-      final debt = await ref.read(debtServiceProvider).getDebt(widget.debtId!);
-      if (debt == null || !mounted) return;
+      final view = await ref.read(debtServiceProvider).debtView(widget.debtId!);
+      if (view == null || !mounted) return;
+      final debt = view.debt;
       final contact = await contacts.getById(debt.contactId);
       final account = debt.accountId == null
           ? null
-          : await ref.read(accountServiceProvider).getById(debt.accountId!);
+          : await accounts.getById(debt.accountId!);
+      final category = view.categoryId == null
+          ? null
+          : await categories.getById(view.categoryId!);
       if (!mounted) return;
       setState(() {
-        _original = debt;
+        _original = view;
         _direction = debt.direction;
+        _source = debt.source;
         _contact = contact;
         _amount.text = ref.read(moneyParserProvider).toEditable(debt.amount);
         _note.text = debt.note ?? '';
         _start = debt.startDate;
         _due = debt.dueDate;
-        _useAccount = debt.accountId != null;
         _account = account;
+        if (debt.source == DebtSource.creditSale) _saleCategory = category;
+        if (debt.source == DebtSource.creditPurchase) {
+          _purchaseCategory = category;
+        }
         _remind = debt.remind;
       });
+      if (_account == null) {
+        final fallback = await accounts.getDefault();
+        if (mounted) setState(() => _account = fallback);
+      }
       return;
     }
     if (widget.contactId != null) {
       final contact = await contacts.getById(widget.contactId!);
       if (mounted) setState(() => _contact = contact);
     }
-    final account = await ref.read(accountServiceProvider).getDefault();
+    final account = await accounts.getDefault();
     if (mounted) setState(() => _account = account);
   }
 
@@ -99,15 +140,33 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     super.dispose();
   }
 
+  void _setDirection(DebtDirection d) => setState(() {
+    _direction = d;
+    // البيع بالآجل «لي» فقط والشراء بالآجل «عليّ» فقط.
+    if (!_source.allows(d)) {
+      _source = d == DebtDirection.owedToMe
+          ? DebtSource.creditSale
+          : DebtSource.creditPurchase;
+    }
+  });
+
   Future<void> _save() async {
+    if (_saving) return;
+    // يتعطل الزر فوراً قبل أي انتظار (منع الحفظ المكرر).
+    setState(() => _saving = true);
     final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
     final minor = ref.read(moneyParserProvider).parse(_amount.text);
     if (minor == null || minor <= 0) {
-      setState(() => _amountError = l10n.errInvalidAmount);
+      setState(() {
+        _amountError = l10n.errInvalidAmount;
+        _saving = false;
+      });
       return;
     }
     if (_contact == null) {
       showMessage(context, l10n.choosePerson, error: true);
+      setState(() => _saving = false);
       return;
     }
     if (_remind && _due != null) {
@@ -116,14 +175,15 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     final draft = DebtDraft(
       contactId: _contact!.id,
       direction: _direction,
+      source: _source,
       amount: minor,
       startDate: _start,
       dueDate: _due,
-      accountId: _useAccount ? _account?.id : null,
+      accountId: _source.needsAccount ? _account?.id : null,
+      categoryId: _category?.id,
       note: _note.text,
       remind: _remind && _due != null,
     );
-    setState(() => _saving = true);
     final money = ref.read(moneyFormatterProvider);
     try {
       final service = ref.read(debtServiceProvider);
@@ -132,15 +192,20 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
       } else {
         await service.createDebt(draft);
       }
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        context.pop();
-        messenger.showSnackBar(SnackBar(content: Text(l10n.saved)));
-      }
+      if (!mounted) return;
+      context.pop();
+      final warned = await warnIfCashNegative(
+        messenger,
+        ref,
+        draft.accountId,
+        message: l10n.negativeCashWarning,
+      );
+      if (!warned) messenger.showSnackBar(SnackBar(content: Text(l10n.saved)));
     } on Object catch (e) {
-      if (mounted) showError(context, e, formatAmount: (m) => money.inline(m));
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        showError(context, e, formatAmount: (m) => money.inline(m));
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -154,8 +219,12 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     )) {
       return;
     }
-    await ref.read(debtServiceProvider).deleteDebt(widget.debtId!);
-    if (mounted) context.pop();
+    try {
+      await ref.read(debtServiceProvider).deleteDebt(widget.debtId!);
+      if (mounted) context.pop();
+    } on Object catch (e) {
+      if (mounted) showError(context, e);
+    }
   }
 
   @override
@@ -163,9 +232,7 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
     final l10n = context.l10n;
     final c = context.colors;
     final dates = ref.watch(dateLabelsProvider);
-    final owedToMe = _direction == DebtDirection.owedToMe;
-    // لا يتغير الاتجاه بعد وجود دفعات.
-    final directionLocked = (_original?.paidAmount ?? 0) > 0;
+    final today = DateTime.now();
 
     return Scaffold(
       appBar: AppBar(
@@ -176,8 +243,10 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
         centerTitle: true,
         title: Text(_isEdit ? l10n.editDebt : l10n.newDebt),
         actions: [
-          if (_isEdit)
+          // الحذف فقط لخطأ إدخال: لا دفعات ولا مسامحة.
+          if (_isEdit && _original != null && !_locked)
             IconButton(
+              tooltip: l10n.deleteDebt,
               icon: Icon(Icons.delete_outline_rounded, color: c.expense),
               onPressed: _delete,
             ),
@@ -202,23 +271,40 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
                             ? c.income
                             : c.expense,
                         selected: _direction == d,
-                        onTap: directionLocked
-                            ? null
-                            : () => setState(() => _direction = d),
+                        onTap: _locked ? null : () => _setDirection(d),
                       ),
                     ),
                   ),
               ],
             ),
+            if (_locked) ...[
+              const SizedBox(height: Insets.sm),
+              Row(
+                children: [
+                  Icon(Icons.lock_outline_rounded, size: 16, color: c.warning),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.debtLockedHint,
+                      style: TextStyle(fontSize: 12, color: c.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: Insets.md),
             PickerTile(
-              icon: Icons.person_outline_rounded,
+              icon: _personLocked
+                  ? Icons.lock_person_outlined
+                  : Icons.person_outline_rounded,
               title: _contact?.name ?? l10n.choosePerson,
               subtitle: _contact?.phone ?? l10n.person,
-              onTap: () async {
-                final picked = await pickContact(context, ref);
-                if (picked != null) setState(() => _contact = picked);
-              },
+              onTap: _personLocked
+                  ? null
+                  : () async {
+                      final picked = await pickContact(context, ref);
+                      if (picked != null) setState(() => _contact = picked);
+                    },
             ),
             const SizedBox(height: Insets.sm),
             TextField(
@@ -234,6 +320,64 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
               ),
               onChanged: (_) => setState(() => _amountError = null),
             ),
+            const SizedBox(height: Insets.md),
+            Text(
+              l10n.sourceTitle,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            for (final s in DebtSource.forDirection(_direction))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _SourceOption(
+                  title: l10n.debtSourceOption(s, _direction),
+                  hint: l10n.debtSourceHint(s, _direction),
+                  selected: _source == s,
+                  onTap: _locked ? null : () => setState(() => _source = s),
+                ),
+              ),
+            if (_source.needsAccount)
+              PickerTile(
+                icon: _account == null
+                    ? Icons.account_balance_wallet_outlined
+                    : AppIcons.account(_account!.type),
+                title: _account?.name ?? l10n.errAccountRequired,
+                subtitle: _direction == DebtDirection.owedToMe
+                    ? l10n.decreasesBalanceNotExpense
+                    : l10n.increasesBalanceNotIncome,
+                onTap: () async {
+                  final picked = await pickAccount(
+                    context,
+                    selectedId: _account?.id,
+                  );
+                  if (picked != null) setState(() => _account = picked);
+                },
+              ),
+            if (_source.needsCategory)
+              PickerTile(
+                icon: _category == null
+                    ? Icons.sell_outlined
+                    : AppIcons.category(_category!.icon),
+                title: _category?.name ?? l10n.errCategoryRequired,
+                subtitle: l10n.category,
+                onTap: () async {
+                  final picked = await pickCategory(
+                    context,
+                    kind: _source == DebtSource.creditSale
+                        ? CategoryKind.income
+                        : CategoryKind.expense,
+                    selectedId: _category?.id,
+                  );
+                  if (picked == null) return;
+                  setState(() {
+                    if (_source == DebtSource.creditSale) {
+                      _saleCategory = picked;
+                    } else {
+                      _purchaseCategory = picked;
+                    }
+                  });
+                },
+              ),
             const SizedBox(height: Insets.sm),
             Row(
               children: [
@@ -243,8 +387,17 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
                     title: dates.full(_start),
                     subtitle: l10n.date,
                     onTap: () async {
-                      final d = await pickDate(context, initial: _start);
-                      if (d != null) setState(() => _start = d);
+                      // القاعدة 3: تاريخ الدين ≤ اليوم.
+                      final d = await pickDate(
+                        context,
+                        initial: _start.isAfter(today) ? today : _start,
+                        last: today,
+                      );
+                      if (d == null) return;
+                      setState(() {
+                        _start = d;
+                        if (_due != null && _due!.isBefore(d)) _due = null;
+                      });
                     },
                   ),
                 ),
@@ -255,75 +408,17 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
                     title: _due == null ? '—' : dates.full(_due!),
                     subtitle: l10n.dueDateOptional,
                     onTap: () async {
+                      // القاعدة 4: الاستحقاق ≥ تاريخ الدين.
                       final d = await pickDate(
                         context,
                         initial: _due ?? _start.add(const Duration(days: 30)),
-                        first: _start,
+                        first: DateTime(_start.year, _start.month, _start.day),
                       );
                       setState(() => _due = d);
                     },
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: Insets.md),
-            // السؤال المحوري: هل تحرك المال فعلاً؟
-            AppCard(
-              color: _useAccount ? c.primary.withValues(alpha: 0.05) : null,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              owedToMe
-                                  ? l10n.moneyLeftAccount
-                                  : l10n.moneyEnteredAccount,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              l10n.bookOnlyHint,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: c.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _useAccount,
-                        onChanged: (v) => setState(() => _useAccount = v),
-                      ),
-                    ],
-                  ),
-                  if (_useAccount) ...[
-                    const SizedBox(height: 8),
-                    PickerTile(
-                      icon: _account == null
-                          ? Icons.account_balance_wallet_outlined
-                          : AppIcons.account(_account!.type),
-                      title: _account?.name ?? '—',
-                      subtitle: owedToMe
-                          ? l10n.decreasesBalanceNotExpense
-                          : l10n.increasesBalanceNotIncome,
-                      onTap: () async {
-                        final picked = await pickAccount(
-                          context,
-                          selectedId: _account?.id,
-                        );
-                        if (picked != null) setState(() => _account = picked);
-                      },
-                    ),
-                  ],
-                ],
-              ),
             ),
             const SizedBox(height: Insets.sm),
             AppCard(
@@ -346,7 +441,12 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
             ),
             const SizedBox(height: Insets.xl),
             FilledButton.icon(
-              icon: const Icon(Icons.check_rounded),
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_rounded),
               label: Text(l10n.saveDebt),
               onPressed: _saving ? null : _save,
             ),
@@ -410,4 +510,68 @@ class _DirectionCard extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// خيار «مصدر الدين» مع أثره المحاسبي تحته.
+class _SourceOption extends StatelessWidget {
+  const _SourceOption({
+    required this.title,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String hint;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: selected ? c.primary.withValues(alpha: 0.07) : c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.chip),
+        side: BorderSide(
+          color: selected ? c.primary : c.border,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(Radii.chip),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: selected ? c.primary : c.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      hint,
+                      style: TextStyle(fontSize: 12, color: c.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

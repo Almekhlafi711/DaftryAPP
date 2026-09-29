@@ -1,5 +1,8 @@
 // =============================================================================
-// الشاشتان 1 و 2: الإعداد الأول واختيار العملة ثم تأكيدها قبل القفل (UC-00).
+// الشاشتان 1 و 2: الإعداد الأول (UC-00) بثلاث مراحل:
+//   1) ثلاث شاشات ترحيب: التعريف، المزايا، الخطوات المهمة (يمكن تخطيها).
+//   2) الملف الشخصي: الاسم مطلوب (للتقارير والكشوف) ورقم الجوال اختياري.
+//   3) اختيار العملة ثم تأكيدها قبل القفل.
 //
 // - بدون تسجيل دخول أو إنشاء حساب.
 // - اختيار العملة إلزامي؛ زر «متابعة» معطّل حتى تُختار عملة.
@@ -18,6 +21,10 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/feedback.dart';
 import '../backup/restore_flow.dart';
+import '../profile/profile_form.dart';
+import 'intro_pages.dart';
+
+enum _Step { intro, profile, currency }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -27,9 +34,24 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  _Step _step = _Step.intro;
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
+  String? _phoneError;
   CurrencyInfo? _selected;
   String _query = '';
   bool _saving = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  void _goTo(_Step step) => setState(() => _step = step);
+
+  void _back() => _goTo(_Step.values[_step.index - 1]);
 
   List<CurrencyInfo> _filtered(bool arabic) {
     final q = _query.trim().toLowerCase();
@@ -42,6 +64,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               c.nameEn.toLowerCase().contains(q),
         )
         .toList();
+  }
+
+  /// من الملف الشخصي إلى العملة بعد التحقق من رقم الجوال.
+  void _submitProfile() {
+    if (_name.text.trim().isEmpty) return;
+    final error = phoneErrorFor(context, _phone.text);
+    if (error != null) {
+      setState(() => _phoneError = error);
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    _goTo(_Step.currency);
   }
 
   Future<void> _confirm() async {
@@ -57,7 +91,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     try {
       await ref
           .read(settingsServiceProvider)
-          .completeOnboarding(currency, arabic: arabic);
+          .completeOnboarding(
+            currency,
+            arabic: arabic,
+            userName: _name.text,
+            userPhone: _phone.text,
+          );
       // المُوجّه ينقل المستخدم للرئيسية تلقائياً بعد تغيّر حالة الإعداد.
     } on Object catch (e) {
       if (mounted) showError(context, e);
@@ -66,25 +105,52 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
+  /// الاستعادة من نسخة احتياطية بدل البدء من جديد. إن كانت النسخة من إصدار
+  /// أقدم بلا اسم، نحفظ الاسم الذي أدخله المستخدم للتو.
+  Future<void> _restore() async {
+    final settings = ref.read(settingsServiceProvider);
+    final name = _name.text;
+    final phone = _phone.text;
+    await showRestoreOptions(context, ref);
+    // الشاشة قد تُغلق بعد الاستعادة (ينقل المُوجّه للرئيسية)، لذا لا نستخدم
+    // ref أو context هنا.
+    try {
+      final prefs = await settings.getPreferences();
+      if (prefs.onboarded && prefs.userName == null) {
+        await settings.saveProfile(name: name, phone: phone);
+      }
+    } on Object {
+      // الاسم يمكن إضافته لاحقاً من الإعدادات.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    const language = _LanguageToggle();
+    // زر الرجوع في النظام يعود خطوة بدل إغلاق التطبيق.
+    return PopScope(
+      canPop: _step == _Step.intro,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: switch (_step) {
+        _Step.intro => IntroPages(
+          topAction: language,
+          onDone: () => _goTo(_Step.profile),
+        ),
+        _Step.profile => _buildProfile(context, language),
+        _Step.currency => _buildCurrency(context, language),
+      },
+    );
+  }
+
+  Widget _buildProfile(BuildContext context, Widget language) {
     final l10n = context.l10n;
     final c = context.colors;
-    final arabic = ref.watch(isArabicProvider);
-    final currencies = _filtered(arabic);
-
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          // تبديل اللغة من أول شاشة.
-          TextButton.icon(
-            icon: const Icon(Icons.language_rounded, size: 20),
-            label: Text(arabic ? 'English' : 'العربية'),
-            onPressed: () => ref
-                .read(settingsServiceProvider)
-                .set(SettingKeys.locale, arabic ? 'en' : 'ar'),
-          ),
-        ],
+        leading: BackButton(onPressed: _back),
+        actions: [language],
       ),
       body: SafeArea(
         child: Column(
@@ -94,33 +160,66 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
                 children: [
                   Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: c.brand,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        color: Colors.white,
-                        size: 36,
-                      ),
+                    child: IconBadge(
+                      icon: Icons.person_rounded,
+                      color: c.primary,
+                      size: 72,
                     ),
                   ),
                   const SizedBox(height: Insets.lg),
                   Text(
-                    l10n.welcomeTitle,
+                    l10n.profileTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.welcomeSubtitle,
+                    l10n.profileSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: c.textSecondary),
                   ),
                   const SizedBox(height: Insets.xl),
+                  ProfileFields(
+                    name: _name,
+                    phone: _phone,
+                    phoneError: _phoneError,
+                    onChanged: () => setState(() => _phoneError = null),
+                    onSubmitted: _submitProfile,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(Insets.screen),
+              child: FilledButton(
+                onPressed: _name.text.trim().isEmpty ? null : _submitProfile,
+                child: Text(l10n.continueLabel),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrency(BuildContext context, Widget language) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final arabic = ref.watch(isArabicProvider);
+    final currencies = _filtered(arabic);
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(onPressed: _back),
+        actions: [language],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: Insets.screen),
+                children: [
                   Text.rich(
                     TextSpan(
                       text: l10n.chooseCurrency,
@@ -131,7 +230,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                       ],
                     ),
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: Insets.sm),
                   // تنبيه واضح: العملة لا تتغير لاحقاً.
@@ -212,7 +311,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: TextButton.icon(
                       icon: const Icon(Icons.settings_backup_restore_rounded),
                       label: Text(l10n.restoreExisting),
-                      onPressed: () => showRestoreOptions(context, ref),
+                      onPressed: _restore,
                     ),
                   ),
                 ],
@@ -233,6 +332,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// تبديل اللغة من أول شاشة.
+class _LanguageToggle extends ConsumerWidget {
+  const _LanguageToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final arabic = ref.watch(isArabicProvider);
+    return TextButton.icon(
+      icon: const Icon(Icons.language_rounded, size: 20),
+      label: Text(arabic ? 'English' : 'العربية'),
+      onPressed: () => ref
+          .read(settingsServiceProvider)
+          .set(SettingKeys.locale, arabic ? 'en' : 'ar'),
     );
   }
 }

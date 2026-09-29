@@ -12,11 +12,13 @@ import 'dart:math';
 
 import '../core/money/money.dart';
 import '../data/database/app_database.dart';
+import '../data/seed/default_categories.dart';
 import '../domain/enums.dart';
 import '../domain/models/debt_models.dart';
 import '../domain/models/transaction_models.dart';
 import 'account_service.dart';
 import 'budget_service.dart';
+import 'category_service.dart';
 import 'contact_service.dart';
 import 'debt_service.dart';
 import 'transaction_service.dart';
@@ -144,15 +146,29 @@ class DemoDataService {
     await budgets.upsert(categoryId: byIcon('bills').id, limit: money(1200));
     await budgets.upsert(categoryId: byIcon('shopping').id, limit: money(600));
 
-    // الديون.
+    // الديون — كل مصادر الدين: إقراض، بيع بالآجل، شراء بالآجل، دين سابق،
+    // مع استلام موزّع على دينين ومسامحة.
     final ahmed = await contacts.create(
       name: t('أحمد علي', 'Ahmed Ali'),
       phone: '0551234567',
     );
-    final loan = await debts.createDebt(
+    // بيع بالآجل: دخل بفئة «مبيعات» دون حركة حساب.
+    await debts.createDebt(
       DebtDraft(
         contactId: ahmed,
         direction: DebtDirection.owedToMe,
+        source: DebtSource.creditSale,
+        amount: money(800),
+        startDate: today.subtract(const Duration(days: 40)),
+        categoryId: byIcon('sales').id,
+        note: t('بضاعة بالآجل', 'Goods on credit'),
+      ),
+    );
+    await debts.createDebt(
+      DebtDraft(
+        contactId: ahmed,
+        direction: DebtDirection.owedToMe,
+        source: DebtSource.loan,
         amount: money(1200),
         startDate: today.subtract(const Duration(days: 20)),
         dueDate: today.add(const Duration(days: 5)),
@@ -160,22 +176,14 @@ class DemoDataService {
         note: t('سلفة جهاز', 'Device loan'),
       ),
     );
+    // استلام 1,000: يُغلق البضاعة (800) ويُسدد 200 من السلفة — عملية واحدة.
     await debts.recordPayment(
-      loan,
       PaymentDraft(
-        amount: money(500),
-        paidAt: today.subtract(const Duration(days: 2)),
-        accountId: cash.id,
-      ),
-    );
-    // بيع بالآجل: في الدفتر فقط دون حركة مال.
-    await debts.createDebt(
-      DebtDraft(
         contactId: ahmed,
         direction: DebtDirection.owedToMe,
-        amount: money(800),
-        startDate: today.subtract(const Duration(days: 40)),
-        note: t('بضاعة بالآجل', 'Goods on credit'),
+        amount: money(1000),
+        paidAt: today.subtract(const Duration(days: 2)),
+        accountId: cash.id,
       ),
     );
 
@@ -187,10 +195,23 @@ class DemoDataService {
       DebtDraft(
         contactId: khaled,
         direction: DebtDirection.iOwe,
+        source: DebtSource.loan,
         amount: money(1500),
         startDate: today.subtract(const Duration(days: 30)),
         dueDate: today.subtract(const Duration(days: 3)), // متأخر
         accountId: bank,
+      ),
+    );
+    // شراء بالآجل: مصروف بفئة دون حركة حساب.
+    await debts.createDebt(
+      DebtDraft(
+        contactId: khaled,
+        direction: DebtDirection.iOwe,
+        source: DebtSource.creditPurchase,
+        amount: money(350),
+        startDate: today.subtract(const Duration(days: 12)),
+        categoryId: byIcon('shopping').id,
+        note: t('قطع غيار', 'Spare parts'),
       ),
     );
 
@@ -201,17 +222,41 @@ class DemoDataService {
       DebtDraft(
         contactId: mohammed,
         direction: DebtDirection.owedToMe,
+        source: DebtSource.loan,
         amount: money(650),
         startDate: today.subtract(const Duration(days: 60)),
         accountId: wallet,
       ),
     );
     await debts.recordPayment(
-      settled,
       PaymentDraft(
-        amount: money(650),
+        contactId: mohammed,
+        direction: DebtDirection.owedToMe,
+        debtId: settled,
+        amount: money(500),
         paidAt: today.subtract(const Duration(days: 10)),
         accountId: wallet,
+      ),
+    );
+    // مسامحة بالمتبقي (150): مصروف «مسامحة ديون» دون حركة حساب.
+    final writeOff = await CategoryService(db)
+        .ensureSystemCategory(kWriteOffCategory, arabic: arabic);
+    await debts.writeOffRemaining(
+      contactId: mohammed,
+      direction: DebtDirection.owedToMe,
+      date: today.subtract(const Duration(days: 1)),
+      categoryId: writeOff.id,
+    );
+
+    // دين سابق (قبل استخدام التطبيق): في الدفتر فقط.
+    final saleh = await contacts.create(name: t('صالح عمر', 'Saleh Omar'));
+    await debts.createDebt(
+      DebtDraft(
+        contactId: saleh,
+        direction: DebtDirection.owedToMe,
+        source: DebtSource.opening,
+        amount: money(300),
+        startDate: today.subtract(const Duration(days: 90)),
       ),
     );
   }

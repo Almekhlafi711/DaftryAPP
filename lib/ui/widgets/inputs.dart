@@ -9,7 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/money/money.dart';
 import '../../data/database/app_database.dart';
+import '../../domain/enums.dart';
 import '../state/app_state.dart';
+import '../state/data_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
@@ -255,6 +257,54 @@ Future<Account?> pickAccount(
                   onTap: () => Navigator.pop(ctx, a),
                 ),
             ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// اختيار فئة من نوع معيّن (دون فئتي المسامحة والإعفاء).
+Future<Category?> pickCategory(
+  BuildContext context, {
+  required CategoryKind kind,
+  int? selectedId,
+}) {
+  return showModalBottomSheet<Category>(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => Consumer(
+      builder: (ctx, ref, _) {
+        final categories =
+            ref.watch(transactionCategoriesProvider(kind)).value ?? const [];
+        final c = ctx.colors;
+        final l10n = ctx.l10n;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(ctx).height * 0.7,
+            ),
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              children: [
+                Text(l10n.category, style: Theme.of(ctx).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                for (final cat in categories)
+                  ListTile(
+                    leading: IconBadge(
+                      icon: AppIcons.category(cat.icon),
+                      color: Color(cat.color),
+                      size: 40,
+                    ),
+                    title: Text(cat.name),
+                    trailing: cat.id == selectedId
+                        ? Icon(Icons.check_circle, color: c.primary)
+                        : null,
+                    onTap: () => Navigator.pop(ctx, cat),
+                  ),
+              ],
+            ),
           ),
         );
       },

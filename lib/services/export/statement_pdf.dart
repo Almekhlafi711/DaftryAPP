@@ -1,5 +1,7 @@
 // =============================================================================
 // توليد كشف حساب الشخص كملف PDF أو صورة PNG (UC-15 / الشاشة 12).
+// لكل اتجاه (لي / عليّ) قسم مستقل: رصيد افتتاحي، ثم الحركات بعمود رصيد
+// جارٍ، ثم الرصيد الختامي — ولا يُخصم أحد الاتجاهين من الآخر.
 //
 // صورة للكشف القصير (مناسبة لواتساب) و PDF للطويل. الصورة تُولَّد من صفحة
 // PDF نفسها (Raster) فيكون التصميم واحداً في الحالتين.
@@ -16,6 +18,7 @@ import 'package:printing/printing.dart';
 import '../../core/money/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/budget_report_models.dart';
+import 'document_owner.dart';
 import 'pdf_fonts.dart';
 
 /// نصوص الكشف بلغة المستخدم (تُملأ من ملفات الترجمة في طبقة الواجهة).
@@ -30,9 +33,8 @@ class StatementLabels {
     required this.description,
     required this.amount,
     required this.balance,
-    required this.newDebt,
-    required this.paymentReceived,
-    required this.paymentMade,
+    required this.describe,
+    required this.sectionTitle,
     required this.owedToMeHint,
     required this.iOweHint,
     required this.noMovements,
@@ -48,9 +50,12 @@ class StatementLabels {
   final String description;
   final String amount;
   final String balance;
-  final String newDebt;
-  final String paymentReceived;
-  final String paymentMade;
+
+  /// وصف السطر بلغة المستخدم (مثل «بيع بالآجل» أو «استلام» أو «مسامحة»).
+  final String Function(DebtDirection direction, StatementLine line) describe;
+
+  /// عنوان قسم الاتجاه (مثل «لي عند أحمد»).
+  final String Function(DebtDirection direction) sectionTitle;
 
   /// شرح الرصيد الموجب (مثل «المتبقي لي عند الشخص»).
   final String owedToMeHint;
@@ -68,6 +73,7 @@ class StatementPdf {
     required this.money,
     required this.locale,
     required this.rtl,
+    this.owner,
   });
 
   final PdfFonts fonts;
@@ -75,6 +81,9 @@ class StatementPdf {
   final MoneyFormatter money;
   final String locale;
   final bool rtl;
+
+  /// صاحب الدفتر (اسمه ورقمه) في ترويسة الكشف.
+  final DocumentOwner? owner;
 
   /// أرقام التواريخ تتبع إعداد الأرقام (intl يكتب العربية بالأرقام الهندية افتراضياً).
   String _date(DateFormat format, DateTime d) {
@@ -121,9 +130,7 @@ class StatementPdf {
           ],
         ),
         build: (ctx) => [
-          _summaryRow(labels.openingBalance, data.openingBalance),
-          pw.SizedBox(height: 8),
-          if (data.lines.isEmpty)
+          if (data.sections.isEmpty)
             pw.Padding(
               padding: const pw.EdgeInsets.all(16),
               child: pw.Center(
@@ -132,11 +139,40 @@ class StatementPdf {
                   style: const pw.TextStyle(color: _muted),
                 ),
               ),
-            )
-          else
-            _table(data, dateFmt),
-          pw.SizedBox(height: 12),
-          _closing(data),
+            ),
+          for (final section in data.sections) ...[
+            if (data.sections.length > 1)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 6),
+                child: pw.Text(
+                  labels.sectionTitle(section.direction),
+                  style: pw.TextStyle(
+                    fontSize: 13,
+                    fontWeight: pw.FontWeight.bold,
+                    color: section.direction == DebtDirection.owedToMe
+                        ? _green
+                        : _red,
+                  ),
+                ),
+              ),
+            _summaryRow(labels.openingBalance, section.opening),
+            pw.SizedBox(height: 8),
+            if (section.lines.isEmpty)
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(16),
+                child: pw.Center(
+                  child: pw.Text(
+                    labels.noMovements,
+                    style: const pw.TextStyle(color: _muted),
+                  ),
+                ),
+              )
+            else
+              _table(section, dateFmt),
+            pw.SizedBox(height: 12),
+            _closing(section),
+            pw.SizedBox(height: 18),
+          ],
         ],
       ),
     );
@@ -181,16 +217,35 @@ class StatementPdf {
             ),
           ],
         ),
-        pw.Text(
-          labels.appName,
-          style: pw.TextStyle(
-            fontSize: 16,
-            fontWeight: pw.FontWeight.bold,
-            color: _primary,
-          ),
-        ),
+        _brand(labels.appName, owner),
       ],
     ),
+  );
+
+  /// اسم التطبيق وتحته صاحب الدفتر ورقمه.
+  static pw.Widget _brand(String appName, DocumentOwner? owner) => pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.end,
+    children: [
+      pw.Text(
+        appName,
+        style: pw.TextStyle(
+          fontSize: 16,
+          fontWeight: pw.FontWeight.bold,
+          color: _primary,
+        ),
+      ),
+      if (owner != null)
+        pw.Text(
+          owner.label,
+          style: const pw.TextStyle(fontSize: 10, color: _muted),
+        ),
+      if (owner?.phone != null)
+        pw.Text(
+          owner!.phone!,
+          style: const pw.TextStyle(fontSize: 10, color: _muted),
+          textDirection: pw.TextDirection.ltr,
+        ),
+    ],
   );
 
   pw.Widget _summaryRow(String label, int value) => pw.Row(
@@ -201,7 +256,7 @@ class StatementPdf {
     ],
   );
 
-  pw.Widget _table(StatementData data, DateFormat dateFmt) {
+  pw.Widget _table(StatementSection section, DateFormat dateFmt) {
     final headerStyle = pw.TextStyle(
       fontSize: 9,
       fontWeight: pw.FontWeight.bold,
@@ -230,7 +285,7 @@ class StatementPdf {
             cell(pw.Text(labels.balance, style: headerStyle)),
           ],
         ),
-        for (final line in data.lines)
+        for (final line in section.lines)
           pw.TableRow(
             children: [
               cell(
@@ -242,11 +297,7 @@ class StatementPdf {
               cell(
                 pw.Text(
                   [
-                    line.isPayment
-                        ? (line.direction == DebtDirection.owedToMe
-                              ? labels.paymentReceived
-                              : labels.paymentMade)
-                        : labels.newDebt,
+                    labels.describe(section.direction, line),
                     if (line.note != null) line.note!,
                   ].join(' — '),
                   style: const pw.TextStyle(fontSize: 9),
@@ -254,21 +305,22 @@ class StatementPdf {
               ),
               cell(
                 _amount(
-                  line.effect,
+                  line.movement,
                   size: 9,
                   signed: true,
-                  color: line.isPayment ? _green : _red,
+                  color: line.kind == StatementLineKind.debt ? _red : _green,
                 ),
               ),
-              cell(_amount(line.runningBalance, size: 9)),
+              cell(_amount(line.balance, size: 9)),
             ],
           ),
       ],
     );
   }
 
-  pw.Widget _closing(StatementData data) {
-    final value = data.closingBalance;
+  pw.Widget _closing(StatementSection section) {
+    final value = section.closing;
+    final owedToMe = section.direction == DebtDirection.owedToMe;
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -287,17 +339,12 @@ class StatementPdf {
               ),
               if (value != 0)
                 pw.Text(
-                  value > 0 ? labels.owedToMeHint : labels.iOweHint,
+                  owedToMe ? labels.owedToMeHint : labels.iOweHint,
                   style: const pw.TextStyle(fontSize: 9, color: _muted),
                 ),
             ],
           ),
-          _amount(
-            value.abs(),
-            bold: true,
-            size: 14,
-            color: value >= 0 ? _green : _red,
-          ),
+          _amount(value, bold: true, size: 14, color: owedToMe ? _green : _red),
         ],
       ),
     );

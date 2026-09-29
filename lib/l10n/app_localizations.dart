@@ -236,12 +236,6 @@ abstract class AppLocalizations {
   /// **'رقم الجوال'**
   String get phone;
 
-  /// No description provided for @address.
-  ///
-  /// In ar, this message translates to:
-  /// **'العنوان'**
-  String get address;
-
   /// No description provided for @comingSoon.
   ///
   /// In ar, this message translates to:
@@ -942,12 +936,6 @@ abstract class AppLocalizations {
   /// **'تحويل الرصيد ثم الأرشفة'**
   String get transferAndArchive;
 
-  /// No description provided for @archiveWithoutTransfer.
-  ///
-  /// In ar, this message translates to:
-  /// **'أرشفة دون تحويل'**
-  String get archiveWithoutTransfer;
-
   /// No description provided for @newDefaultAccount.
   ///
   /// In ar, this message translates to:
@@ -1014,11 +1002,17 @@ abstract class AppLocalizations {
   /// **'يستحق اليوم'**
   String get dueToday;
 
-  /// No description provided for @statusSettled.
+  /// No description provided for @statusClosed.
   ///
   /// In ar, this message translates to:
-  /// **'مسدَّد'**
-  String get statusSettled;
+  /// **'مغلق'**
+  String get statusClosed;
+
+  /// No description provided for @statusOverdue.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخر'**
+  String get statusOverdue;
 
   /// No description provided for @statusPartial.
   ///
@@ -1086,24 +1080,6 @@ abstract class AppLocalizations {
   /// **'الاستحقاق (اختياري)'**
   String get dueDateOptional;
 
-  /// No description provided for @moneyLeftAccount.
-  ///
-  /// In ar, this message translates to:
-  /// **'هل خرج المبلغ من حساب؟'**
-  String get moneyLeftAccount;
-
-  /// No description provided for @moneyEnteredAccount.
-  ///
-  /// In ar, this message translates to:
-  /// **'هل دخل المبلغ إلى حساب؟'**
-  String get moneyEnteredAccount;
-
-  /// No description provided for @bookOnlyHint.
-  ///
-  /// In ar, this message translates to:
-  /// **'أطفئه عند البيع أو الشراء بالآجل (دفتر فقط)'**
-  String get bookOnlyHint;
-
   /// No description provided for @decreasesBalanceNotExpense.
   ///
   /// In ar, this message translates to:
@@ -1143,32 +1119,14 @@ abstract class AppLocalizations {
   /// No description provided for @deleteDebtBody.
   ///
   /// In ar, this message translates to:
-  /// **'ستُحذف كل دفعاته وحركاته وتعود الأرصدة كما كانت.'**
+  /// **'يُحذف الدين مع قيده فيعود الحساب أو الدخل أو المصروف كما كان. (للديون المسجلة خطأً فقط.)'**
   String get deleteDebtBody;
-
-  /// No description provided for @recordPayment.
-  ///
-  /// In ar, this message translates to:
-  /// **'تسجيل دفعة'**
-  String get recordPayment;
-
-  /// No description provided for @paymentFor.
-  ///
-  /// In ar, this message translates to:
-  /// **'تسجيل دفعة — {name}'**
-  String paymentFor(String name);
 
   /// No description provided for @remainingAmount.
   ///
   /// In ar, this message translates to:
   /// **'المتبقي: {amount}'**
   String remainingAmount(String amount);
-
-  /// No description provided for @paymentAmount.
-  ///
-  /// In ar, this message translates to:
-  /// **'مبلغ الدفعة'**
-  String get paymentAmount;
 
   /// No description provided for @fullRemaining.
   ///
@@ -1179,32 +1137,14 @@ abstract class AppLocalizations {
   /// No description provided for @receivedIntoAccount.
   ///
   /// In ar, this message translates to:
-  /// **'استلمت المبلغ في حساب'**
+  /// **'استلمتُ المبلغ في'**
   String get receivedIntoAccount;
 
   /// No description provided for @paidFromAccount.
   ///
   /// In ar, this message translates to:
-  /// **'دفعت المبلغ من حساب'**
+  /// **'دفعتُ المبلغ من'**
   String get paidFromAccount;
-
-  /// No description provided for @suggestedCreationAccount.
-  ///
-  /// In ar, this message translates to:
-  /// **'مقترح: حساب إنشاء الدين'**
-  String get suggestedCreationAccount;
-
-  /// No description provided for @savePayment.
-  ///
-  /// In ar, this message translates to:
-  /// **'حفظ الدفعة'**
-  String get savePayment;
-
-  /// No description provided for @whichDebt.
-  ///
-  /// In ar, this message translates to:
-  /// **'الدين'**
-  String get whichDebt;
 
   /// No description provided for @profileOwedToMe.
   ///
@@ -1217,12 +1157,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المتبقي عليّ لـ {name}'**
   String profileIOwe(String name);
-
-  /// No description provided for @profileSettled.
-  ///
-  /// In ar, this message translates to:
-  /// **'لا يوجد متبقٍ — الحساب مسدَّد'**
-  String get profileSettled;
 
   /// No description provided for @paidAmount.
   ///
@@ -1257,44 +1191,14 @@ abstract class AppLocalizations {
   /// No description provided for @paymentReceived.
   ///
   /// In ar, this message translates to:
-  /// **'دفعة مستلمة'**
+  /// **'استلام'**
   String get paymentReceived;
 
   /// No description provided for @paymentMade.
   ///
   /// In ar, this message translates to:
-  /// **'دفعة مدفوعة'**
+  /// **'سداد'**
   String get paymentMade;
-
-  /// No description provided for @newDebtEntry.
-  ///
-  /// In ar, this message translates to:
-  /// **'دين جديد'**
-  String get newDebtEntry;
-
-  /// No description provided for @debtWithNote.
-  ///
-  /// In ar, this message translates to:
-  /// **'دين: {note}'**
-  String debtWithNote(String note);
-
-  /// No description provided for @inAccount.
-  ///
-  /// In ar, this message translates to:
-  /// **'في {account}'**
-  String inAccount(String account);
-
-  /// No description provided for @fromAccountName.
-  ///
-  /// In ar, this message translates to:
-  /// **'من {account}'**
-  String fromAccountName(String account);
-
-  /// No description provided for @withoutAccount.
-  ///
-  /// In ar, this message translates to:
-  /// **'بدون حساب'**
-  String get withoutAccount;
 
   /// No description provided for @editPerson.
   ///
@@ -1302,29 +1206,401 @@ abstract class AppLocalizations {
   /// **'تعديل بيانات الشخص'**
   String get editPerson;
 
-  /// No description provided for @hidePerson.
-  ///
-  /// In ar, this message translates to:
-  /// **'إخفاء من القائمة'**
-  String get hidePerson;
-
-  /// No description provided for @deletePayment.
-  ///
-  /// In ar, this message translates to:
-  /// **'حذف الدفعة'**
-  String get deletePayment;
-
-  /// No description provided for @deletePaymentBody.
-  ///
-  /// In ar, this message translates to:
-  /// **'ستُعكس حركتها على الرصيد ويُعاد حساب حالة الدين.'**
-  String get deletePaymentBody;
-
   /// No description provided for @searchPeople.
   ///
   /// In ar, this message translates to:
   /// **'ابحث عن شخص'**
   String get searchPeople;
+
+  /// No description provided for @sourceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصدر الدين'**
+  String get sourceTitle;
+
+  /// No description provided for @sourceLoanOwed.
+  ///
+  /// In ar, this message translates to:
+  /// **'أقرضته من حساب'**
+  String get sourceLoanOwed;
+
+  /// No description provided for @sourceLoanOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقترضتُ إلى حساب'**
+  String get sourceLoanOwe;
+
+  /// No description provided for @sourceCreditSale.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعتُ له بالآجل'**
+  String get sourceCreditSale;
+
+  /// No description provided for @sourceCreditPurchase.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشتريتُ بالآجل'**
+  String get sourceCreditPurchase;
+
+  /// No description provided for @sourceOpening.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين سابق (قبل استخدام التطبيق)'**
+  String get sourceOpening;
+
+  /// No description provided for @sourceCreditSaleHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُسجَّل دخلاً بفئة — دون حركة حساب'**
+  String get sourceCreditSaleHint;
+
+  /// No description provided for @sourceCreditPurchaseHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُسجَّل مصروفاً بفئة — دون حركة حساب'**
+  String get sourceCreditPurchaseHint;
+
+  /// No description provided for @sourceOpeningHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'في الدفتر فقط — لا دخل ولا حركة حساب'**
+  String get sourceOpeningHint;
+
+  /// No description provided for @labelLoanOwed.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلفة نقدية'**
+  String get labelLoanOwed;
+
+  /// No description provided for @labelLoanOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراض'**
+  String get labelLoanOwe;
+
+  /// No description provided for @labelCreditSale.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيع بالآجل'**
+  String get labelCreditSale;
+
+  /// No description provided for @labelCreditPurchase.
+  ///
+  /// In ar, this message translates to:
+  /// **'شراء بالآجل'**
+  String get labelCreditPurchase;
+
+  /// No description provided for @labelOpening.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين سابق'**
+  String get labelOpening;
+
+  /// No description provided for @debtLockedHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'عليه دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة'**
+  String get debtLockedHint;
+
+  /// No description provided for @receiveAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام مبلغ'**
+  String get receiveAmount;
+
+  /// No description provided for @payAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد مبلغ'**
+  String get payAmount;
+
+  /// No description provided for @receiveFrom.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام من {name}'**
+  String receiveFrom(String name);
+
+  /// No description provided for @payTo.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد لـ {name}'**
+  String payTo(String name);
+
+  /// No description provided for @remainingAfterPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتبقي بعد الدفعة: {amount}'**
+  String remainingAfterPayment(String amount);
+
+  /// No description provided for @distributedOldestFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُوزَّع على الأقدم أولاً: {parts}'**
+  String distributedOldestFirst(String parts);
+
+  /// No description provided for @chooseSpecificDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار دين معيّن'**
+  String get chooseSpecificDebt;
+
+  /// No description provided for @autoDistribute.
+  ///
+  /// In ar, this message translates to:
+  /// **'توزيع تلقائي'**
+  String get autoDistribute;
+
+  /// No description provided for @excessTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ زائد عن المتبقي'**
+  String get excessTitle;
+
+  /// No description provided for @excessOwedToMe.
+  ///
+  /// In ar, this message translates to:
+  /// **'الزائد {amount} — هل تسجّله ديناً عليك لـ {name}؟'**
+  String excessOwedToMe(String amount, String name);
+
+  /// No description provided for @excessIOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'الزائد {amount} — هل تسجّله ديناً لك على {name}؟'**
+  String excessIOwe(String amount, String name);
+
+  /// No description provided for @recordExcess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الزائد'**
+  String get recordExcess;
+
+  /// No description provided for @editAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل المبلغ'**
+  String get editAmount;
+
+  /// No description provided for @excessNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيادة عن المستحق'**
+  String get excessNote;
+
+  /// No description provided for @noOneOwesYou.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ديون مفتوحة لك عند أحد'**
+  String get noOneOwesYou;
+
+  /// No description provided for @youOweNoOne.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ديون مفتوحة عليك'**
+  String get youOweNoOne;
+
+  /// No description provided for @distribution.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفصيل التوزيع'**
+  String get distribution;
+
+  /// No description provided for @cancelOperation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء العملية'**
+  String get cancelOperation;
+
+  /// No description provided for @cancelOperationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُلغى كل دفعات العملية معاً ويُعكس أثرها على الحساب، وتبقى ظاهرة مشطوبة في الخط الزمني.'**
+  String get cancelOperationBody;
+
+  /// No description provided for @cancelledBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملغاة'**
+  String get cancelledBadge;
+
+  /// No description provided for @negativeCashWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه: رصيد «{account}» أصبح سالباً'**
+  String negativeCashWarning(String account);
+
+  /// No description provided for @forgiveRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسامحة بالمتبقي'**
+  String get forgiveRemaining;
+
+  /// No description provided for @forgivenRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعفاء من المتبقي'**
+  String get forgivenRemaining;
+
+  /// No description provided for @forgiveBodyOwedToMe.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُغلق الدين ويُسجَّل المتبقي {amount} مصروفاً بفئة «مسامحة ديون». لا تتحرك أرصدة الحسابات.'**
+  String forgiveBodyOwedToMe(String amount);
+
+  /// No description provided for @forgiveBodyIOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُغلق الدين ويُسجَّل المتبقي {amount} دخلاً بفئة «إعفاء دين». لا تتحرك أرصدة الحسابات.'**
+  String forgiveBodyIOwe(String amount);
+
+  /// No description provided for @writeOffEntry.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسامحة'**
+  String get writeOffEntry;
+
+  /// No description provided for @forgivenEntry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعفاء من الدين'**
+  String get forgivenEntry;
+
+  /// No description provided for @paymentRate.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة السداد {percent}%'**
+  String paymentRate(String percent);
+
+  /// No description provided for @writtenOffRate.
+  ///
+  /// In ar, this message translates to:
+  /// **'مُسامَح {percent}%'**
+  String writtenOffRate(String percent);
+
+  /// No description provided for @netForYou.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصافي لصالحك {amount}'**
+  String netForYou(String amount);
+
+  /// No description provided for @netForThem.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصافي لصالح {name} {amount}'**
+  String netForThem(String name, String amount);
+
+  /// No description provided for @netEven.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصافي متعادل'**
+  String get netEven;
+
+  /// No description provided for @netInfoHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلومة فقط — لا يُخصم أحدهما من الآخر'**
+  String get netInfoHint;
+
+  /// No description provided for @balanceAfter.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد بعد العملية: {amount}'**
+  String balanceAfter(String amount);
+
+  /// No description provided for @archivePerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة الشخص'**
+  String get archivePerson;
+
+  /// No description provided for @archivePersonBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يختفي من القوائم والاختيار مع بقاء سجله كاملاً، ويمكن رفع أرشفته لاحقاً.'**
+  String get archivePersonBody;
+
+  /// No description provided for @deletePerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف الشخص'**
+  String get deletePerson;
+
+  /// No description provided for @deletePersonBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد له أي حركة، وسيُحذف نهائياً.'**
+  String get deletePersonBody;
+
+  /// No description provided for @personArchivedBanner.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الشخص مؤرشف'**
+  String get personArchivedBanner;
+
+  /// No description provided for @peopleCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا أحد} =1{شخص واحد} =2{شخصان} few{{count} أشخاص} many{{count} شخصاً} other{{count} شخص}}'**
+  String peopleCount(int count);
+
+  /// No description provided for @overdueCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا ديون متأخرة} =1{دين متأخر} =2{دينان متأخران} few{{count} ديون متأخرة} many{{count} ديناً متأخراً} other{{count} دين متأخر}}'**
+  String overdueCount(int count);
+
+  /// No description provided for @filterDebts.
+  ///
+  /// In ar, this message translates to:
+  /// **'فلترة الديون'**
+  String get filterDebts;
+
+  /// No description provided for @statusFilter.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالة'**
+  String get statusFilter;
+
+  /// No description provided for @sortNearestDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأقرب استحقاقاً'**
+  String get sortNearestDue;
+
+  /// No description provided for @sortLastActivity.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر حركة'**
+  String get sortLastActivity;
+
+  /// No description provided for @duplicatePerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'«{name}» موجود، هل تقصده؟'**
+  String duplicatePerson(String name);
+
+  /// No description provided for @useExisting.
+  ///
+  /// In ar, this message translates to:
+  /// **'نعم، هو'**
+  String get useExisting;
+
+  /// No description provided for @reconcileOk.
+  ///
+  /// In ar, this message translates to:
+  /// **'معادلة التطابق الشاملة متحققة ✓'**
+  String get reconcileOk;
+
+  /// No description provided for @reconcileGap.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه: فرق {amount} في معادلة التطابق — راجع البيانات'**
+  String reconcileGap(String amount);
+
+  /// No description provided for @archiveNeedsZero.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً'**
+  String get archiveNeedsZero;
 
   /// No description provided for @statementTitle.
   ///
@@ -1818,6 +2094,12 @@ abstract class AppLocalizations {
   /// **'تعذّر فتح الرابط'**
   String get linkOpenFailed;
 
+  /// No description provided for @developedBy.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم التطوير من قبل محمد المخلافي'**
+  String get developedBy;
+
   /// No description provided for @lockedTitle.
   ///
   /// In ar, this message translates to:
@@ -1859,6 +2141,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تأكيد حذف جميع البيانات'**
   String get deleteAllDataReason;
+
+  /// No description provided for @disableLockReason.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد إيقاف قفل التطبيق'**
+  String get disableLockReason;
+
+  /// No description provided for @changePinReason.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد تغيير رمز PIN'**
+  String get changePinReason;
 
   /// No description provided for @createPin.
   ///
@@ -2076,6 +2370,78 @@ abstract class AppLocalizations {
   /// **'الاسم مطلوب'**
   String get errEmptyName;
 
+  /// No description provided for @errInvalidPhone.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الجوال غير صحيح'**
+  String get errInvalidPhone;
+
+  /// No description provided for @errContactArchived.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشخص مؤرشف — ارفع أرشفته أولاً'**
+  String get errContactArchived;
+
+  /// No description provided for @errInvalidDebtSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصدر الدين لا يناسب اتجاهه'**
+  String get errInvalidDebtSource;
+
+  /// No description provided for @errAccountRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر الحساب'**
+  String get errAccountRequired;
+
+  /// No description provided for @errDateInFuture.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ لا يكون بعد اليوم'**
+  String get errDateInFuture;
+
+  /// No description provided for @errDueBeforeStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الاستحقاق قبل تاريخ الدين'**
+  String get errDueBeforeStart;
+
+  /// No description provided for @errPaymentBeforeDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ يسبق تاريخ الدين — غيّره أو اختر ديناً معيّناً'**
+  String get errPaymentBeforeDebt;
+
+  /// No description provided for @errDebtHasMovements.
+  ///
+  /// In ar, this message translates to:
+  /// **'على الدين دفعات أو مسامحة — ألغِ الدفعات أولاً'**
+  String get errDebtHasMovements;
+
+  /// No description provided for @errPaymentAlreadyCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'العملية ملغاة مسبقاً'**
+  String get errPaymentAlreadyCancelled;
+
+  /// No description provided for @errAccountHasBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً'**
+  String get errAccountHasBalance;
+
+  /// No description provided for @errPersonHasBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يُؤرشف الشخص إلا ومتبقّيه صفر في الاتجاهين'**
+  String get errPersonHasBalance;
+
+  /// No description provided for @errPersonHasMovements.
+  ///
+  /// In ar, this message translates to:
+  /// **'للشخص حركات مسجلة — يمكن أرشفته فقط'**
+  String get errPersonHasMovements;
+
   /// No description provided for @errDuplicateAccountName.
   ///
   /// In ar, this message translates to:
@@ -2121,7 +2487,7 @@ abstract class AppLocalizations {
   /// No description provided for @errDebtMovementReadOnly.
   ///
   /// In ar, this message translates to:
-  /// **'حركات الديون تُعدَّل من ملف الشخص'**
+  /// **'قيود الديون تُعدَّل من ملف الشخص'**
   String get errDebtMovementReadOnly;
 
   /// No description provided for @errCannotMoveArchived.
@@ -2139,13 +2505,13 @@ abstract class AppLocalizations {
   /// No description provided for @errDebtSettled.
   ///
   /// In ar, this message translates to:
-  /// **'هذا الدين مسدَّد بالكامل'**
+  /// **'لا توجد ديون مفتوحة لهذه العملية'**
   String get errDebtSettled;
 
   /// No description provided for @errDebtAmountBelowPaid.
   ///
   /// In ar, this message translates to:
-  /// **'لا يمكن أن يقل المبلغ عن المسدَّد ({amount})'**
+  /// **'الأصل لا يقل عن المدفوع والمُسامَح ({amount})'**
   String errDebtAmountBelowPaid(String amount);
 
   /// No description provided for @errCurrencyLocked.
@@ -2225,6 +2591,210 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'غداً موعد سداد {amount} لـ {name}'**
   String notifIOwe(String amount, String name);
+
+  /// No description provided for @introSkip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخطي'**
+  String get introSkip;
+
+  /// No description provided for @introNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي'**
+  String get introNext;
+
+  /// No description provided for @introStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الآن'**
+  String get introStart;
+
+  /// No description provided for @intro1Body.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفتر حساباتك الشخصي وديونك في مكان واحد. يعمل بدون إنترنت وبدون تسجيل دخول، وبياناتك تبقى على جهازك.'**
+  String get intro1Body;
+
+  /// No description provided for @introOffline.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون إنترنت'**
+  String get introOffline;
+
+  /// No description provided for @introNoAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون حساب'**
+  String get introNoAccount;
+
+  /// No description provided for @introPrivate.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصوصية تامة'**
+  String get introPrivate;
+
+  /// No description provided for @intro2Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل ما تحتاجه لإدارة أموالك'**
+  String get intro2Title;
+
+  /// No description provided for @intro2Body.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدوات بسيطة وواضحة لكل يوم.'**
+  String get intro2Body;
+
+  /// No description provided for @featTxTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاملات والحسابات'**
+  String get featTxTitle;
+
+  /// No description provided for @featTxBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل الدخل والمصروف والتحويل بين حساباتك'**
+  String get featTxBody;
+
+  /// No description provided for @featDebtsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون والتذكير'**
+  String get featDebtsTitle;
+
+  /// No description provided for @featDebtsBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تابع ما لك وما عليك مع تذكير قبل الاستحقاق'**
+  String get featDebtsBody;
+
+  /// No description provided for @featBudgetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميزانية والتقارير'**
+  String get featBudgetTitle;
+
+  /// No description provided for @featBudgetBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدود شهرية ورسوم بيانية وتصدير PDF و Excel'**
+  String get featBudgetBody;
+
+  /// No description provided for @featStatementTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كشف حساب جاهز'**
+  String get featStatementTitle;
+
+  /// No description provided for @featStatementBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرسل كشف حساب أي شخص عبر واتساب بضغطة'**
+  String get featStatementBody;
+
+  /// No description provided for @intro3Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطوات مهمة للبدء'**
+  String get intro3Title;
+
+  /// No description provided for @intro3Body.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلاث خطوات تحمي بياناتك من البداية.'**
+  String get intro3Body;
+
+  /// No description provided for @stepCurrencyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر عملتك بعناية'**
+  String get stepCurrencyTitle;
+
+  /// No description provided for @stepLockTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احمِ بياناتك'**
+  String get stepLockTitle;
+
+  /// No description provided for @stepLockBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل قفل التطبيق بالبصمة أو رمز PIN من الإعدادات'**
+  String get stepLockBody;
+
+  /// No description provided for @stepBackupTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خذ نسخة احتياطية'**
+  String get stepBackupTitle;
+
+  /// No description provided for @stepBackupBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'صدّر نسخة مشفّرة أو فعّل النسخ السحابي لتنقل بياناتك بأمان'**
+  String get stepBackupBody;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرّفنا بنفسك'**
+  String get profileTitle;
+
+  /// No description provided for @profileSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يظهر اسمك في التقارير وكشوف الحساب التي تشاركها.'**
+  String get profileSubtitle;
+
+  /// No description provided for @yourName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمك'**
+  String get yourName;
+
+  /// No description provided for @phoneOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الجوال (اختياري)'**
+  String get phoneOptional;
+
+  /// No description provided for @sectionProfile.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف الشخصي'**
+  String get sectionProfile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الملف الشخصي'**
+  String get editProfile;
+
+  /// No description provided for @addYourName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف اسمك'**
+  String get addYourName;
+
+  /// No description provided for @noPhone.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون رقم جوال'**
+  String get noPhone;
+
+  /// No description provided for @greetingName.
+  ///
+  /// In ar, this message translates to:
+  /// **'{greeting}، {name}'**
+  String greetingName(String greeting, String name);
+
+  /// No description provided for @issuedBy.
+  ///
+  /// In ar, this message translates to:
+  /// **'صادر من: {name}'**
+  String issuedBy(String name);
 }
 
 class _AppLocalizationsDelegate

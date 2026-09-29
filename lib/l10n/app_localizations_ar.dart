@@ -79,9 +79,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phone => 'رقم الجوال';
 
   @override
-  String get address => 'العنوان';
-
-  @override
   String get comingSoon => 'قريباً';
 
   @override
@@ -476,9 +473,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transferAndArchive => 'تحويل الرصيد ثم الأرشفة';
 
   @override
-  String get archiveWithoutTransfer => 'أرشفة دون تحويل';
-
-  @override
   String get newDefaultAccount => 'الحساب الافتراضي البديل';
 
   @override
@@ -536,7 +530,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dueToday => 'يستحق اليوم';
 
   @override
-  String get statusSettled => 'مسدَّد';
+  String get statusClosed => 'مغلق';
+
+  @override
+  String get statusOverdue => 'متأخر';
 
   @override
   String get statusPartial => 'مسدَّد جزئياً';
@@ -574,15 +571,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dueDateOptional => 'الاستحقاق (اختياري)';
 
   @override
-  String get moneyLeftAccount => 'هل خرج المبلغ من حساب؟';
-
-  @override
-  String get moneyEnteredAccount => 'هل دخل المبلغ إلى حساب؟';
-
-  @override
-  String get bookOnlyHint => 'أطفئه عند البيع أو الشراء بالآجل (دفتر فقط)';
-
-  @override
   String get decreasesBalanceNotExpense => 'ينقص الرصيد — ليس مصروفاً';
 
   @override
@@ -602,15 +590,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteDebtBody =>
-      'ستُحذف كل دفعاته وحركاته وتعود الأرصدة كما كانت.';
-
-  @override
-  String get recordPayment => 'تسجيل دفعة';
-
-  @override
-  String paymentFor(String name) {
-    return 'تسجيل دفعة — $name';
-  }
+      'يُحذف الدين مع قيده فيعود الحساب أو الدخل أو المصروف كما كان. (للديون المسجلة خطأً فقط.)';
 
   @override
   String remainingAmount(String amount) {
@@ -618,25 +598,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get paymentAmount => 'مبلغ الدفعة';
-
-  @override
   String get fullRemaining => 'كامل المتبقي';
 
   @override
-  String get receivedIntoAccount => 'استلمت المبلغ في حساب';
+  String get receivedIntoAccount => 'استلمتُ المبلغ في';
 
   @override
-  String get paidFromAccount => 'دفعت المبلغ من حساب';
-
-  @override
-  String get suggestedCreationAccount => 'مقترح: حساب إنشاء الدين';
-
-  @override
-  String get savePayment => 'حفظ الدفعة';
-
-  @override
-  String get whichDebt => 'الدين';
+  String get paidFromAccount => 'دفعتُ المبلغ من';
 
   @override
   String profileOwedToMe(String name) {
@@ -647,9 +615,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String profileIOwe(String name) {
     return 'المتبقي عليّ لـ $name';
   }
-
-  @override
-  String get profileSettled => 'لا يوجد متبقٍ — الحساب مسدَّد';
 
   @override
   String paidAmount(String amount) {
@@ -673,47 +638,271 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeline => 'الخط الزمني';
 
   @override
-  String get paymentReceived => 'دفعة مستلمة';
+  String get paymentReceived => 'استلام';
 
   @override
-  String get paymentMade => 'دفعة مدفوعة';
-
-  @override
-  String get newDebtEntry => 'دين جديد';
-
-  @override
-  String debtWithNote(String note) {
-    return 'دين: $note';
-  }
-
-  @override
-  String inAccount(String account) {
-    return 'في $account';
-  }
-
-  @override
-  String fromAccountName(String account) {
-    return 'من $account';
-  }
-
-  @override
-  String get withoutAccount => 'بدون حساب';
+  String get paymentMade => 'سداد';
 
   @override
   String get editPerson => 'تعديل بيانات الشخص';
 
   @override
-  String get hidePerson => 'إخفاء من القائمة';
-
-  @override
-  String get deletePayment => 'حذف الدفعة';
-
-  @override
-  String get deletePaymentBody =>
-      'ستُعكس حركتها على الرصيد ويُعاد حساب حالة الدين.';
-
-  @override
   String get searchPeople => 'ابحث عن شخص';
+
+  @override
+  String get sourceTitle => 'مصدر الدين';
+
+  @override
+  String get sourceLoanOwed => 'أقرضته من حساب';
+
+  @override
+  String get sourceLoanOwe => 'اقترضتُ إلى حساب';
+
+  @override
+  String get sourceCreditSale => 'بعتُ له بالآجل';
+
+  @override
+  String get sourceCreditPurchase => 'اشتريتُ بالآجل';
+
+  @override
+  String get sourceOpening => 'دين سابق (قبل استخدام التطبيق)';
+
+  @override
+  String get sourceCreditSaleHint => 'يُسجَّل دخلاً بفئة — دون حركة حساب';
+
+  @override
+  String get sourceCreditPurchaseHint => 'يُسجَّل مصروفاً بفئة — دون حركة حساب';
+
+  @override
+  String get sourceOpeningHint => 'في الدفتر فقط — لا دخل ولا حركة حساب';
+
+  @override
+  String get labelLoanOwed => 'سلفة نقدية';
+
+  @override
+  String get labelLoanOwe => 'اقتراض';
+
+  @override
+  String get labelCreditSale => 'بيع بالآجل';
+
+  @override
+  String get labelCreditPurchase => 'شراء بالآجل';
+
+  @override
+  String get labelOpening => 'دين سابق';
+
+  @override
+  String get debtLockedHint =>
+      'عليه دفعات أو مسامحة: الاتجاه والمصدر والشخص مقفلة';
+
+  @override
+  String get receiveAmount => 'استلام مبلغ';
+
+  @override
+  String get payAmount => 'سداد مبلغ';
+
+  @override
+  String receiveFrom(String name) {
+    return 'استلام من $name';
+  }
+
+  @override
+  String payTo(String name) {
+    return 'سداد لـ $name';
+  }
+
+  @override
+  String remainingAfterPayment(String amount) {
+    return 'المتبقي بعد الدفعة: $amount';
+  }
+
+  @override
+  String distributedOldestFirst(String parts) {
+    return 'يُوزَّع على الأقدم أولاً: $parts';
+  }
+
+  @override
+  String get chooseSpecificDebt => 'اختيار دين معيّن';
+
+  @override
+  String get autoDistribute => 'توزيع تلقائي';
+
+  @override
+  String get excessTitle => 'مبلغ زائد عن المتبقي';
+
+  @override
+  String excessOwedToMe(String amount, String name) {
+    return 'الزائد $amount — هل تسجّله ديناً عليك لـ $name؟';
+  }
+
+  @override
+  String excessIOwe(String amount, String name) {
+    return 'الزائد $amount — هل تسجّله ديناً لك على $name؟';
+  }
+
+  @override
+  String get recordExcess => 'تسجيل الزائد';
+
+  @override
+  String get editAmount => 'تعديل المبلغ';
+
+  @override
+  String get excessNote => 'زيادة عن المستحق';
+
+  @override
+  String get noOneOwesYou => 'لا توجد ديون مفتوحة لك عند أحد';
+
+  @override
+  String get youOweNoOne => 'لا توجد ديون مفتوحة عليك';
+
+  @override
+  String get distribution => 'تفصيل التوزيع';
+
+  @override
+  String get cancelOperation => 'إلغاء العملية';
+
+  @override
+  String get cancelOperationBody =>
+      'تُلغى كل دفعات العملية معاً ويُعكس أثرها على الحساب، وتبقى ظاهرة مشطوبة في الخط الزمني.';
+
+  @override
+  String get cancelledBadge => 'ملغاة';
+
+  @override
+  String negativeCashWarning(String account) {
+    return 'تنبيه: رصيد «$account» أصبح سالباً';
+  }
+
+  @override
+  String get forgiveRemaining => 'مسامحة بالمتبقي';
+
+  @override
+  String get forgivenRemaining => 'إعفاء من المتبقي';
+
+  @override
+  String forgiveBodyOwedToMe(String amount) {
+    return 'يُغلق الدين ويُسجَّل المتبقي $amount مصروفاً بفئة «مسامحة ديون». لا تتحرك أرصدة الحسابات.';
+  }
+
+  @override
+  String forgiveBodyIOwe(String amount) {
+    return 'يُغلق الدين ويُسجَّل المتبقي $amount دخلاً بفئة «إعفاء دين». لا تتحرك أرصدة الحسابات.';
+  }
+
+  @override
+  String get writeOffEntry => 'مسامحة';
+
+  @override
+  String get forgivenEntry => 'إعفاء من الدين';
+
+  @override
+  String paymentRate(String percent) {
+    return 'نسبة السداد $percent%';
+  }
+
+  @override
+  String writtenOffRate(String percent) {
+    return 'مُسامَح $percent%';
+  }
+
+  @override
+  String netForYou(String amount) {
+    return 'الصافي لصالحك $amount';
+  }
+
+  @override
+  String netForThem(String name, String amount) {
+    return 'الصافي لصالح $name $amount';
+  }
+
+  @override
+  String get netEven => 'الصافي متعادل';
+
+  @override
+  String get netInfoHint => 'معلومة فقط — لا يُخصم أحدهما من الآخر';
+
+  @override
+  String balanceAfter(String amount) {
+    return 'الرصيد بعد العملية: $amount';
+  }
+
+  @override
+  String get archivePerson => 'أرشفة الشخص';
+
+  @override
+  String get archivePersonBody =>
+      'يختفي من القوائم والاختيار مع بقاء سجله كاملاً، ويمكن رفع أرشفته لاحقاً.';
+
+  @override
+  String get deletePerson => 'حذف الشخص';
+
+  @override
+  String get deletePersonBody => 'لا توجد له أي حركة، وسيُحذف نهائياً.';
+
+  @override
+  String get personArchivedBanner => 'هذا الشخص مؤرشف';
+
+  @override
+  String peopleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخص',
+      many: '$count شخصاً',
+      few: '$count أشخاص',
+      two: 'شخصان',
+      one: 'شخص واحد',
+      zero: 'لا أحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String overdueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count دين متأخر',
+      many: '$count ديناً متأخراً',
+      few: '$count ديون متأخرة',
+      two: 'دينان متأخران',
+      one: 'دين متأخر',
+      zero: 'لا ديون متأخرة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filterDebts => 'فلترة الديون';
+
+  @override
+  String get statusFilter => 'الحالة';
+
+  @override
+  String get sortNearestDue => 'الأقرب استحقاقاً';
+
+  @override
+  String get sortLastActivity => 'آخر حركة';
+
+  @override
+  String duplicatePerson(String name) {
+    return '«$name» موجود، هل تقصده؟';
+  }
+
+  @override
+  String get useExisting => 'نعم، هو';
+
+  @override
+  String get reconcileOk => 'معادلة التطابق الشاملة متحققة ✓';
+
+  @override
+  String reconcileGap(String amount) {
+    return 'تنبيه: فرق $amount في معادلة التطابق — راجع البيانات';
+  }
+
+  @override
+  String get archiveNeedsZero =>
+      'لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً';
 
   @override
   String statementTitle(String name) {
@@ -980,6 +1169,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkOpenFailed => 'تعذّر فتح الرابط';
 
   @override
+  String get developedBy => 'تم التطوير من قبل محمد المخلافي';
+
+  @override
   String get lockedTitle => 'دفتري مقفل';
 
   @override
@@ -999,6 +1191,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAllDataReason => 'تأكيد حذف جميع البيانات';
+
+  @override
+  String get disableLockReason => 'تأكيد إيقاف قفل التطبيق';
+
+  @override
+  String get changePinReason => 'تأكيد تغيير رمز PIN';
 
   @override
   String get createPin => 'أنشئ رمز PIN من 4 أرقام';
@@ -1113,6 +1311,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errEmptyName => 'الاسم مطلوب';
 
   @override
+  String get errInvalidPhone => 'رقم الجوال غير صحيح';
+
+  @override
+  String get errContactArchived => 'الشخص مؤرشف — ارفع أرشفته أولاً';
+
+  @override
+  String get errInvalidDebtSource => 'مصدر الدين لا يناسب اتجاهه';
+
+  @override
+  String get errAccountRequired => 'اختر الحساب';
+
+  @override
+  String get errDateInFuture => 'التاريخ لا يكون بعد اليوم';
+
+  @override
+  String get errDueBeforeStart => 'تاريخ الاستحقاق قبل تاريخ الدين';
+
+  @override
+  String get errPaymentBeforeDebt =>
+      'التاريخ يسبق تاريخ الدين — غيّره أو اختر ديناً معيّناً';
+
+  @override
+  String get errDebtHasMovements =>
+      'على الدين دفعات أو مسامحة — ألغِ الدفعات أولاً';
+
+  @override
+  String get errPaymentAlreadyCancelled => 'العملية ملغاة مسبقاً';
+
+  @override
+  String get errAccountHasBalance =>
+      'لا يُؤرشف الحساب إلا ورصيده صفر — حوّل رصيده أولاً';
+
+  @override
+  String get errPersonHasBalance =>
+      'لا يُؤرشف الشخص إلا ومتبقّيه صفر في الاتجاهين';
+
+  @override
+  String get errPersonHasMovements => 'للشخص حركات مسجلة — يمكن أرشفته فقط';
+
+  @override
   String get errDuplicateAccountName => 'يوجد حساب بنفس الاسم';
 
   @override
@@ -1134,7 +1372,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errCategoryRequired => 'اختر فئة';
 
   @override
-  String get errDebtMovementReadOnly => 'حركات الديون تُعدَّل من ملف الشخص';
+  String get errDebtMovementReadOnly => 'قيود الديون تُعدَّل من ملف الشخص';
 
   @override
   String get errCannotMoveArchived =>
@@ -1146,11 +1384,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get errDebtSettled => 'هذا الدين مسدَّد بالكامل';
+  String get errDebtSettled => 'لا توجد ديون مفتوحة لهذه العملية';
 
   @override
   String errDebtAmountBelowPaid(String amount) {
-    return 'لا يمكن أن يقل المبلغ عن المسدَّد ($amount)';
+    return 'الأصل لا يقل عن المدفوع والمُسامَح ($amount)';
   }
 
   @override
@@ -1194,5 +1432,114 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String notifIOwe(String amount, String name) {
     return 'غداً موعد سداد $amount لـ $name';
+  }
+
+  @override
+  String get introSkip => 'تخطي';
+
+  @override
+  String get introNext => 'التالي';
+
+  @override
+  String get introStart => 'ابدأ الآن';
+
+  @override
+  String get intro1Body =>
+      'دفتر حساباتك الشخصي وديونك في مكان واحد. يعمل بدون إنترنت وبدون تسجيل دخول، وبياناتك تبقى على جهازك.';
+
+  @override
+  String get introOffline => 'بدون إنترنت';
+
+  @override
+  String get introNoAccount => 'بدون حساب';
+
+  @override
+  String get introPrivate => 'خصوصية تامة';
+
+  @override
+  String get intro2Title => 'كل ما تحتاجه لإدارة أموالك';
+
+  @override
+  String get intro2Body => 'أدوات بسيطة وواضحة لكل يوم.';
+
+  @override
+  String get featTxTitle => 'المعاملات والحسابات';
+
+  @override
+  String get featTxBody => 'سجّل الدخل والمصروف والتحويل بين حساباتك';
+
+  @override
+  String get featDebtsTitle => 'الديون والتذكير';
+
+  @override
+  String get featDebtsBody => 'تابع ما لك وما عليك مع تذكير قبل الاستحقاق';
+
+  @override
+  String get featBudgetTitle => 'الميزانية والتقارير';
+
+  @override
+  String get featBudgetBody => 'حدود شهرية ورسوم بيانية وتصدير PDF و Excel';
+
+  @override
+  String get featStatementTitle => 'كشف حساب جاهز';
+
+  @override
+  String get featStatementBody => 'أرسل كشف حساب أي شخص عبر واتساب بضغطة';
+
+  @override
+  String get intro3Title => 'خطوات مهمة للبدء';
+
+  @override
+  String get intro3Body => 'ثلاث خطوات تحمي بياناتك من البداية.';
+
+  @override
+  String get stepCurrencyTitle => 'اختر عملتك بعناية';
+
+  @override
+  String get stepLockTitle => 'احمِ بياناتك';
+
+  @override
+  String get stepLockBody => 'فعّل قفل التطبيق بالبصمة أو رمز PIN من الإعدادات';
+
+  @override
+  String get stepBackupTitle => 'خذ نسخة احتياطية';
+
+  @override
+  String get stepBackupBody =>
+      'صدّر نسخة مشفّرة أو فعّل النسخ السحابي لتنقل بياناتك بأمان';
+
+  @override
+  String get profileTitle => 'عرّفنا بنفسك';
+
+  @override
+  String get profileSubtitle =>
+      'يظهر اسمك في التقارير وكشوف الحساب التي تشاركها.';
+
+  @override
+  String get yourName => 'اسمك';
+
+  @override
+  String get phoneOptional => 'رقم الجوال (اختياري)';
+
+  @override
+  String get sectionProfile => 'الملف الشخصي';
+
+  @override
+  String get editProfile => 'تعديل الملف الشخصي';
+
+  @override
+  String get addYourName => 'أضف اسمك';
+
+  @override
+  String get noPhone => 'بدون رقم جوال';
+
+  @override
+  String greetingName(String greeting, String name) {
+    return '$greeting، $name';
+  }
+
+  @override
+  String issuedBy(String name) {
+    return 'صادر من: $name';
   }
 }

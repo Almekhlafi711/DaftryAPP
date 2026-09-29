@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 
 import '../core/errors/app_exception.dart';
 import '../data/database/app_database.dart';
+import '../data/seed/default_categories.dart';
 import '../domain/enums.dart';
 
 class CategoryService {
@@ -13,15 +14,52 @@ class CategoryService {
 
   final AppDatabase db;
 
+  /// فئتا المسامحة والإعفاء خاصتان بوحدة الديون (لا تُختاران لمعاملة عادية).
+  static const debtOnlyKeys = [
+    SystemCategoryKeys.debtWriteOff,
+    SystemCategoryKeys.debtForgiven,
+  ];
+
   /// فئات نوع معيّن مرتبة كما تظهر في شبكة الأيقونات.
-  Stream<List<Category>> watchByKind(CategoryKind kind) =>
-      (db.select(db.categories)
-            ..where((c) => c.kind.equals(kind.name))
-            ..orderBy([
-              (c) => OrderingTerm.asc(c.sortOrder),
-              (c) => OrderingTerm.asc(c.id),
-            ]))
-          .watch();
+  /// [forTransactions]: يستبعد فئتي المسامحة والإعفاء من شاشة المعاملة.
+  Stream<List<Category>> watchByKind(
+    CategoryKind kind, {
+    bool forTransactions = false,
+  }) {
+    final q = db.select(db.categories)
+      ..where((c) => c.kind.equals(kind.name))
+      ..orderBy([
+        (c) => OrderingTerm.asc(c.sortOrder),
+        (c) => OrderingTerm.asc(c.id),
+      ]);
+    if (forTransactions) {
+      q.where((c) => c.systemKey.isNull() | c.systemKey.isNotIn(debtOnlyKeys));
+    }
+    return q.watch();
+  }
+
+  /// فئة بمفتاحها الثابت (null إن حذفها المستخدم).
+  Future<Category?> bySystemKey(String key) => (db.select(
+    db.categories,
+  )..where((c) => c.systemKey.equals(key))).getSingleOrNull();
+
+  /// فئة يحتاجها التطبيق (مثل «مسامحة ديون»): تُعاد إن وُجدت، وإلا تُنشأ
+  /// بلغة الواجهة الحالية.
+  Future<Category> ensureSystemCategory(
+    SeedCategory seed, {
+    required bool arabic,
+  }) => db.transaction(() async {
+    final existing = await bySystemKey(seed.key);
+    if (existing != null) return existing;
+    final id = await create(
+      name: arabic ? seed.nameAr : seed.nameEn,
+      kind: seed.kind,
+      icon: seed.icon,
+      color: seed.color,
+      systemKey: seed.key,
+    );
+    return (await getById(id))!;
+  });
 
   Stream<List<Category>> watchAll() =>
       (db.select(db.categories)..orderBy([
@@ -40,6 +78,7 @@ class CategoryService {
     required String icon,
     required int color,
     int? parentId,
+    String? systemKey,
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw const BusinessException(BusinessError.emptyName);
@@ -60,6 +99,8 @@ class CategoryService {
             color: color,
             parentId: Value(parentId),
             sortOrder: Value((row.read(maxOrder) ?? 0) + 1),
+            isDefault: Value(systemKey != null),
+            systemKey: Value(systemKey),
           ),
         );
   }

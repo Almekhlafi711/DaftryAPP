@@ -100,7 +100,8 @@ class BudgetService {
         await (db.selectOnly(t)
               ..addColumns([t.categoryId, sum])
               ..where(
-                t.type.equals(TxType.expense.name) &
+                // المصروف العادي والشراء بالآجل ومسامحة الديون.
+                t.type.isIn(TxType.expenseNames) &
                     t.date.isBiggerOrEqualValue(range.start) &
                     t.date.isSmallerThanValue(range.end),
               )

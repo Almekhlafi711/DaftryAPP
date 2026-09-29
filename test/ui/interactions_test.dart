@@ -303,7 +303,7 @@ void main() {
                 type: TxType.expense,
                 amount: 1000,
                 currencyId: 1,
-                accountId: cash.id,
+                accountId: Value(cash.id),
                 categoryId: Value(food.id),
                 date: DateTime.now(),
                 receiptPath: const Value('/missing/receipt.jpg'),

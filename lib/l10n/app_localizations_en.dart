@@ -79,9 +79,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phone => 'Phone';
 
   @override
-  String get address => 'Address';
-
-  @override
   String get comingSoon => 'Soon';
 
   @override
@@ -473,9 +470,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferAndArchive => 'Transfer balance & archive';
 
   @override
-  String get archiveWithoutTransfer => 'Archive without transfer';
-
-  @override
   String get newDefaultAccount => 'New default account';
 
   @override
@@ -527,7 +521,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dueToday => 'Due today';
 
   @override
-  String get statusSettled => 'Settled';
+  String get statusClosed => 'Closed';
+
+  @override
+  String get statusOverdue => 'Overdue';
 
   @override
   String get statusPartial => 'Partially paid';
@@ -566,16 +563,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dueDateOptional => 'Due date (optional)';
 
   @override
-  String get moneyLeftAccount => 'Did money leave an account?';
-
-  @override
-  String get moneyEnteredAccount => 'Did money enter an account?';
-
-  @override
-  String get bookOnlyHint =>
-      'Turn off for credit sales/purchases (ledger only)';
-
-  @override
   String get decreasesBalanceNotExpense => 'Decreases balance — not an expense';
 
   @override
@@ -595,15 +582,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteDebtBody =>
-      'All its payments and movements will be removed and balances restored.';
-
-  @override
-  String get recordPayment => 'Record payment';
-
-  @override
-  String paymentFor(String name) {
-    return 'Payment — $name';
-  }
+      'The debt and its entry are removed, restoring the account, income or expense. (For debts entered by mistake only.)';
 
   @override
   String remainingAmount(String amount) {
@@ -611,25 +590,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get paymentAmount => 'Payment amount';
-
-  @override
   String get fullRemaining => 'Full remaining';
 
   @override
-  String get receivedIntoAccount => 'Received into an account';
+  String get receivedIntoAccount => 'Received into';
 
   @override
-  String get paidFromAccount => 'Paid from an account';
-
-  @override
-  String get suggestedCreationAccount => 'Suggested: the debt’s account';
-
-  @override
-  String get savePayment => 'Save payment';
-
-  @override
-  String get whichDebt => 'Debt';
+  String get paidFromAccount => 'Paid from';
 
   @override
   String profileOwedToMe(String name) {
@@ -640,9 +607,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String profileIOwe(String name) {
     return 'I owe $name';
   }
-
-  @override
-  String get profileSettled => 'Nothing remaining — all settled';
 
   @override
   String paidAmount(String amount) {
@@ -666,47 +630,269 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeline => 'Timeline';
 
   @override
-  String get paymentReceived => 'Payment received';
+  String get paymentReceived => 'Received';
 
   @override
-  String get paymentMade => 'Payment made';
-
-  @override
-  String get newDebtEntry => 'New debt';
-
-  @override
-  String debtWithNote(String note) {
-    return 'Debt: $note';
-  }
-
-  @override
-  String inAccount(String account) {
-    return 'to $account';
-  }
-
-  @override
-  String fromAccountName(String account) {
-    return 'from $account';
-  }
-
-  @override
-  String get withoutAccount => 'No account';
+  String get paymentMade => 'Paid';
 
   @override
   String get editPerson => 'Edit person';
 
   @override
-  String get hidePerson => 'Hide from list';
-
-  @override
-  String get deletePayment => 'Delete payment';
-
-  @override
-  String get deletePaymentBody =>
-      'Its balance movement will be reversed and the debt status recalculated.';
-
-  @override
   String get searchPeople => 'Search people';
+
+  @override
+  String get sourceTitle => 'Where did this debt come from?';
+
+  @override
+  String get sourceLoanOwed => 'I lent from an account';
+
+  @override
+  String get sourceLoanOwe => 'I borrowed into an account';
+
+  @override
+  String get sourceCreditSale => 'I sold on credit';
+
+  @override
+  String get sourceCreditPurchase => 'I bought on credit';
+
+  @override
+  String get sourceOpening => 'Earlier debt (before using the app)';
+
+  @override
+  String get sourceCreditSaleHint =>
+      'Recorded as income in a category — no account movement';
+
+  @override
+  String get sourceCreditPurchaseHint =>
+      'Recorded as an expense in a category — no account movement';
+
+  @override
+  String get sourceOpeningHint =>
+      'Ledger only — no income and no account movement';
+
+  @override
+  String get labelLoanOwed => 'Cash loan';
+
+  @override
+  String get labelLoanOwe => 'Borrowed';
+
+  @override
+  String get labelCreditSale => 'Credit sale';
+
+  @override
+  String get labelCreditPurchase => 'Credit purchase';
+
+  @override
+  String get labelOpening => 'Earlier debt';
+
+  @override
+  String get debtLockedHint =>
+      'It has payments or write-offs: direction, source and person are locked';
+
+  @override
+  String get receiveAmount => 'Receive payment';
+
+  @override
+  String get payAmount => 'Make payment';
+
+  @override
+  String receiveFrom(String name) {
+    return 'Receive from $name';
+  }
+
+  @override
+  String payTo(String name) {
+    return 'Pay $name';
+  }
+
+  @override
+  String remainingAfterPayment(String amount) {
+    return 'Remaining after payment: $amount';
+  }
+
+  @override
+  String distributedOldestFirst(String parts) {
+    return 'Applied oldest first: $parts';
+  }
+
+  @override
+  String get chooseSpecificDebt => 'Choose a specific debt';
+
+  @override
+  String get autoDistribute => 'Automatic';
+
+  @override
+  String get excessTitle => 'More than the remaining';
+
+  @override
+  String excessOwedToMe(String amount, String name) {
+    return 'The extra $amount — record it as a debt you owe $name?';
+  }
+
+  @override
+  String excessIOwe(String amount, String name) {
+    return 'The extra $amount — record it as a debt $name owes you?';
+  }
+
+  @override
+  String get recordExcess => 'Record the extra';
+
+  @override
+  String get editAmount => 'Change amount';
+
+  @override
+  String get excessNote => 'Overpayment';
+
+  @override
+  String get noOneOwesYou => 'No one owes you anything right now';
+
+  @override
+  String get youOweNoOne => 'You don’t owe anyone right now';
+
+  @override
+  String get distribution => 'Breakdown';
+
+  @override
+  String get cancelOperation => 'Cancel operation';
+
+  @override
+  String get cancelOperationBody =>
+      'All payments in this operation are cancelled together and the account movement is reversed. They stay visible, struck through, in the timeline.';
+
+  @override
+  String get cancelledBadge => 'Cancelled';
+
+  @override
+  String negativeCashWarning(String account) {
+    return 'Heads up: “$account” balance is now negative';
+  }
+
+  @override
+  String get forgiveRemaining => 'Write off the rest';
+
+  @override
+  String get forgivenRemaining => 'Mark the rest as forgiven';
+
+  @override
+  String forgiveBodyOwedToMe(String amount) {
+    return 'Closes the debt and records the remaining $amount as an expense under “Debt write-off”. No account balance changes.';
+  }
+
+  @override
+  String forgiveBodyIOwe(String amount) {
+    return 'Closes the debt and records the remaining $amount as income under “Debt relief”. No account balance changes.';
+  }
+
+  @override
+  String get writeOffEntry => 'Written off';
+
+  @override
+  String get forgivenEntry => 'Forgiven by creditor';
+
+  @override
+  String paymentRate(String percent) {
+    return 'Paid $percent%';
+  }
+
+  @override
+  String writtenOffRate(String percent) {
+    return 'Written off $percent%';
+  }
+
+  @override
+  String netForYou(String amount) {
+    return 'Net in your favor: $amount';
+  }
+
+  @override
+  String netForThem(String name, String amount) {
+    return 'Net in $name’s favor: $amount';
+  }
+
+  @override
+  String get netEven => 'Net: even';
+
+  @override
+  String get netInfoHint => 'For information only — the two are not offset';
+
+  @override
+  String balanceAfter(String amount) {
+    return 'Balance after: $amount';
+  }
+
+  @override
+  String get archivePerson => 'Archive person';
+
+  @override
+  String get archivePersonBody =>
+      'Hidden from lists and pickers; the full history is kept and you can unarchive later.';
+
+  @override
+  String get deletePerson => 'Delete person';
+
+  @override
+  String get deletePersonBody =>
+      'This person has no activity and will be deleted permanently.';
+
+  @override
+  String get personArchivedBanner => 'This person is archived';
+
+  @override
+  String peopleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+      zero: 'no one',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String overdueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count overdue',
+      one: '1 overdue',
+      zero: 'none overdue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filterDebts => 'Filter debts';
+
+  @override
+  String get statusFilter => 'Status';
+
+  @override
+  String get sortNearestDue => 'Nearest due';
+
+  @override
+  String get sortLastActivity => 'Latest activity';
+
+  @override
+  String duplicatePerson(String name) {
+    return '“$name” already exists — did you mean them?';
+  }
+
+  @override
+  String get useExisting => 'Yes, that’s them';
+
+  @override
+  String get reconcileOk => 'Global reconciliation check passed ✓';
+
+  @override
+  String reconcileGap(String amount) {
+    return 'Warning: reconciliation gap of $amount — please review your data';
+  }
+
+  @override
+  String get archiveNeedsZero =>
+      'An account can only be archived with a zero balance — transfer it first';
 
   @override
   String statementTitle(String name) {
@@ -974,6 +1160,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkOpenFailed => 'Couldn\'t open the link';
 
   @override
+  String get developedBy => 'Developed by Mohammed Al-Mekhlafi';
+
+  @override
   String get lockedTitle => 'Daftari is locked';
 
   @override
@@ -993,6 +1182,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAllDataReason => 'Confirm deleting all data';
+
+  @override
+  String get disableLockReason => 'Confirm turning off app lock';
+
+  @override
+  String get changePinReason => 'Confirm changing your PIN';
 
   @override
   String get createPin => 'Create a 4-digit PIN';
@@ -1107,6 +1302,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errEmptyName => 'Name is required';
 
   @override
+  String get errInvalidPhone => 'Invalid phone number';
+
+  @override
+  String get errContactArchived =>
+      'This person is archived — unarchive them first';
+
+  @override
+  String get errInvalidDebtSource =>
+      'This source does not match the debt direction';
+
+  @override
+  String get errAccountRequired => 'Choose an account';
+
+  @override
+  String get errDateInFuture => 'The date cannot be in the future';
+
+  @override
+  String get errDueBeforeStart => 'The due date is before the debt date';
+
+  @override
+  String get errPaymentBeforeDebt =>
+      'The date is before the debt date — change it or choose a specific debt';
+
+  @override
+  String get errDebtHasMovements =>
+      'This debt has payments or a write-off — cancel the payments first';
+
+  @override
+  String get errPaymentAlreadyCancelled =>
+      'This operation is already cancelled';
+
+  @override
+  String get errAccountHasBalance =>
+      'An account can only be archived with a zero balance — transfer it first';
+
+  @override
+  String get errPersonHasBalance =>
+      'A person can only be archived when nothing is owed either way';
+
+  @override
+  String get errPersonHasMovements =>
+      'This person has recorded activity — archive them instead';
+
+  @override
   String get errDuplicateAccountName => 'An account with this name exists';
 
   @override
@@ -1131,7 +1370,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errDebtMovementReadOnly =>
-      'Debt movements are edited from the person’s profile';
+      'Debt entries are edited from the person’s profile';
 
   @override
   String get errCannotMoveArchived =>
@@ -1143,11 +1382,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get errDebtSettled => 'This debt is fully settled';
+  String get errDebtSettled => 'There is no open debt for this operation';
 
   @override
   String errDebtAmountBelowPaid(String amount) {
-    return 'Amount cannot be less than what was paid ($amount)';
+    return 'The amount cannot be less than what was paid and written off ($amount)';
   }
 
   @override
@@ -1191,5 +1430,118 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifIOwe(String amount, String name) {
     return 'You owe $name $amount, due tomorrow';
+  }
+
+  @override
+  String get introSkip => 'Skip';
+
+  @override
+  String get introNext => 'Next';
+
+  @override
+  String get introStart => 'Get started';
+
+  @override
+  String get intro1Body =>
+      'Your personal ledger and debts in one place. Works offline with no sign-up, and your data stays on your device.';
+
+  @override
+  String get introOffline => 'Offline';
+
+  @override
+  String get introNoAccount => 'No sign-up';
+
+  @override
+  String get introPrivate => 'Fully private';
+
+  @override
+  String get intro2Title => 'Everything to manage your money';
+
+  @override
+  String get intro2Body => 'Simple, clear tools for every day.';
+
+  @override
+  String get featTxTitle => 'Transactions & accounts';
+
+  @override
+  String get featTxBody =>
+      'Record income, expenses and transfers between accounts';
+
+  @override
+  String get featDebtsTitle => 'Debts & reminders';
+
+  @override
+  String get featDebtsBody =>
+      'Track what you are owed and what you owe, with due-date reminders';
+
+  @override
+  String get featBudgetTitle => 'Budgets & reports';
+
+  @override
+  String get featBudgetBody => 'Monthly limits, charts, and PDF & Excel export';
+
+  @override
+  String get featStatementTitle => 'Ready-made statements';
+
+  @override
+  String get featStatementBody =>
+      'Send anyone their statement on WhatsApp in one tap';
+
+  @override
+  String get intro3Title => 'Key steps to get started';
+
+  @override
+  String get intro3Body => 'Three steps that protect your data from day one.';
+
+  @override
+  String get stepCurrencyTitle => 'Choose your currency carefully';
+
+  @override
+  String get stepLockTitle => 'Protect your data';
+
+  @override
+  String get stepLockBody =>
+      'Turn on app lock with biometrics or a PIN in Settings';
+
+  @override
+  String get stepBackupTitle => 'Back up regularly';
+
+  @override
+  String get stepBackupBody =>
+      'Export an encrypted copy or turn on cloud backup to move your data safely';
+
+  @override
+  String get profileTitle => 'Tell us about you';
+
+  @override
+  String get profileSubtitle =>
+      'Your name appears on the reports and statements you share.';
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get phoneOptional => 'Phone (optional)';
+
+  @override
+  String get sectionProfile => 'Profile';
+
+  @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get addYourName => 'Add your name';
+
+  @override
+  String get noPhone => 'No phone number';
+
+  @override
+  String greetingName(String greeting, String name) {
+    return '$greeting, $name';
+  }
+
+  @override
+  String issuedBy(String name) {
+    return 'Issued by: $name';
   }
 }

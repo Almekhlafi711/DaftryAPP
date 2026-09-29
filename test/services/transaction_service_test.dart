@@ -160,6 +160,7 @@ void main() {
         DebtDraft(
           contactId: contact,
           direction: DebtDirection.owedToMe,
+          source: DebtSource.loan,
           amount: 1000,
           startDate: DateTime.now(),
           accountId: cash.id,
@@ -201,6 +202,7 @@ void main() {
         DebtDraft(
           contactId: contact,
           direction: DebtDirection.iOwe,
+          source: DebtSource.loan,
           amount: 50000,
           startDate: DateTime.now(),
           accountId: cash.id,
@@ -223,6 +225,7 @@ void main() {
         DebtDraft(
           contactId: contact,
           direction: DebtDirection.owedToMe,
+          source: DebtSource.loan,
           amount: 50000,
           startDate: DateTime.now(),
           accountId: cash.id,

@@ -1,7 +1,9 @@
 // =============================================================================
 // الشاشة 10: دفتر الديون — قائمة الأشخاص.
-// مجموع «لي» و«عليّ» في الأعلى، ثم تبويبات الاتجاه، ثم كل شخص في سطر واحد
-// بالمتبقي وشريط السداد وشارة الاستحقاق (المتأخر بالأحمر).
+// - بطاقة الملخص: مجموع «لي» و«عليّ» ومؤشرات (عدد الأشخاص والديون المتأخرة).
+// - تبويبات لي / عليّ / الكل ظاهرة دائماً، وبحث بالاسم أو الهاتف.
+// - زر فلترة واحد: الحالة (مفتوح، متأخر، مغلق، مؤرشف) والترتيب فقط.
+// - زر إجراءات سريعة: «دين جديد»، «استلام مبلغ»، «سداد مبلغ».
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/labels.dart';
+import 'debt_actions.dart';
 
 /// التبويب المختار: null = الكل.
 class _DirectionTab extends Notifier<DebtDirection?> {
@@ -40,12 +43,22 @@ class _Query extends Notifier<String> {
 
 final _queryProvider = NotifierProvider<_Query, String>(_Query.new);
 
+class _Filter extends Notifier<PeopleFilter> {
+  @override
+  PeopleFilter build() => const PeopleFilter();
+
+  void set(PeopleFilter f) => state = f;
+}
+
+final _filterProvider = NotifierProvider<_Filter, PeopleFilter>(_Filter.new);
+
 final _peopleProvider = StreamProvider.autoDispose<List<PersonSummary>>(
   (ref) => ref
       .watch(debtServiceProvider)
       .watchPeople(
         direction: ref.watch(_directionProvider),
         query: ref.watch(_queryProvider),
+        filter: ref.watch(_filterProvider),
       ),
 );
 
@@ -65,6 +78,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
     final c = context.colors;
     final totals = ref.watch(debtTotalsProvider).value ?? DebtTotals.zero;
     final direction = ref.watch(_directionProvider);
+    final filter = ref.watch(_filterProvider);
     final people = ref.watch(_peopleProvider);
 
     return Scaffold(
@@ -91,23 +105,26 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
               ),
         actions: [
           IconButton(
+            tooltip: l10n.searchPeople,
             icon: Icon(_searching ? Icons.close_rounded : Icons.search_rounded),
             onPressed: () {
               if (_searching) ref.read(_queryProvider.notifier).set('');
               setState(() => _searching = !_searching);
             },
           ),
+          IconButton(
+            tooltip: l10n.filterDebts,
+            icon: Badge(
+              isLabelVisible: filter.activeCount > 0,
+              label: Text('${filter.activeCount}'),
+              child: const Icon(Icons.filter_alt_outlined),
+            ),
+            onPressed: () => _showFilter(context),
+          ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'new-debt',
-        backgroundColor: c.brand,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.newDebt),
-        onPressed: () => context.push(AppRoutes.newDebt()),
-      ),
+      floatingActionButton: const _SpeedDial(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Insets.screen, 0, Insets.screen, 96),
         children: [
@@ -130,6 +147,35 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          // مؤشرات الملخص: عدد الأشخاص وعدد الديون المتأخرة.
+          Row(
+            children: [
+              Icon(Icons.people_alt_outlined, size: 16, color: c.textSecondary),
+              const SizedBox(width: 4),
+              Text(
+                l10n.peopleCount(totals.people),
+                style: TextStyle(fontSize: 12.5, color: c.textSecondary),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.schedule_rounded,
+                size: 16,
+                color: totals.overdueDebts > 0 ? c.expense : c.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                l10n.overdueCount(totals.overdueDebts),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: totals.overdueDebts > 0 ? c.expense : c.textSecondary,
+                  fontWeight: totals.overdueDebts > 0
+                      ? FontWeight.w700
+                      : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: Insets.md),
           SegmentedTabs<DebtDirection?>(
             values: const [null, DebtDirection.owedToMe, DebtDirection.iOwe],
@@ -148,20 +194,223 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             builder: (list) => list.isEmpty
                 ? EmptyState(
                     icon: Icons.people_outline_rounded,
-                    message: l10n.noDebts,
+                    message:
+                        filter.activeCount > 0 ||
+                            ref.watch(_queryProvider).isNotEmpty
+                        ? l10n.noResults
+                        : l10n.noDebts,
                   )
                 : Column(
                     children: [
                       for (final p in list)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: _PersonTile(summary: p),
+                          child: _PersonTile(summary: p, direction: direction),
                         ),
                     ],
                   ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showFilter(BuildContext context) => showModalBottomSheet<void>(
+    context: context,
+    builder: (ctx) => Consumer(
+      builder: (ctx, ref, _) {
+        final l10n = ctx.l10n;
+        final filter = ref.watch(_filterProvider);
+        final notifier = ref.read(_filterProvider.notifier);
+        Widget chip(String label, bool selected, VoidCallback onTap) =>
+            ChoiceChip(
+              label: Text(label),
+              selected: selected,
+              labelStyle: TextStyle(
+                color: selected ? Colors.white : ctx.colors.textPrimary,
+              ),
+              onSelected: (_) => onTap(),
+            );
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Insets.screen,
+              0,
+              Insets.screen,
+              Insets.screen,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.filterDebts,
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+                const SizedBox(height: Insets.md),
+                Text(l10n.statusFilter),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final s in PeopleStatus.values)
+                      chip(
+                        switch (s) {
+                          PeopleStatus.all => l10n.all,
+                          PeopleStatus.open => l10n.statusOpen,
+                          PeopleStatus.overdue => l10n.statusOverdue,
+                          PeopleStatus.closed => l10n.statusClosed,
+                          PeopleStatus.archived => l10n.archivedBadge,
+                        },
+                        filter.status == s,
+                        () => notifier.set(
+                          PeopleFilter(status: s, sort: filter.sort),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Insets.md),
+                Text(l10n.sort),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final s in PeopleSort.values)
+                      chip(
+                        switch (s) {
+                          PeopleSort.nearestDue => l10n.sortNearestDue,
+                          PeopleSort.amountDesc => l10n.sortAmountDesc,
+                          PeopleSort.lastActivity => l10n.sortLastActivity,
+                        },
+                        filter.sort == s,
+                        () => notifier.set(
+                          PeopleFilter(status: filter.status, sort: s),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Insets.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          notifier.set(const PeopleFilter());
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(l10n.reset),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(l10n.apply),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// زر الإجراءات السريعة (Speed Dial): دين جديد، استلام مبلغ، سداد مبلغ.
+class _SpeedDial extends ConsumerStatefulWidget {
+  const _SpeedDial();
+
+  @override
+  ConsumerState<_SpeedDial> createState() => _SpeedDialState();
+}
+
+class _SpeedDialState extends ConsumerState<_SpeedDial> {
+  bool _open = false;
+
+  void _run(Future<void> Function() action) {
+    setState(() => _open = false);
+    action();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    Widget action({
+      required String label,
+      required IconData icon,
+      required Color color,
+      required VoidCallback onTap,
+    }) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: FloatingActionButton.extended(
+        heroTag: label,
+        elevation: 2,
+        backgroundColor: c.surface,
+        foregroundColor: color,
+        icon: Icon(icon),
+        label: Text(label),
+        onPressed: onTap,
+      ),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: _open
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    action(
+                      label: l10n.receiveAmount,
+                      icon: Icons.call_received_rounded,
+                      color: c.income,
+                      onTap: () => _run(
+                        () => startSettle(context, ref, DebtDirection.owedToMe),
+                      ),
+                    ),
+                    action(
+                      label: l10n.payAmount,
+                      icon: Icons.call_made_rounded,
+                      color: c.expense,
+                      onTap: () => _run(
+                        () => startSettle(context, ref, DebtDirection.iOwe),
+                      ),
+                    ),
+                    action(
+                      label: l10n.newDebt,
+                      icon: Icons.add_rounded,
+                      color: c.primary,
+                      onTap: () =>
+                          _run(() => context.push(AppRoutes.newDebt())),
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
+        FloatingActionButton(
+          heroTag: 'debts-speed-dial',
+          backgroundColor: c.brand,
+          foregroundColor: Colors.white,
+          tooltip: l10n.newDebt,
+          onPressed: () => setState(() => _open = !_open),
+          child: AnimatedRotation(
+            turns: _open ? 0.125 : 0,
+            duration: const Duration(milliseconds: 180),
+            child: const Icon(Icons.add_rounded),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -198,20 +447,31 @@ class _TotalBox extends StatelessWidget {
   );
 }
 
-class _PersonTile extends StatelessWidget {
-  const _PersonTile({required this.summary});
+class _PersonTile extends ConsumerWidget {
+  const _PersonTile({required this.summary, required this.direction});
 
   final PersonSummary summary;
+  final DebtDirection? direction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final c = context.colors;
-    final net = summary.net;
-    final color = net >= 0 ? c.income : c.expense;
-    final settled = summary.openDebts == 0;
+    final money = ref.watch(moneyFormatterProvider);
+    final archived = summary.contact.isArchived;
+    final closed = summary.isClosed;
     final due = summary.nearestDue;
-    final dueInfo = due == null ? null : dueLabel(l10n, due);
+    final dueInfo = due == null || closed ? null : dueLabel(l10n, due);
+    final avatarColor = summary.receivable >= summary.payable
+        ? c.income
+        : c.expense;
+
+    // «لي» و«عليّ» يُعرضان منفصلين (لا مقاصة تلقائية).
+    final amounts = [
+      if (summary.receivable > 0 || (closed && summary.payable == 0))
+        (summary.receivable, c.income),
+      if (summary.payable > 0) (summary.payable, c.expense),
+    ];
 
     return AppCard(
       onTap: () => context.push(AppRoutes.person(summary.contact.id)),
@@ -221,10 +481,13 @@ class _PersonTile extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: color.withValues(alpha: 0.12),
+                backgroundColor: avatarColor.withValues(alpha: 0.12),
                 child: Text(
                   summary.contact.name.characters.first,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: avatarColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -238,8 +501,10 @@ class _PersonTile extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 2),
-                    if (settled)
-                      Pill(l10n.statusSettled, color: c.income)
+                    if (archived)
+                      Pill(l10n.archivedBadge, color: c.archive)
+                    else if (closed)
+                      Pill(l10n.statusClosed, color: c.income)
                     else if (dueInfo != null)
                       Pill(
                         dueInfo.$1,
@@ -251,30 +516,37 @@ class _PersonTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  AmountText(
-                    net.abs(),
-                    color: settled ? c.textSecondary : color,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Consumer(
-                    builder: (context, ref, _) => Text(
-                      l10n.ofTotal(
-                        ref
-                            .watch(moneyFormatterProvider)
-                            .format(summary.totalAmount, compact: true),
+                  for (final (value, color) in amounts)
+                    AmountText(
+                      value,
+                      color: closed ? c.textSecondary : color,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
                       ),
-                      style: TextStyle(fontSize: 11.5, color: c.textSecondary),
                     ),
+                  Text(
+                    l10n.ofTotal(money.format(summary.total, compact: true)),
+                    style: TextStyle(fontSize: 11.5, color: c.textSecondary),
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          AppProgressBar(value: summary.progress, color: c.income, height: 6),
+          AppProgressBar(
+            value: summary.progress / 100,
+            color: c.income,
+            height: 6,
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              l10n.paymentRate('${summary.progress}'),
+              style: TextStyle(fontSize: 11.5, color: c.textSecondary),
+            ),
+          ),
         ],
       ),
     );

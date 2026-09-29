@@ -37,6 +37,8 @@ class HomeScreen extends ConsumerWidget {
     final budget = ref.watch(budgetOverviewProvider).value;
     final debts = ref.watch(debtTotalsProvider).value;
     final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? l10n.greetingMorning : l10n.greetingEvening;
+    final userName = ref.watch(preferencesProvider).value?.userName;
 
     return Scaffold(
       backgroundColor: c.background,
@@ -66,9 +68,11 @@ class HomeScreen extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    hour < 12
-                                        ? l10n.greetingMorning
-                                        : l10n.greetingEvening,
+                                    userName == null
+                                        ? greeting
+                                        : l10n.greetingName(greeting, userName),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: Colors.white70,
                                     ),
@@ -152,7 +156,9 @@ class HomeScreen extends ConsumerWidget {
                               for (final item in items)
                                 TransactionTile(
                                   item: item,
-                                  onTap: () => item.isDebtMovement
+                                  onTap: () =>
+                                      item.isDebtLinked &&
+                                          item.contactId != null
                                       ? context.push(
                                           AppRoutes.person(item.contactId!),
                                         )

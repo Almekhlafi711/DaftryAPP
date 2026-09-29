@@ -90,6 +90,7 @@ void main() {
       DebtDraft(
         contactId: c,
         direction: DebtDirection.owedToMe,
+        source: DebtSource.loan,
         amount: 100000,
         startDate: DateTime.now(),
         accountId: cash.id,

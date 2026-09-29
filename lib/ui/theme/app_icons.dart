@@ -54,8 +54,14 @@ abstract final class AppIcons {
     0xFF64748B,
   ];
 
+  /// أيقونات فئات التطبيق الخاصة (لا تظهر في قائمة الاختيار).
+  static const Map<String, IconData> _systemIcons = {
+    'forgive': Icons.handshake_outlined,
+    'relief': Icons.money_off_rounded,
+  };
+
   static IconData category(String key) =>
-      categoryIcons[key] ?? Icons.more_horiz_rounded;
+      categoryIcons[key] ?? _systemIcons[key] ?? Icons.more_horiz_rounded;
 
   static IconData account(AccountType type) => switch (type) {
     AccountType.cash => Icons.payments_outlined,

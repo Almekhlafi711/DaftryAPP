@@ -9,6 +9,7 @@ import 'package:drift/drift.dart';
 
 import '../core/constants/currencies.dart';
 import '../core/errors/app_exception.dart';
+import '../core/money/money.dart';
 import '../data/database/app_database.dart';
 import '../data/seed/default_categories.dart';
 import '../domain/enums.dart';
@@ -18,6 +19,12 @@ abstract final class SettingKeys {
   /// '1' بعد إكمال الإعداد الأول وقفل العملة.
   static const onboarded = 'onboarded';
   static const defaultAccountId = 'default_account_id';
+
+  /// اسم صاحب الدفتر (مطلوب في الإعداد الأول) — يظهر في التقارير والكشوف.
+  static const userName = 'user_name';
+
+  /// رقم جوال صاحب الدفتر (اختياري).
+  static const userPhone = 'user_phone';
 
   /// ar | en | system
   static const locale = 'locale';
@@ -56,6 +63,15 @@ class AppPreferences {
   bool _flag(String key) => _values[key] == '1';
 
   bool get onboarded => _flag(SettingKeys.onboarded);
+
+  /// null إن لم يُدخل الاسم بعد (مثل نسخة احتياطية من إصدار أقدم).
+  String? get userName => _nonEmpty(SettingKeys.userName);
+  String? get userPhone => _nonEmpty(SettingKeys.userPhone);
+  String? _nonEmpty(String key) {
+    final v = _values[key]?.trim();
+    return v == null || v.isEmpty ? null : v;
+  }
+
   String get locale => _values[SettingKeys.locale] ?? 'system';
   String get themeMode => _values[SettingKeys.themeMode] ?? 'system';
   bool get arabicDigits => _flag(SettingKeys.arabicDigits);
@@ -109,6 +125,58 @@ class SettingsService {
   Future<bool> isOnboarded() async => (await get(SettingKeys.onboarded)) == '1';
 
   // ---------------------------------------------------------------------------
+  // الملف الشخصي: الاسم (مطلوب) ورقم الجوال (اختياري)
+  // ---------------------------------------------------------------------------
+
+  /// أقصى طول للاسم.
+  static const maxNameLength = 40;
+
+  /// يوحّد رقم الجوال: يحوّل الأرقام الهندية ويحذف المسافات والشرطات
+  /// والأقواس. يعيد null للرقم الفارغ، ويرمي [BusinessError.invalidPhone]
+  /// إن لم يكن من 6 إلى 15 رقماً (مع + اختيارية في البداية).
+  static String? normalizePhone(String? raw) {
+    final compact = MoneyParser.normalizeDigits(raw ?? '')
+        .replaceAll(RegExp(r'[\s\-()]'), '');
+    if (compact.isEmpty) return null;
+    if (!RegExp(r'^\+?\d{6,15}$').hasMatch(compact)) {
+      throw const BusinessException(BusinessError.invalidPhone);
+    }
+    return compact;
+  }
+
+  /// يتحقق من الاسم والرقم ويعيدهما بعد التنظيف.
+  static ({String name, String? phone}) _validateProfile(
+    String name,
+    String? phone,
+  ) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) throw const BusinessException(BusinessError.emptyName);
+    return (
+      name: trimmed.length > maxNameLength
+          ? trimmed.substring(0, maxNameLength)
+          : trimmed,
+      phone: normalizePhone(phone),
+    );
+  }
+
+  Future<void> _writeProfile(({String name, String? phone}) profile) async {
+    await set(SettingKeys.userName, profile.name);
+    if (profile.phone == null) {
+      await (db.delete(
+        db.settings,
+      )..where((s) => s.key.equals(SettingKeys.userPhone))).go();
+    } else {
+      await set(SettingKeys.userPhone, profile.phone!);
+    }
+  }
+
+  /// حفظ الاسم ورقم الجوال (من الإعدادات). الرقم الفارغ يحذف الرقم المحفوظ.
+  Future<void> saveProfile({required String name, String? phone}) {
+    final profile = _validateProfile(name, phone);
+    return db.transaction(() => _writeProfile(profile));
+  }
+
+  // ---------------------------------------------------------------------------
   // الإعداد الأول (UC-00)
   // ---------------------------------------------------------------------------
 
@@ -116,10 +184,17 @@ class SettingsService {
   /// «النقدية» والفئات الافتراضية — كل ذلك في عملية ذرية واحدة.
   ///
   /// [arabic] يحدد لغة أسماء الحساب والفئات الافتراضية.
+  /// [userName] و [userPhone] يُحفظان في العملية نفسها إن مُرِّرا.
   Future<void> completeOnboarding(
     CurrencyInfo currency, {
     required bool arabic,
+    String? userName,
+    String? userPhone,
   }) async {
+    // التحقق قبل أي كتابة حتى لا يُقفل الإعداد بملف شخصي غير صالح.
+    final profile = userName == null
+        ? null
+        : _validateProfile(userName, userPhone);
     await db.transaction(() async {
       // قاعدة 3.12.1: لا يمكن تغيير العملة بعد التأكيد.
       if (await isOnboarded()) {
@@ -160,11 +235,13 @@ class SettingsService {
               color: c.color,
               isDefault: const Value(true),
               sortOrder: Value(order++),
+              systemKey: Value(c.key),
             ),
         ]);
       });
 
       await set(SettingKeys.defaultAccountId, '$accountId');
+      if (profile != null) await _writeProfile(profile);
       await set(SettingKeys.locale, arabic ? 'ar' : 'en');
       await set(SettingKeys.onboarded, '1');
     });

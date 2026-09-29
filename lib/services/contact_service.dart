@@ -1,5 +1,10 @@
 // =============================================================================
 // خدمة الأشخاص (جهات التعامل في دفتر الديون) — FR-14.
+//
+// - الشخص نفسه هو الدفتر: الاسم والهاتف والملاحظة تكفي.
+// - الحذف مسموح فقط لشخص بلا أي حركة؛ وإلا فالأرشفة بشرط أن يكون متبقّيه
+//   صفراً في الاتجاهين (8.4).
+// - منع التكرار: عند كتابة اسم موجود تقترح الواجهة الشخص الموجود.
 // =============================================================================
 
 import 'package:drift/drift.dart';
@@ -12,10 +17,10 @@ class ContactService {
 
   final AppDatabase db;
 
-  /// الأشخاص النشطون مرتبين أبجدياً، مع بحث اختياري بالاسم أو الهاتف.
+  /// الأشخاص غير المؤرشفين مرتبين أبجدياً، مع بحث بالاسم أو الهاتف.
   Stream<List<Contact>> watchActive({String query = ''}) {
     final q = db.select(db.contacts)
-      ..where((c) => c.isActive.equals(true))
+      ..where((c) => c.isArchived.equals(false))
       ..orderBy([(c) => OrderingTerm.asc(c.name)]);
     final text = query.trim();
     if (text.isNotEmpty) {
@@ -31,22 +36,39 @@ class ContactService {
   Future<Contact?> getById(int id) =>
       (db.select(db.contacts)..where((c) => c.id.equals(id))).getSingleOrNull();
 
+  /// شخص غير مؤرشف بنفس الاسم (بعد إزالة المسافات الزائدة، ودون تمييز حالة
+  /// الأحرف) — لاقتراح «أحمد علي موجود، هل تقصده؟».
+  Future<Contact?> findByName(String name, {int? exceptId}) async {
+    final normalized = normalizeName(name).toLowerCase();
+    if (normalized.isEmpty) return null;
+    final candidates = await (db.select(
+      db.contacts,
+    )..where((c) => c.isArchived.equals(false))).get();
+    return candidates
+        .where(
+          (c) =>
+              c.id != exceptId &&
+              normalizeName(c.name).toLowerCase() == normalized,
+        )
+        .firstOrNull;
+  }
+
   /// إضافة شخص يدوياً أو من جهات الاتصال.
-  /// إن وُجد شخص نشط بنفس رقم الهاتف يُعاد رقمه بدل التكرار.
+  /// إن وُجد شخص غير مؤرشف بنفس رقم الهاتف يُعاد رقمه بدل التكرار.
   Future<int> create({
     required String name,
     String? phone,
-    String? address,
     String? note,
   }) async {
-    final trimmed = name.trim();
+    final trimmed = normalizeName(name);
     if (trimmed.isEmpty) throw const BusinessException(BusinessError.emptyName);
     final cleanPhone = _clean(phone);
     if (cleanPhone != null) {
       final existing =
           await (db.select(db.contacts)
                 ..where(
-                  (c) => c.phone.equals(cleanPhone) & c.isActive.equals(true),
+                  (c) =>
+                      c.phone.equals(cleanPhone) & c.isArchived.equals(false),
                 )
                 ..limit(1))
               .getSingleOrNull();
@@ -58,7 +80,6 @@ class ContactService {
           ContactsCompanion.insert(
             name: trimmed,
             phone: Value(cleanPhone),
-            address: Value(_clean(address)),
             note: Value(_clean(note)),
           ),
         );
@@ -69,26 +90,72 @@ class ContactService {
     int id, {
     required String name,
     String? phone,
-    String? address,
     String? note,
   }) async {
-    final trimmed = name.trim();
+    final trimmed = normalizeName(name);
     if (trimmed.isEmpty) throw const BusinessException(BusinessError.emptyName);
     await (db.update(db.contacts)..where((c) => c.id.equals(id))).write(
       ContactsCompanion(
         name: Value(trimmed),
         phone: Value(_clean(phone)),
-        address: Value(_clean(address)),
         note: Value(_clean(note)),
       ),
     );
   }
 
-  /// إخفاء الشخص من القائمة (يبقى سجله وديونه في التقارير).
-  Future<void> setActive(int id, {required bool active}) =>
+  /// مجموع المتبقي في الاتجاهين (كل دين متبقّيه ≥ 0).
+  Future<int> _remaining(int id) async {
+    final row = await db
+        .customSelect(
+          'SELECT COALESCE(SUM(${AppDatabase.remainingSql('d')}), 0) AS r '
+          'FROM debts d WHERE d.contact_id = ?1',
+          variables: [Variable.withInt(id)],
+          readsFrom: {db.debts, db.debtPayments},
+        )
+        .getSingle();
+    return row.read<int>('r');
+  }
+
+  /// أرشفة الشخص بدل حذفه: بشرط أن يكون متبقّيه صفراً في الاتجاهين.
+  Future<void> archive(int id) => db.transaction(() async {
+    final contact = await getById(id);
+    if (contact == null) throw const BusinessException(BusinessError.notFound);
+    if (await _remaining(id) != 0) {
+      throw BusinessException(BusinessError.personHasBalance, contact.name);
+    }
+    await (db.update(db.contacts)..where((c) => c.id.equals(id))).write(
+      ContactsCompanion(
+        isArchived: const Value(true),
+        archivedAt: Value(DateTime.now()),
+      ),
+    );
+  });
+
+  Future<void> unarchive(int id) =>
       (db.update(db.contacts)..where((c) => c.id.equals(id))).write(
-        ContactsCompanion(isActive: Value(active)),
+        const ContactsCompanion(
+          isArchived: Value(false),
+          archivedAt: Value(null),
+        ),
       );
+
+  /// حذف الشخص: مسموح فقط إن لم تكن له أي حركة (أي دين).
+  Future<void> delete(int id) => db.transaction(() async {
+    final count = db.debts.id.count();
+    final row =
+        await (db.selectOnly(db.debts)
+              ..addColumns([count])
+              ..where(db.debts.contactId.equals(id)))
+            .getSingle();
+    if ((row.read(count) ?? 0) > 0) {
+      throw const BusinessException(BusinessError.personHasMovements);
+    }
+    await (db.delete(db.contacts)..where((c) => c.id.equals(id))).go();
+  });
+
+  /// الاسم دون مسافات زائدة في البداية والنهاية والوسط.
+  static String normalizeName(String name) =>
+      name.trim().replaceAll(RegExp(r'\s+'), ' ');
 
   static String? _clean(String? s) {
     final v = s?.trim();

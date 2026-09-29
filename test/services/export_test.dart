@@ -6,6 +6,7 @@ import 'package:daftry/core/utils/date_range.dart';
 import 'package:daftry/domain/enums.dart';
 import 'package:daftry/domain/models/debt_models.dart';
 import 'package:daftry/domain/models/transaction_models.dart';
+import 'package:daftry/services/export/document_owner.dart';
 import 'package:daftry/services/export/pdf_fonts.dart';
 import 'package:daftry/services/export/report_exporter.dart';
 import 'package:daftry/services/export/statement_pdf.dart';
@@ -29,10 +30,11 @@ void main() {
       name: 'أحمد علي',
       phone: '0551234567',
     );
-    final debt = await env.debts.createDebt(
+    await env.debts.createDebt(
       DebtDraft(
         contactId: contact,
         direction: DebtDirection.owedToMe,
+        source: DebtSource.loan,
         amount: 120000,
         startDate: DateTime.now().subtract(const Duration(days: 3)),
         accountId: cash.id,
@@ -40,8 +42,13 @@ void main() {
       ),
     );
     await env.debts.recordPayment(
-      debt,
-      PaymentDraft(amount: 50000, paidAt: DateTime.now()),
+      PaymentDraft(
+        contactId: contact,
+        direction: DebtDirection.owedToMe,
+        amount: 50000,
+        paidAt: DateTime.now(),
+        accountId: cash.id,
+      ),
     );
     final data = await env.statements.build(contact, DateRange.lastDays(30));
 
@@ -50,7 +57,11 @@ void main() {
       money: money,
       locale: 'ar',
       rtl: true,
-      labels: const StatementLabels(
+      owner: const DocumentOwner(
+        label: 'صادر من: محمد',
+        phone: '+967777953434',
+      ),
+      labels: StatementLabels(
         appName: 'دفتري',
         title: 'كشف حساب',
         period: 'الفترة',
@@ -60,9 +71,8 @@ void main() {
         description: 'البيان',
         amount: 'المبلغ',
         balance: 'الرصيد',
-        newDebt: 'دين جديد',
-        paymentReceived: 'دفعة مستلمة',
-        paymentMade: 'دفعة مدفوعة',
+        describe: (direction, line) => line.kind.name,
+        sectionTitle: (direction) => direction.name,
         owedToMeHint: 'المستحق على أحمد',
         iOweHint: 'المستحق لأحمد',
         noMovements: 'لا توجد حركات',
@@ -103,6 +113,7 @@ void main() {
       money: money,
       locale: 'ar',
       rtl: true,
+      owner: const DocumentOwner(label: 'صادر من: محمد'),
       labels: ReportLabels(
         appName: 'دفتري',
         title: 'تقرير',

@@ -1,5 +1,7 @@
 // =============================================================================
 // إعدادات قفل التطبيق: تفعيل القفل (يتطلب إنشاء PIN)، البصمة/الوجه، تغيير الرمز.
+// إيقاف القفل وتغيير الرمز يتطلبان إثبات الهوية أولاً، حتى لا يُتجاوز القفل
+// (مثلاً قبل حذف كل البيانات) بمجرد الوصول إلى الإعدادات.
 // =============================================================================
 
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import 'app_lock_gate.dart';
 import 'pin_pad.dart';
 
 final _canBiometricProvider = FutureProvider.autoDispose<bool>(
@@ -65,6 +68,11 @@ class SecurityScreen extends ConsumerWidget {
                         await settings.setFlag(SettingKeys.lockEnabled, true);
                       }
                     } else {
+                      final verified = await verifyIdentity(
+                        context,
+                        reason: l10n.disableLockReason,
+                      );
+                      if (!verified) return;
                       await settings.setFlag(SettingKeys.lockEnabled, false);
                       await settings.setFlag(
                         SettingKeys.biometricEnabled,
@@ -101,7 +109,15 @@ class SecurityScreen extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.pin_outlined),
                     title: Text(l10n.changePin),
-                    onTap: () => createPin(context, ref),
+                    onTap: () async {
+                      final verified = await verifyIdentity(
+                        context,
+                        reason: l10n.changePinReason,
+                      );
+                      if (verified && context.mounted) {
+                        await createPin(context, ref);
+                      }
+                    },
                   ),
                 ],
               ],
